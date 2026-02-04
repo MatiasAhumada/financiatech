@@ -7,23 +7,229 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+}
+
+enum DeviceStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+  MAINTENANCE
+}
+
+enum InstallmentStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  CARD
+  CHECK
+}
+
+enum PhoneType {
+  MOBILE
+  HOME
+  WORK
+}
+
+model User {
+  id       String   @id @default(cuid())
+  name     String
+  email    String   @unique
+  password String
+  role     UserRole
+
+  superAdmin SuperAdmin?
+  admin      Admin?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("users")
+}
+
+model SuperAdmin {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  admins Admin[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("super_admins")
+}
+
+model Admin {
+  id           String @id @default(cuid())
+  userId       String @unique
+  superAdminId String
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  superAdmin SuperAdmin @relation(fields: [superAdminId], references: [id], onDelete: Cascade)
+  devices    Device[]
+  clients    Client[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("admins")
+}
+
+model Client {
+  id      String  @id @default(cuid())
+  name    String
+  email   String?
+  adminId String
+
+  admin     Admin       @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  devices   Device[]
+  payments  Payment[]
+  addresses Address[]
+  phones    Phone[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("clients")
+}
+
+model Address {
+  id       String  @id @default(cuid())
+  street   String
+  city     String
+  state    String?
+  zipCode  String?
+  country  String?
+  clientId String
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("addresses")
+}
+
+model Phone {
+  id       String    @id @default(cuid())
+  number   String
+  type     PhoneType
+  clientId String
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("phones")
+}
+
 model Device {
-  id        String   @id @default(cuid())
-  name      String
-  type      String
-  status    String   @default("active")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String       @id @default(cuid())
+  name         String
+  type         String
+  model        String?
+  serialNumber String?      @unique
+  status       DeviceStatus @default(ACTIVE)
+  adminId      String
+  clientId     String
+
+  admin        Admin         @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  client       Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  paymentPlan  PaymentPlan?
+  blockRule    BlockRule?
+  installments Installment[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@map("devices")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model PaymentPlan {
+  id            String   @id @default(cuid())
+  totalAmount   Decimal  @db.Decimal(10, 2)
+  installments  Int
+  monthlyAmount Decimal  @db.Decimal(10, 2)
+  startDate     DateTime
+  endDate       DateTime
+  deviceId      String   @unique
 
-  @@map("users")
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("payment_plans")
+}
+
+model Installment {
+  id         String            @id @default(cuid())
+  number     Int
+  amount     Decimal           @db.Decimal(10, 2)
+  dueDate    DateTime
+  paidAmount Decimal           @default(0) @db.Decimal(10, 2)
+  status     InstallmentStatus @default(PENDING)
+  deviceId   String
+
+  device   Device    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("installments")
+}
+
+model BlockRule {
+  id               String  @id @default(cuid())
+  firstWarningDay  Int
+  secondWarningDay Int
+  blockDay         Int
+  isActive         Boolean @default(true)
+  deviceId         String  @unique
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("block_rules")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentDate   DateTime      @default(now())
+  paymentMethod PaymentMethod
+  reference     String?
+  clientId      String
+  installmentId String
+
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  installment Installment @relation(fields: [installmentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("payments")
 }
