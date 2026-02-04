@@ -1,10 +1,6 @@
 import clientAxios from "@/utils/clientAxios.util";
 import { API_ROUTES } from "@/constants/routes";
-import {
-  Device,
-  CreateDeviceDto,
-  UpdateDeviceDto,
-} from "@/types";
+import { Device, CreateDeviceDto, UpdateDeviceDto } from "@/types";
 
 export const devicesService = {
   async getAll(): Promise<Device[]> {

@@ -8,7 +8,7 @@ export const ROUTES = {
 export const ROUTE_LABELS: Record<string, string> = {
   "": "Inicio",
   devices: "Dispositivos",
-  users: "Usuarios", 
+  users: "Usuarios",
   reports: "Reportes",
 } as const;
 

@@ -10,7 +10,7 @@ export async function GET(
 ) {
   try {
     const device = await devicesService.findById(params.id);
-    
+
     if (!device) {
       throw new ApiError({
         status: httpStatus.NOT_FOUND,

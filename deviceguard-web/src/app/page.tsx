@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -13,7 +19,7 @@ export default function Home() {
             Sistema de gestión de dispositivos
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           <Card>
             <CardHeader>
@@ -23,12 +29,10 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full">
-                Ver Dispositivos
-              </Button>
+              <Button className="w-full">Ver Dispositivos</Button>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Usuarios</CardTitle>
@@ -37,23 +41,17 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full">
-                Ver Usuarios
-              </Button>
+              <Button className="w-full">Ver Usuarios</Button>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Reportes</CardTitle>
-              <CardDescription>
-                Genera reportes y estadísticas
-              </CardDescription>
+              <CardDescription>Genera reportes y estadísticas</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full">
-                Ver Reportes
-              </Button>
+              <Button className="w-full">Ver Reportes</Button>
             </CardContent>
           </Card>
         </div>
