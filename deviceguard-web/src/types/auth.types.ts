@@ -1,17 +1,9 @@
-import { UserRole, User as PrismaUser } from "@prisma/client";
+import { UserRole, User, Prisma } from "@prisma/client";
 
-export interface LoginDto {
-  email: string;
-  password: string;
-}
+export type { User, UserRole };
 
-export interface RegisterDto {
-  name: string;
-  email: string;
-  password: string;
-  role: UserRole;
-  superAdminId?: string;
-}
+export type LoginDto = Pick<User, "email" | "password">;
+export type RegisterDto = Prisma.UserCreateInput & { superAdminId?: string };
 
 export interface AuthUser {
   id: string;
@@ -34,5 +26,3 @@ export interface AuthResponse {
   user: AuthUser;
   token: string;
 }
-
-export type { PrismaUser };
