@@ -23,14 +23,14 @@ export default function LoginPage() {
     const success = await login(email, password);
 
     if (success) {
-      router.push(ROUTES.HOME);
+      router.push(ROUTES.DASHBOARD);
     }
 
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center">
