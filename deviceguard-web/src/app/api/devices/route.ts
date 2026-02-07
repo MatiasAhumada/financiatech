@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
   try {
     verifyAuth(request);
     const body = await request.json();
-    const { name, type, status } = body;
+    const { name, type, status, model, serialNumber, adminId, clientId } = body;
 
-    if (!name || !type) {
+    if (!name || !type || !adminId || !clientId) {
       throw new ApiError({
         status: httpStatus.BAD_REQUEST,
         message: ERROR_MESSAGES.DEVICE_REQUIRED_FIELDS,
@@ -31,7 +31,11 @@ export async function POST(request: NextRequest) {
     const device = await devicesService.create({
       name,
       type,
+      model,
+      serialNumber,
       status,
+      admin: { connect: { id: adminId } },
+      client: { connect: { id: clientId } },
     });
 
     return NextResponse.json(device, { status: httpStatus.CREATED });

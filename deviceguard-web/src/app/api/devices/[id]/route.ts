@@ -7,11 +7,12 @@ import httpStatus from "http-status";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     verifyAuth(request);
-    const device = await devicesService.findById(params.id);
+    const { id } = await params;
+    const device = await devicesService.findById(id);
 
     if (!device) {
       throw new ApiError({
@@ -28,14 +29,15 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     verifyAuth(request);
+    const { id } = await params;
     const body = await request.json();
     const { name, type, status } = body;
 
-    const device = await devicesService.update(params.id, {
+    const device = await devicesService.update(id, {
       name,
       type,
       status,
@@ -49,11 +51,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     verifyAuth(request);
-    await devicesService.delete(params.id);
+    const { id } = await params;
+    await devicesService.delete(id);
     return NextResponse.json({ message: "Device deleted successfully" });
   } catch (error) {
     return apiErrorHandler({ error: error as ApiError, request });
