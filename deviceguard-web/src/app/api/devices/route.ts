@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { devicesService } from "@/server/services/devices.service";
 import apiErrorHandler, { ApiError } from "@/utils/handlers/apiError.handler";
 import { ERROR_MESSAGES } from "@/constants/error-messages.constant";
+import { verifyAuth } from "@/utils/auth.middleware";
 import httpStatus from "http-status";
 
 export async function GET(request: NextRequest) {
   try {
+    verifyAuth(request);
     const devices = await devicesService.findAll();
     return NextResponse.json(devices);
   } catch (error) {
@@ -15,6 +17,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    verifyAuth(request);
     const body = await request.json();
     const { name, type, status } = body;
 

@@ -1,16 +1,5 @@
 import { DevicesRepository } from "../repository/devices.repository";
-
-export interface CreateDeviceData {
-  name: string;
-  type: string;
-  status?: string;
-}
-
-export interface UpdateDeviceData {
-  name?: string;
-  type?: string;
-  status?: string;
-}
+import { Prisma } from "@prisma/client";
 
 export class DevicesService {
   private devicesRepository: DevicesRepository;
@@ -19,12 +8,8 @@ export class DevicesService {
     this.devicesRepository = new DevicesRepository();
   }
 
-  async create(data: CreateDeviceData) {
-    return this.devicesRepository.create({
-      name: data.name,
-      type: data.type,
-      status: data.status || "active",
-    });
+  async create(data: Prisma.DeviceCreateInput) {
+    return this.devicesRepository.create(data);
   }
 
   async findAll() {
@@ -35,7 +20,7 @@ export class DevicesService {
     return this.devicesRepository.findById(id);
   }
 
-  async update(id: string, data: UpdateDeviceData) {
+  async update(id: string, data: Prisma.DeviceUpdateInput) {
     return this.devicesRepository.update(id, data);
   }
 
