@@ -1,6 +1,7 @@
 export const ROUTES = {
   HOME: "/",
   LOGIN: "/login",
+  CLIENTS: "/clients",
   DEVICES: "/devices",
   USERS: "/users",
   REPORTS: "/reports",
@@ -21,6 +22,7 @@ export const API_ROUTES = {
   },
   ADMINS: "/api/admins",
   ADMINS_STATS: "/api/admins/stats",
+  CLIENTS: "/api/clients",
   DEVICES: "/api/devices",
   USERS: "/api/users",
   REPORTS: "/api/reports",

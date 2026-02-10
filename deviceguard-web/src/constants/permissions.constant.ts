@@ -9,19 +9,19 @@ export const MODULES = {
   SETTINGS: "settings",
 } as const;
 
-export const MODULE_PERMISSIONS = {
+export const MODULE_PERMISSIONS: Record<string, UserRole[]> = {
   [MODULES.DASHBOARD]: [UserRole.SUPER_ADMIN, UserRole.ADMIN],
   [MODULES.ORGANIZATIONS]: [UserRole.SUPER_ADMIN, UserRole.ADMIN],
   [MODULES.ADMINS]: [UserRole.SUPER_ADMIN],
   [MODULES.PLANS]: [UserRole.SUPER_ADMIN],
   [MODULES.LOGS]: [UserRole.SUPER_ADMIN],
   [MODULES.SETTINGS]: [UserRole.SUPER_ADMIN],
-} as const;
+};
 
 export const ROUTES_BY_ROLE = {
   [UserRole.SUPER_ADMIN]: [
     {
-      path: "/dashboard",
+      path: "/",
       label: "Dashboard Global",
       icon: "LayoutDashboard",
       module: MODULES.DASHBOARD,
@@ -59,24 +59,20 @@ export const ROUTES_BY_ROLE = {
   ],
   [UserRole.ADMIN]: [
     {
-      path: "/dashboard",
+      path: "/",
       label: "Dashboard",
       icon: "LayoutDashboard",
       module: MODULES.DASHBOARD,
     },
     {
-      path: "/organizations",
-      label: "Mi Organización",
-      icon: "Building2",
+      path: "/clients",
+      label: "Clientes",
+      icon: "Users",
       module: MODULES.ORGANIZATIONS,
     },
   ],
 } as const;
 
 export function hasModuleAccess(userRole: UserRole, module: string): boolean {
-  return (
-    MODULE_PERMISSIONS[module as keyof typeof MODULE_PERMISSIONS]?.includes(
-      userRole
-    ) ?? false
-  );
+  return MODULE_PERMISSIONS[module]?.includes(userRole) ?? false;
 }
