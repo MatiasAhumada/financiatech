@@ -19,6 +19,15 @@ enum DeviceStatus {
   MAINTENANCE
 }
 
+enum DeviceType {
+  SMARTPHONE
+  TABLET
+  LAPTOP
+  DESKTOP
+  SMARTWATCH
+  OTHER
+}
+
 enum InstallmentStatus {
   PENDING
   PAID
@@ -143,7 +152,7 @@ model Phone {
 model Device {
   id           String       @id @default(cuid())
   name         String
-  type         String
+  type         DeviceType
   model        String?
   serialNumber String?      @unique
   status       DeviceStatus @default(ACTIVE)

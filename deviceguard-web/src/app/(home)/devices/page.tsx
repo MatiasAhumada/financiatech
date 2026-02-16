@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GenericModal } from "@/components/common/GenericModal";
-import { createDeviceSchema } from "@/schemas/device.schema";
+import {
+  createDeviceSchema,
+  DEVICE_TYPE_LABELS,
+} from "@/schemas/device.schema";
 import { deviceService } from "@/services/device.service";
 import { IDevice, IDeviceFormValues } from "@/types";
 import {
@@ -22,7 +25,7 @@ import {
   Delete02Icon,
 } from "hugeicons-react";
 import { useDebounce } from "@/hooks/useDebounce";
-import { DeviceStatus } from "@prisma/client";
+import { DeviceStatus, DeviceType } from "@prisma/client";
 import { createPortal } from "react-dom";
 import { getCenteredMenuPosition } from "@/utils/menu.util";
 
@@ -30,7 +33,7 @@ export default function DevicesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<IDeviceFormValues>({
     name: "",
-    type: "",
+    type: DeviceType.SMARTPHONE,
     model: "",
     serialNumber: "",
     status: DeviceStatus.ACTIVE,
@@ -77,7 +80,7 @@ export default function DevicesPage() {
   const handleOpenModal = () => {
     setFormData({
       name: "",
-      type: "",
+      type: DeviceType.SMARTPHONE,
       model: "",
       serialNumber: "",
       status: DeviceStatus.ACTIVE,
@@ -142,7 +145,7 @@ export default function DevicesPage() {
   const handleCloseModal = () => {
     setFormData({
       name: "",
-      type: "",
+      type: DeviceType.SMARTPHONE,
       model: "",
       serialNumber: "",
       status: DeviceStatus.ACTIVE,
@@ -221,7 +224,9 @@ export default function DevicesPage() {
                     </div>
                     <div>
                       <p className="font-medium text-white">{device.name}</p>
-                      <p className="text-sm text-silver-400">{device.type}</p>
+                      <p className="text-sm text-silver-400">
+                        {DEVICE_TYPE_LABELS[device.type]}
+                      </p>
                     </div>
                   </div>
                 );
@@ -442,21 +447,29 @@ export default function DevicesPage() {
 
             <div className="space-y-2">
               <Label htmlFor="type">Tipo</Label>
-              <Input
+              <select
                 id="type"
                 value={formData.type}
                 onChange={(e) => {
-                  setFormData({ ...formData, type: e.target.value });
+                  setFormData({
+                    ...formData,
+                    type: e.target.value as DeviceType,
+                  });
                   if (errors.type) setErrors({ ...errors, type: "" });
                 }}
-                placeholder="Ej: Laptop, Smartphone, Tablet"
                 disabled={isViewMode}
-                className={
+                className={`w-full px-3 py-2 rounded-md border bg-background text-sm ${
                   errors.type
                     ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
                     : ""
-                }
-              />
+                }`}
+              >
+                {Object.entries(DEVICE_TYPE_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
               {errors.type && (
                 <p className="text-xs text-mahogany_red">{errors.type}</p>
               )}
