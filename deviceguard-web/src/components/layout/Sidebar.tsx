@@ -20,7 +20,9 @@ import {
   Logout01Icon,
   Menu01Icon,
   Cancel01Icon,
+  SmartPhone02Icon,
 } from "hugeicons-react";
+import { Smartphone } from "lucide-react";
 
 const ICONS = {
   LayoutDashboard: DashboardSpeed01Icon,
@@ -29,6 +31,7 @@ const ICONS = {
   CreditCard: CreditCardIcon,
   FileText: FileScriptIcon,
   Settings: Settings02Icon,
+  Smartphone: SmartPhone02Icon,
 };
 
 export function Sidebar() {

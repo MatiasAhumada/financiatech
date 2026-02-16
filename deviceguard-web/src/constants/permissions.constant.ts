@@ -60,7 +60,7 @@ export const ROUTES_BY_ROLE = {
   [UserRole.ADMIN]: [
     {
       path: "/",
-      label: "Dashboard",
+      label: "Inicio",
       icon: "LayoutDashboard",
       module: MODULES.DASHBOARD,
     },
@@ -68,6 +68,12 @@ export const ROUTES_BY_ROLE = {
       path: "/clients",
       label: "Clientes",
       icon: "Users",
+      module: MODULES.ORGANIZATIONS,
+    },
+    {
+      path: "/devices",
+      label: "Dispositivos",
+      icon: "Smartphone",
       module: MODULES.ORGANIZATIONS,
     },
   ],

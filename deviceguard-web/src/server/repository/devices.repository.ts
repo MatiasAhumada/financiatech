@@ -8,9 +8,29 @@ export class DevicesRepository {
     });
   }
 
-  async findAll() {
+  async findByAdminId(adminId: string, search?: string) {
     return prisma.device.findMany({
-      orderBy: { createdAt: "desc" },
+      where: {
+        adminId,
+        deletedAt: null,
+        ...(search && {
+          OR: [
+            { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
+            { type: { contains: search, mode: Prisma.QueryMode.insensitive } },
+            {
+              serialNumber: {
+                contains: search,
+                mode: Prisma.QueryMode.insensitive,
+              },
+            },
+          ],
+        }),
+      },
+      include: {
+        admin: true,
+        client: true,
+      },
+      orderBy: { createdAt: Prisma.SortOrder.desc },
     });
   }
 

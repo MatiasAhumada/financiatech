@@ -22,8 +22,10 @@ export interface IClient extends PrismaClient {
   devices: PrismaDevice[];
 }
 
-export interface IClientFormValues
-  extends Omit<PrismaClient, "id" | "createdAt" | "updatedAt" | "deletedAt" | "adminId"> {
+export interface IClientFormValues extends Omit<
+  PrismaClient,
+  "id" | "createdAt" | "updatedAt" | "deletedAt" | "adminId"
+> {
   phones?: Array<{
     number: string;
     type: "MOBILE" | "HOME" | "WORK";
@@ -38,3 +40,13 @@ export interface IClientFormValues
     nota?: string;
   }>;
 }
+
+export interface IDevice extends PrismaDevice {
+  admin: PrismaAdmin;
+  client: PrismaClient;
+}
+
+export interface IDeviceFormValues extends Omit<
+  PrismaDevice,
+  "id" | "createdAt" | "updatedAt" | "deletedAt" | "adminId"
+> {}

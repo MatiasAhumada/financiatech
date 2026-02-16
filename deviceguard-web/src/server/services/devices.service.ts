@@ -12,8 +12,8 @@ export class DevicesService {
     return this.devicesRepository.create(data);
   }
 
-  async findAll() {
-    return this.devicesRepository.findAll();
+  async findByAdminId(adminId: string, search?: string) {
+    return this.devicesRepository.findByAdminId(adminId, search);
   }
 
   async findById(id: string) {
