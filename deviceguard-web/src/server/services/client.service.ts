@@ -1,7 +1,7 @@
 import { ClientRepository } from "../repository/client.repository";
 import { ApiError } from "@/utils/handlers/apiError.handler";
 import { prisma } from "@/lib/prisma";
-import { PhoneType } from "@prisma/client";
+import { CreateClientDto, UpdateClientDto } from "@/types";
 import httpStatus from "http-status";
 
 export class ClientService {
@@ -11,25 +11,13 @@ export class ClientService {
     this.clientRepository = new ClientRepository();
   }
 
-  async create(data: {
-    name: string;
-    email?: string;
-    adminId: string;
-    phones?: Array<{ number: string; type: PhoneType }>;
-    addresses?: Array<{
-      street: string;
-      city: string;
-      state?: string;
-      zipCode?: string;
-      country?: string;
-    }>;
-  }) {
+  async create(data: CreateClientDto) {
     return prisma.$transaction(async (tx) => {
       const client = await tx.client.create({
         data: {
           name: data.name,
           email: data.email || null,
-          adminId: data.adminId,
+          admin: { connect: { id: data.adminId } },
         },
       });
 
@@ -61,22 +49,7 @@ export class ClientService {
     });
   }
 
-  async update(
-    id: string,
-    data: {
-      name: string;
-      email?: string;
-      adminId: string;
-      phones?: Array<{ number: string; type: PhoneType }>;
-      addresses?: Array<{
-        street: string;
-        city: string;
-        state?: string;
-        zipCode?: string;
-        country?: string;
-      }>;
-    }
-  ) {
+  async update(id: string, data: UpdateClientDto) {
     return prisma.$transaction(async (tx) => {
       const client = await tx.client.update({
         where: { id },

@@ -148,7 +148,7 @@ export default function ClientsPage() {
       ...formData,
       phones: [
         ...(formData.phones || []),
-        { number: "", type: PhoneType.MOBILE },
+        { number: "", type: PhoneType.MOBILE, referencia: "" },
       ],
     });
   };
@@ -164,7 +164,7 @@ export default function ClientsPage() {
       ...formData,
       addresses: [
         ...(formData.addresses || []),
-        { street: "", city: "", state: "", zipCode: "", country: "" },
+        { street: "", city: "", state: "", zipCode: "", country: "", nota: "" },
       ],
     });
   };
@@ -532,6 +532,17 @@ export default function ClientsPage() {
                           </Button>
                         )}
                       </div>
+                      <Input
+                        value={phone.referencia || ""}
+                        onChange={(e) => {
+                          const newPhones = [...(formData.phones || [])];
+                          newPhones[index].referencia = e.target.value;
+                          setFormData({ ...formData, phones: newPhones });
+                        }}
+                        placeholder="Referencia (opcional)"
+                        disabled={isViewMode}
+                        className="text-sm"
+                      />
                       {errors[`phones.${index}.number`] && (
                         <p className="text-xs text-mahogany_red">
                           {errors[`phones.${index}.number`]}
@@ -680,6 +691,17 @@ export default function ClientsPage() {
                         }}
                         placeholder="País"
                         disabled={isViewMode}
+                      />
+                      <Input
+                        value={address.nota || ""}
+                        onChange={(e) => {
+                          const newAddresses = [...(formData.addresses || [])];
+                          newAddresses[index].nota = e.target.value;
+                          setFormData({ ...formData, addresses: newAddresses });
+                        }}
+                        placeholder="Nota (opcional)"
+                        disabled={isViewMode}
+                        className="text-sm"
                       />
                     </div>
                   ))

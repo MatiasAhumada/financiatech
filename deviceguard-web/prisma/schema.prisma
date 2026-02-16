@@ -112,6 +112,7 @@ model Address {
   state    String?
   zipCode  String?
   country  String?
+  nota     String?
   clientId String
 
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
@@ -124,10 +125,11 @@ model Address {
 }
 
 model Phone {
-  id       String    @id @default(cuid())
-  number   String
-  type     PhoneType
-  clientId String
+  id          String    @id @default(cuid())
+  number      String
+  type        PhoneType
+  referencia  String?
+  clientId    String
 
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 

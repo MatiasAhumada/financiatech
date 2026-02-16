@@ -9,6 +9,7 @@ export const createClientSchema = z.object({
       z.object({
         number: z.string().min(1, "El número es requerido"),
         type: z.nativeEnum(PhoneType),
+        referencia: z.string().optional().or(z.literal("")),
       })
     )
     .optional(),
@@ -32,6 +33,7 @@ export const createClientSchema = z.object({
           .min(1, "El país es requerido")
           .optional()
           .or(z.literal("")),
+        nota: z.string().optional().or(z.literal("")),
       })
     )
     .optional(),
