@@ -3,12 +3,12 @@ import { CreateDeviceDto } from "@/schemas/device.schema";
 import { API_ROUTES } from "@/constants/routes";
 
 export const deviceService = {
-  async create(dto: CreateDeviceDto & { clientId: string }) {
+  async create(dto: CreateDeviceDto) {
     const { data } = await clientAxios.post(API_ROUTES.DEVICES, dto);
     return data;
   },
 
-  async update(id: string, dto: CreateDeviceDto & { clientId: string }) {
+  async update(id: string, dto: CreateDeviceDto) {
     const { data } = await clientAxios.put(`${API_ROUTES.DEVICES}/${id}`, dto);
     return data;
   },

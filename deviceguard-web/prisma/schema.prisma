@@ -157,10 +157,10 @@ model Device {
   serialNumber String?      @unique
   status       DeviceStatus @default(ACTIVE)
   adminId      String
-  clientId     String
+  clientId     String?
 
   admin        Admin         @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  client       Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client       Client?       @relation(fields: [clientId], references: [id], onDelete: Cascade)
   paymentPlan  PaymentPlan?
   blockRule    BlockRule?
   installments Installment[]

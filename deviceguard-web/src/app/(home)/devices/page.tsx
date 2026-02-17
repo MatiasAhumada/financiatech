@@ -12,6 +12,7 @@ import {
   DEVICE_TYPE_LABELS,
 } from "@/schemas/device.schema";
 import { deviceService } from "@/services/device.service";
+import { clientService } from "@/services/client.service";
 import { IDevice, IDeviceFormValues } from "@/types";
 import {
   clientErrorHandler,
@@ -37,7 +38,6 @@ export default function DevicesPage() {
     model: "",
     serialNumber: "",
     status: DeviceStatus.ACTIVE,
-    clientId: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [devices, setDevices] = useState<IDevice[]>([]);
@@ -84,7 +84,6 @@ export default function DevicesPage() {
       model: "",
       serialNumber: "",
       status: DeviceStatus.ACTIVE,
-      clientId: "",
     });
     setErrors({});
     setSelectedDevice(null);
@@ -100,7 +99,6 @@ export default function DevicesPage() {
       model: device.model || "",
       serialNumber: device.serialNumber || "",
       status: device.status,
-      clientId: device.clientId || "",
     });
     setIsViewMode(true);
     setOpenMenuId(null);
@@ -115,7 +113,6 @@ export default function DevicesPage() {
       model: device.model || "",
       serialNumber: device.serialNumber || "",
       status: device.status,
-      clientId: device.clientId || "",
     });
     setIsViewMode(false);
     setOpenMenuId(null);
@@ -149,7 +146,6 @@ export default function DevicesPage() {
       model: "",
       serialNumber: "",
       status: DeviceStatus.ACTIVE,
-      clientId: "",
     });
     setErrors({});
     setSelectedDevice(null);
@@ -176,16 +172,10 @@ export default function DevicesPage() {
 
     try {
       if (selectedDevice) {
-        await deviceService.update(selectedDevice.id, {
-          ...result.data,
-          clientId: formData.clientId,
-        });
+        await deviceService.update(selectedDevice.id, result.data);
         clientSuccessHandler("Dispositivo actualizado exitosamente");
       } else {
-        await deviceService.create({
-          ...result.data,
-          clientId: formData.clientId,
-        });
+        await deviceService.create(result.data);
         clientSuccessHandler("Dispositivo creado exitosamente");
       }
       await loadDevices();
@@ -520,19 +510,6 @@ export default function DevicesPage() {
                 <option value={DeviceStatus.MAINTENANCE}>Mantenimiento</option>
                 <option value={DeviceStatus.BLOCKED}>Bloqueado</option>
               </select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="clientId">ID Cliente (Opcional)</Label>
-              <Input
-                id="clientId"
-                value={formData.clientId || ""}
-                onChange={(e) => {
-                  setFormData({ ...formData, clientId: e.target.value });
-                }}
-                placeholder="ID del cliente asociado"
-                disabled={isViewMode}
-              />
             </div>
           </div>
         </GenericModal>

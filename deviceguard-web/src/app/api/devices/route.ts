@@ -36,7 +36,6 @@ export async function POST(request: NextRequest) {
       serialNumber: validatedData.serialNumber || null,
       status: validatedData.status,
       admin: { connect: { id: payload.adminId! } },
-      client: { connect: { id: validatedData.clientId! } },
     });
 
     return NextResponse.json(device, { status: httpStatus.CREATED });

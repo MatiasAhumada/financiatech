@@ -43,10 +43,10 @@ export interface IClientFormValues extends Omit<
 
 export interface IDevice extends PrismaDevice {
   admin: PrismaAdmin;
-  client: PrismaClient;
+  client: PrismaClient | null;
 }
 
 export interface IDeviceFormValues extends Omit<
   PrismaDevice,
-  "id" | "createdAt" | "updatedAt" | "deletedAt" | "adminId"
+  "id" | "createdAt" | "updatedAt" | "deletedAt" | "adminId" | "clientId"
 > {}
