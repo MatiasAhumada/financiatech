@@ -1,7 +1,7 @@
 import { ClientRepository } from "../repository/client.repository";
 import { ApiError } from "@/utils/handlers/apiError.handler";
 import { prisma } from "@/lib/prisma";
-import { CreateClientDto, UpdateClientDto } from "@/types";
+import { IClientFormValues } from "@/types";
 import httpStatus from "http-status";
 
 export class ClientService {
@@ -11,7 +11,7 @@ export class ClientService {
     this.clientRepository = new ClientRepository();
   }
 
-  async create(data: CreateClientDto) {
+  async create(data: IClientFormValues & { adminId: string }) {
     return prisma.$transaction(async (tx) => {
       const client = await tx.client.create({
         data: {
@@ -49,7 +49,7 @@ export class ClientService {
     });
   }
 
-  async update(id: string, data: UpdateClientDto) {
+  async update(id: string, data: IClientFormValues) {
     return prisma.$transaction(async (tx) => {
       const client = await tx.client.update({
         where: { id },

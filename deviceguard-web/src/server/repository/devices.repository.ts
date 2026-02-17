@@ -16,7 +16,6 @@ export class DevicesRepository {
         ...(search && {
           OR: [
             { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
-            { type: { contains: search, mode: Prisma.QueryMode.insensitive } },
             {
               serialNumber: {
                 contains: search,

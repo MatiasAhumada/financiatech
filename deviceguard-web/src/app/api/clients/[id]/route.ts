@@ -17,10 +17,7 @@ export async function PUT(
 
     const validatedData = createClientSchema.parse(body);
 
-    const client = await clientService.update(id, {
-      ...validatedData,
-      adminId: payload.adminId!,
-    });
+    const client = await clientService.update(id, validatedData);
 
     return NextResponse.json(client, { status: httpStatus.OK });
   } catch (error) {
