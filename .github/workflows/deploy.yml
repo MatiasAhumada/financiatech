@@ -26,6 +26,9 @@ jobs:
             corepack enable
             corepack prepare pnpm@latest --activate
             pnpm install
+            pnpm store prune
             pnpm migrate:deploy
-            pnpm build
+            pnpm build || exit 1
             pm2 restart deviceguard-web || pm2 start "pnpm start" --name deviceguard-web
+            npm cache clean --force
+            pnpm store prune
