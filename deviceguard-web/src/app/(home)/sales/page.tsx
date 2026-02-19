@@ -13,9 +13,11 @@ import {
   clientErrorHandler,
   clientSuccessHandler,
 } from "@/utils/handlers/clientError.handler";
-import { Download01Icon, ShoppingCart01Icon } from "hugeicons-react";
+import { Download01Icon, MoreVerticalIcon, PencilEdit02Icon, Delete02Icon } from "hugeicons-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { SaleModal } from "@/components/sales/SaleModal";
+import { GenericModal } from "@/components/common/GenericModal";
+import { createPortal } from "react-dom";
 
 export default function SalesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -25,7 +27,12 @@ export default function SalesPage() {
   const [financingPlans, setFinancingPlans] = useState<IFinancingPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const debouncedSearch = useDebounce(searchTerm, 300);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const [selectedSale, setSelectedSale] = useState<ISale | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -38,15 +45,16 @@ export default function SalesPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [devicesData, clientsData, plansData] = await Promise.all([
+      const [salesData, devicesData, clientsData, plansData] = await Promise.all([
+        saleService.getAll(),
         deviceService.getAll(),
         clientService.getAll(),
         financingPlanService.getAll(),
       ]);
+      setSales(salesData);
       setDevices(devicesData);
       setClients(clientsData);
       setFinancingPlans(plansData);
-      setSales([]);
     } catch (error) {
       clientErrorHandler(error);
     } finally {
@@ -57,7 +65,8 @@ export default function SalesPage() {
   const loadSales = async (search?: string) => {
     try {
       setLoading(true);
-      setSales([]);
+      const data = await saleService.getAll(search);
+      setSales(data);
     } catch (error) {
       clientErrorHandler(error);
     } finally {
@@ -71,7 +80,44 @@ export default function SalesPage() {
 
   const handleSaleCreated = async () => {
     await loadData();
+    setSelectedSale(null);
     setIsModalOpen(false);
+  };
+
+  const toggleRow = (saleId: string) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(saleId)) {
+      newExpanded.delete(saleId);
+    } else {
+      newExpanded.add(saleId);
+    }
+    setExpandedRows(newExpanded);
+  };
+
+  const handleEditSale = (sale: ISale) => {
+    setSelectedSale(sale);
+    setOpenMenuId(null);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteSale = (sale: ISale) => {
+    setSelectedSale(sale);
+    setOpenMenuId(null);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedSale) return;
+
+    try {
+      await saleService.delete(selectedSale.id);
+      clientSuccessHandler("Venta eliminada exitosamente");
+      await loadData();
+      setIsDeleteModalOpen(false);
+      setSelectedSale(null);
+    } catch (error) {
+      clientErrorHandler(error);
+    }
   };
 
   const todaySales = sales.filter(
@@ -130,6 +176,20 @@ export default function SalesPage() {
           subtitle="Registro histórico de transacciones y activaciones de licencias"
           columns={[
             {
+              key: "expand",
+              label: "",
+              render: (sale: ISale) => (
+                <button
+                  onClick={() => toggleRow(sale.id)}
+                  className="p-2 hover:bg-mahogany_red/20 rounded transition-colors"
+                >
+                  <span className="text-white text-lg">
+                    {expandedRows.has(sale.id) ? "▼" : "▶"}
+                  </span>
+                </button>
+              ),
+            },
+            {
               key: "client",
               label: "CLIENTE / ID DISPOSITIVO",
               render: (sale: ISale) => {
@@ -165,23 +225,20 @@ export default function SalesPage() {
                   <p className="font-medium text-white">
                     ${Number(sale.totalAmount).toFixed(2)}
                   </p>
-                  <p className="text-sm text-silver-400">Pago Único</p>
+                  <p className="text-sm text-silver-400">
+                    {sale.installments} cuotas
+                  </p>
                 </div>
               ),
             },
             {
-              key: "plan",
-              label: "PLAN DE FINANCIAMIENTO",
-              render: (sale: ISale) => {
-                const installmentCount = sale.installments || 1;
-                return (
-                  <div className="inline-block px-3 py-1 bg-onyx-600 border border-carbon_black-700 rounded text-sm text-white">
-                    {installmentCount === 1
-                      ? "CONTADO"
-                      : `${installmentCount} MESES`}
-                  </div>
-                );
-              },
+              key: "monthly",
+              label: "CUOTA MENSUAL",
+              render: (sale: ISale) => (
+                <p className="font-medium text-white">
+                  ${Number(sale.monthlyAmount).toFixed(2)}
+                </p>
+              ),
             },
             {
               key: "date",
@@ -198,35 +255,73 @@ export default function SalesPage() {
             },
             {
               key: "status",
-              label: "ESTADO DE VENTA",
+              label: "ESTADO",
               render: (sale: ISale) => {
-                const statusConfig = {
-                  COMPLETADO: { color: "text-green-500", label: "COMPLETADO" },
-                  PENDIENTE_PAGO: {
-                    color: "text-strawberry_red",
-                    label: "PENDIENTE PAGO",
-                  },
-                  EN_REVISION: { color: "text-yellow-500", label: "EN REVISIÓN" },
-                };
-                const status =
-                  sale.device.status === "SOLD_SYNCED"
-                    ? "COMPLETADO"
-                    : "PENDIENTE_PAGO";
-                const config = statusConfig[status];
+                const isPending = sale.device.status === "SOLD_PENDING";
                 return (
-                  <p className={`text-sm font-medium ${config.color}`}>
-                    {config.label}
-                  </p>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      isPending
+                        ? "bg-warning/20 text-warning"
+                        : "bg-success/20 text-success"
+                    }`}
+                  >
+                    {isPending ? "PENDIENTE VINCULACIÓN" : "ACTIVO"}
+                  </span>
                 );
               },
             },
             {
               key: "actions",
-              label: "DETALLE",
-              render: () => (
-                <button className="p-2 hover:bg-mahogany_red/20 rounded-lg transition-colors border border-transparent hover:border-mahogany_red">
-                  <ShoppingCart01Icon size={20} className="text-silver-400" />
-                </button>
+              label: "ACCIONES",
+              render: (sale: ISale) => (
+                <div className="relative">
+                  <button
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setMenuPosition({
+                        top: rect.bottom + 4,
+                        left: rect.right - 200,
+                      });
+                      setOpenMenuId(openMenuId === sale.id ? null : sale.id);
+                    }}
+                    className="p-2 hover:bg-mahogany_red/20 rounded-lg transition-colors border border-transparent hover:border-mahogany_red"
+                  >
+                    <MoreVerticalIcon size={20} className="text-silver-400" />
+                  </button>
+                  {openMenuId === sale.id &&
+                    createPortal(
+                      <>
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setOpenMenuId(null)}
+                        />
+                        <div
+                          className="fixed w-48 bg-carbon_black border border-carbon_black-600 rounded-lg shadow-2xl z-50"
+                          style={{
+                            top: `${menuPosition.top}px`,
+                            left: `${menuPosition.left}px`,
+                          }}
+                        >
+                          <button
+                            onClick={() => handleEditSale(sale)}
+                            className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx-600 rounded-t-lg flex items-center gap-3 transition-colors"
+                          >
+                            <PencilEdit02Icon size={16} className="text-silver-400" />
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSale(sale)}
+                            className="w-full text-left px-4 py-2.5 text-sm text-strawberry_red hover:bg-onyx-600 rounded-b-lg flex items-center gap-3 transition-colors"
+                          >
+                            <Delete02Icon size={16} className="text-strawberry_red" />
+                            Eliminar
+                          </button>
+                        </div>
+                      </>,
+                      document.body
+                    )}
+                </div>
               ),
             },
           ]}
@@ -237,6 +332,47 @@ export default function SalesPage() {
           searchPlaceholder="Buscar venta por cliente o ID de dispositivo..."
           onSearch={handleSearch}
           totalLabel={`REGISTROS: ${sales.length} | PÁGINA 1 DE ${Math.ceil(sales.length / 10)}`}
+          expandedContent={(sale: ISale) =>
+            expandedRows.has(sale.id) ? (
+              <tr>
+                <td colSpan={8} className="bg-onyx-600 p-6">
+                  <div className="space-y-4">
+                    <h4 className="text-white font-medium uppercase text-sm">
+                      Cuotas del Plan de Financiamiento
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {Array.from({ length: sale.installments }, (_, i) => {
+                        return (
+                          <div
+                            key={i}
+                            className="border rounded-lg p-4 border-warning bg-warning/5"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-silver-400 text-xs uppercase">
+                                Cuota {i + 1}
+                              </span>
+                              <span className="text-xs font-medium text-warning">
+                                PENDIENTE
+                              </span>
+                            </div>
+                            <p className="text-white font-bold text-lg">
+                              ${Number(sale.monthlyAmount).toFixed(2)}
+                            </p>
+                            <p className="text-silver-400 text-xs mt-1">
+                              Vence:{" "}
+                              {new Date(
+                                Date.now() + (i + 1) * 30 * 24 * 60 * 60 * 1000
+                              ).toLocaleDateString()}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            ) : null
+          }
           actions={
             <>
               <Button
@@ -250,7 +386,7 @@ export default function SalesPage() {
                 className="gap-2 bg-mahogany_red hover:bg-mahogany_red-600 flex-1 sm:flex-none text-sm"
                 onClick={() => setIsModalOpen(true)}
               >
-                <ShoppingCart01Icon size={16} className="text-white" />
+                <span className="text-lg text-white">+</span>
                 <span className="text-white">Nueva Venta</span>
               </Button>
             </>
@@ -259,12 +395,43 @@ export default function SalesPage() {
 
         <SaleModal
           open={isModalOpen}
-          onOpenChange={setIsModalOpen}
+          onOpenChange={(open) => {
+            setIsModalOpen(open);
+            if (!open) setSelectedSale(null);
+          }}
           devices={devices}
           clients={clients}
           financingPlans={financingPlans}
           onSuccess={handleSaleCreated}
+          initialSale={selectedSale}
         />
+
+        <GenericModal
+          open={isDeleteModalOpen}
+          onOpenChange={setIsDeleteModalOpen}
+          title="Eliminar Venta"
+          description="¿Estás seguro de que deseas eliminar esta venta? Esta acción no se puede deshacer."
+          footer={
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setIsDeleteModalOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="bg-strawberry_red hover:bg-strawberry_red/90 text-white"
+                onClick={confirmDelete}
+              >
+                Eliminar
+              </Button>
+            </>
+          }
+        >
+          <p className="text-sm text-silver-400">
+            Se eliminarán todos los datos asociados incluyendo plan de pagos, cuotas y reglas de bloqueo.
+          </p>
+        </GenericModal>
       </div>
     </DashboardLayout>
   );

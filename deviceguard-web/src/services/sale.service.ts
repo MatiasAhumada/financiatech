@@ -13,4 +13,14 @@ export const saleService = {
     const { data } = await clientAxios.get(API_ROUTES.SALES, { params });
     return data;
   },
+
+  async delete(id: string) {
+    const { data } = await clientAxios.delete(`${API_ROUTES.SALES}/${id}`);
+    return data;
+  },
+
+  async update(id: string, dto: CreateSaleDto) {
+    const { data } = await clientAxios.put(`${API_ROUTES.SALES}/${id}`, dto);
+    return data;
+  },
 };

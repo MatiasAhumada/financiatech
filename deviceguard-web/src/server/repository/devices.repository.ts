@@ -13,15 +13,14 @@ export class DevicesRepository {
       where: {
         adminId,
         deletedAt: null,
+        OR: [
+          { status: "ACTIVE" },
+          { status: "SOLD_PENDING" },
+        ],
         ...(search && {
           OR: [
-            { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
-            {
-              serialNumber: {
-                contains: search,
-                mode: Prisma.QueryMode.insensitive,
-              },
-            },
+            { name: { contains: search, mode: "insensitive" } },
+            { serialNumber: { contains: search, mode: "insensitive" } },
           ],
         }),
       },
@@ -29,7 +28,7 @@ export class DevicesRepository {
         admin: true,
         client: true,
       },
-      orderBy: { createdAt: Prisma.SortOrder.desc },
+      orderBy: { createdAt: "desc" },
     });
   }
 

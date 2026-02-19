@@ -1,10 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saleService } from "@/server/services/sale.service";
 import apiErrorHandler, { ApiError } from "@/utils/handlers/apiError.handler";
-import { requireRole } from "@/utils/auth.middleware";
+import { requireRole, verifyAuth } from "@/utils/auth.middleware";
 import { createSaleSchema } from "@/schemas/sale.schema";
 import httpStatus from "http-status";
 import { UserRole } from "@prisma/client";
+
+export async function GET(request: NextRequest) {
+  try {
+    const payload = verifyAuth(request);
+    const search = request.nextUrl.searchParams.get("search") || undefined;
+
+    const sales = await saleService.findByAdminId(payload.adminId!, search);
+
+    return NextResponse.json(sales, { status: httpStatus.OK });
+  } catch (error) {
+    return apiErrorHandler({ error: error as ApiError, request });
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {

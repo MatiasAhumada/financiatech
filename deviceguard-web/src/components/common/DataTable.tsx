@@ -23,6 +23,7 @@ interface DataTableProps<T> {
   actions?: ReactNode;
   totalLabel?: string;
   onRowClick?: (item: T) => void;
+  expandedContent?: (item: T) => ReactNode;
 }
 
 export function DataTable<T>({
@@ -38,6 +39,7 @@ export function DataTable<T>({
   actions,
   totalLabel,
   onRowClick,
+  expandedContent,
 }: DataTableProps<T>) {
   return (
     <div className="space-y-6">
@@ -110,21 +112,24 @@ export function DataTable<T>({
                   </tr>
                 ) : (
                   data.map((item) => (
-                    <tr
-                      key={keyExtractor(item)}
-                      onClick={() => onRowClick?.(item)}
-                      className={`border-b border-carbon_black-700 hover:bg-onyx-600 transition-colors ${
-                        onRowClick ? "cursor-pointer sm:cursor-default" : ""
-                      }`}
-                    >
-                      {columns.map((column) => (
-                        <td key={column.key} className="py-4">
-                          {column.render
-                            ? column.render(item)
-                            : (item as any)[column.key]}
-                        </td>
-                      ))}
-                    </tr>
+                    <>
+                      <tr
+                        key={keyExtractor(item)}
+                        onClick={() => onRowClick?.(item)}
+                        className={`border-b border-carbon_black-700 hover:bg-onyx-600 transition-colors ${
+                          onRowClick ? "cursor-pointer sm:cursor-default" : ""
+                        }`}
+                      >
+                        {columns.map((column) => (
+                          <td key={column.key} className="py-4">
+                            {column.render
+                              ? column.render(item)
+                              : (item as any)[column.key]}
+                          </td>
+                        ))}
+                      </tr>
+                      {expandedContent?.(item)}
+                    </>
                   ))
                 )}
               </tbody>
