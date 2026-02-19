@@ -12,10 +12,12 @@ import {
   clientErrorHandler,
   clientSuccessHandler,
 } from "@/utils/handlers/clientError.handler";
+import { SALES_MESSAGES, SALES_DEFAULTS } from "@/constants/sales.constant";
+import { salesUtils } from "@/utils/sales.util";
 import { ShoppingCart01Icon } from "hugeicons-react";
-import { financingUtils } from "@/utils/financing.util";
 
 import { CreateFinancingPlanModal } from "@/components/sales/CreateFinancingPlanModal";
+import { financingUtils } from "@/utils/financing.util";
 
 interface SaleModalProps {
   open: boolean;
@@ -42,9 +44,13 @@ export function SaleModal({
   const [amount, setAmount] = useState("");
   const [initialPayment, setInitialPayment] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<IFinancingPlan | null>(null);
-  const [firstWarningDay, setFirstWarningDay] = useState("3");
-  const [secondWarningDay, setSecondWarningDay] = useState("5");
-  const [blockDay, setBlockDay] = useState("7");
+  const [firstWarningDay, setFirstWarningDay] = useState(
+    SALES_DEFAULTS.FIRST_WARNING_DAY.toString()
+  );
+  const [secondWarningDay, setSecondWarningDay] = useState(
+    SALES_DEFAULTS.SECOND_WARNING_DAY.toString()
+  );
+  const [blockDay, setBlockDay] = useState(SALES_DEFAULTS.BLOCK_DAY.toString());
   const [loading, setLoading] = useState(false);
   const [isCreatePlanModalOpen, setIsCreatePlanModalOpen] = useState(false);
   const [activationCode, setActivationCode] = useState("");
@@ -59,7 +65,7 @@ export function SaleModal({
       const plan = financingPlans.find(
         (p) => p.installments === initialSale.installments
       );
-      
+
       if (plan) setSelectedPlan(plan);
 
       setStep(1);
@@ -75,9 +81,9 @@ export function SaleModal({
     setAmount("");
     setInitialPayment("");
     setSelectedPlan(null);
-    setFirstWarningDay("3");
-    setSecondWarningDay("5");
-    setBlockDay("7");
+    setFirstWarningDay(SALES_DEFAULTS.FIRST_WARNING_DAY.toString());
+    setSecondWarningDay(SALES_DEFAULTS.SECOND_WARNING_DAY.toString());
+    setBlockDay(SALES_DEFAULTS.BLOCK_DAY.toString());
     setActivationCode("");
     onOpenChange(false);
   };
@@ -107,7 +113,7 @@ export function SaleModal({
 
     try {
       setLoading(true);
-      
+
       if (initialSale) {
         await saleService.update(initialSale.id, {
           deviceId: selectedDevice,
@@ -120,7 +126,7 @@ export function SaleModal({
           secondWarningDay: parseInt(secondWarningDay),
           blockDay: parseInt(blockDay),
         });
-        clientSuccessHandler("Venta actualizada exitosamente");
+        clientSuccessHandler(SALES_MESSAGES.SUCCESS.UPDATED);
         handleClose();
         onSuccess();
       } else {
@@ -136,7 +142,7 @@ export function SaleModal({
           blockDay: parseInt(blockDay),
         });
         setActivationCode(result.activationCode);
-        clientSuccessHandler("Venta registrada exitosamente");
+        clientSuccessHandler(SALES_MESSAGES.SUCCESS.CREATED);
         setStep(3);
       }
     } catch (error) {

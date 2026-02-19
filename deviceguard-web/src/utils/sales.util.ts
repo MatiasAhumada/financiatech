@@ -1,0 +1,34 @@
+export const salesUtils = {
+  getClientInitials(name: string): string {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  },
+
+  formatCurrency(amount: number): string {
+    return `$${amount.toFixed(2)}`;
+  },
+
+  formatDate(date: Date | string): string {
+    return new Date(date).toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  },
+
+  calculateDueDate(monthsFromNow: number): Date {
+    return new Date(Date.now() + monthsFromNow * 30 * 24 * 60 * 60 * 1000);
+  },
+
+  isToday(date: Date | string): boolean {
+    return new Date(date).toDateString() === new Date().toDateString();
+  },
+
+  getTotalLabel(total: number, perPage: number = 10): string {
+    return `REGISTROS: ${total} | PÁGINA 1 DE ${Math.ceil(total / perPage)}`;
+  },
+};
