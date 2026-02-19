@@ -91,10 +91,11 @@ model Admin {
   userId       String @unique
   superAdminId String
 
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  superAdmin SuperAdmin @relation(fields: [superAdminId], references: [id], onDelete: Cascade)
-  devices    Device[]
-  clients    Client[]
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  superAdmin     SuperAdmin      @relation(fields: [superAdminId], references: [id], onDelete: Cascade)
+  devices        Device[]
+  clients        Client[]
+  financingPlans FinancingPlan[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -267,15 +268,35 @@ model Sale {
   monthlyAmount   Decimal  @db.Decimal(10, 2)
   activationCode  String   @unique
   saleDate        DateTime @default(now())
+  financingPlanId String?
 
-  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  device        Device         @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  client        Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  financingPlan FinancingPlan? @relation(fields: [financingPlanId], references: [id])
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   @@map("sales")
+}
+
+model FinancingPlan {
+  id           String  @id @default(cuid())
+  name         String
+  installments Int
+  interestRate Decimal @db.Decimal(5, 2)
+  isActive     Boolean @default(true)
+  adminId      String
+
+  admin Admin  @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  sales Sale[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("financing_plans")
 }
 
 model DeviceSync {
