@@ -4,11 +4,12 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
-import { NativeModules, StyleSheet, Pressable } from 'react-native';
+import { NativeModules } from 'react-native';
 import 'react-native-reanimated';
+import { TamaguiProvider, YStack, XStack, Button, Text, Theme } from 'tamagui';
+import config from '../tamagui.config';
 
 import { useColorScheme } from '@/components/useColorScheme';
-import { Text, View } from '@/components/Themed';
 
 const { DeviceModule } = NativeModules;
 
@@ -75,17 +76,41 @@ export default function RootLayout() {
   }
 
   return (
-    <>
-      <RootLayoutNav enableStrictLock={enableStrictLock} isLocked={isLocked} activateDeviceAdmin={activateDeviceAdmin} />
-      {isLocked && (
-        <View style={styles.lockedOverlay}>
-          <Text style={styles.lockedText}>APP BLOQUEADA - CONTACTE AL ADMINISTRADOR</Text>
-          <Pressable style={styles.unlockButton} onPress={disableStrictLock}>
-            <Text style={styles.unlockText}>UNLOCK</Text>
-          </Pressable>
-        </View>
-      )}
-    </>
+    <TamaguiProvider config={config}>
+      <Theme name={useColorScheme() === 'dark' ? 'dark' : 'light'}>
+        <RootLayoutNav enableStrictLock={enableStrictLock} isLocked={isLocked} activateDeviceAdmin={activateDeviceAdmin} />
+        {isLocked && (
+          <YStack
+            position="absolute"
+            top={0}
+            left={0}
+            right={0}
+            bottom={0}
+            backgroundColor="$black1"
+            justifyContent="center"
+            alignItems="center"
+            zIndex={9999}
+          >
+            <Text
+              color="$red10"
+              fontSize="$8"
+              fontWeight="bold"
+              textAlign="center"
+              marginBottom="$8"
+            >
+              APP BLOQUEADA - CONTACTE AL ADMINISTRADOR
+            </Text>
+            <Button
+              theme="red"
+              size="$5"
+              onPress={disableStrictLock}
+            >
+              UNLOCK
+            </Button>
+          </YStack>
+        )}
+      </Theme>
+    </TamaguiProvider>
   );
 }
 
@@ -94,15 +119,40 @@ function RootLayoutNav({ enableStrictLock, isLocked, activateDeviceAdmin }: { en
 
   if (!isLocked) {
     return (
-      <View style={styles.dashboard}>
-        <Text style={styles.dashboardTitle}>DeviceGuard Dashboard</Text>
-        <Pressable style={styles.adminButton} onPress={activateDeviceAdmin}>
-          <Text style={styles.adminButtonText}>ACTIVATE DEVICE ADMIN</Text>
-        </Pressable>
-        <Pressable style={styles.lockButton} onPress={enableStrictLock}>
-          <Text style={styles.lockButtonText}>TEST LOCK</Text>
-        </Pressable>
-      </View>
+      <YStack
+        flex={1}
+        justifyContent="center"
+        alignItems="center"
+        padding="$6"
+        backgroundColor="$background"
+      >
+        <Text
+          fontSize="$9"
+          fontWeight="bold"
+          marginBottom="$10"
+          color="$color"
+        >
+          DeviceGuard Dashboard
+        </Text>
+        <XStack gap="$4" flexDirection="column" width="80%">
+          <Button
+            theme="orange"
+            size="$6"
+            onPress={activateDeviceAdmin}
+            pressStyle={{ scale: 0.95 }}
+          >
+            ACTIVATE DEVICE ADMIN
+          </Button>
+          <Button
+            theme="blue"
+            size="$6"
+            onPress={enableStrictLock}
+            pressStyle={{ scale: 0.95 }}
+          >
+            TEST LOCK
+          </Button>
+        </XStack>
+      </YStack>
     );
   }
 
@@ -116,68 +166,4 @@ function RootLayoutNav({ enableStrictLock, isLocked, activateDeviceAdmin }: { en
   );
 }
 
-const styles = StyleSheet.create({
-  dashboard: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  dashboardTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 40,
-  },
-  adminButton: {
-    backgroundColor: '#FF6B35',
-    paddingHorizontal: 40,
-    paddingVertical: 15,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  adminButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  lockButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 40,
-    paddingVertical: 15,
-    borderRadius: 8,
-  },
-  lockButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  lockedOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'black',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 9999,
-  },
-  lockedText: {
-    color: 'red',
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 40,
-  },
-  unlockButton: {
-    backgroundColor: 'red',
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  unlockText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});
+

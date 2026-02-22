@@ -38,14 +38,14 @@ yarn-error.*
 
 # generated native folders
 /ios
-# /android  # Commented out to include custom Java files for DeviceGuard
 
-# Exclude Android build files but keep source
-/android/app/build/
-/android/build/
-/android/.gradle/
-/android/app/.cxx/
-/android/gradle/
-/android/gradlew*
-/android/local.properties
-/android/app/debug.keystore
+# Android - Keep source, ignore builds
+android/app/build/
+android/build/
+android/.gradle/
+android/app/.cxx/
+android/gradle/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+android/app/debug.keystore
