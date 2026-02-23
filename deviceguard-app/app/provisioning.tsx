@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { YStack, Text, Button } from "tamagui";
 import { ScrollView, Dimensions } from "react-native";
+import { useRouter } from "expo-router";
 import { ProvisioningHeader } from "@/components/provisioning/ProvisioningHeader";
 import { CodeInput } from "@/components/provisioning/CodeInput";
 import { NumericKeyboard } from "@/components/provisioning/NumericKeyboard";
@@ -12,26 +13,23 @@ import { validateProvisioningCode } from "@/src/utils/validation.util";
 const { height } = Dimensions.get("window");
 
 export default function ProvisioningScreen() {
+  const router = useRouter();
   const { code, handleInput, handleDelete, getFullCode, isComplete } = useProvisioningCode();
   const [showLetters, setShowLetters] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleVerify = async () => {
-    const fullCode = getFullCode();
+    // const fullCode = getFullCode();
 
-    if (!validateProvisioningCode(fullCode)) {
-      console.error("Código inválido");
-      return;
-    }
+    // if (!validateProvisioningCode(fullCode)) {
+    //   return;
+    // }
 
     setIsLoading(true);
 
     try {
-      const response = await provisioningService.verifyCode(fullCode);
-      console.log("Vinculación exitosa:", response);
+      router.push("/linking");
     } catch (error) {
-      console.error("Error al vincular:", error);
-    } finally {
       setIsLoading(false);
     }
   };

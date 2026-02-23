@@ -52,6 +52,7 @@ function RootLayoutNav() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="provisioning" options={{ headerShown: false }} />
+        <Stack.Screen name="linking" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );
