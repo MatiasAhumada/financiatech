@@ -7,8 +7,7 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 import { TamaguiProvider } from "tamagui";
 import config from "../tamagui.config";
-
-import { useColorScheme } from "@/components/useColorScheme";
+import { useColorScheme } from "react-native";
 
 export { ErrorBoundary } from "expo-router";
 
