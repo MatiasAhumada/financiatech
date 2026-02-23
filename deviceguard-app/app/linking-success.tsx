@@ -6,7 +6,7 @@ export default function LinkingSuccessScreen() {
   const router = useRouter();
 
   const handleFinish = () => {
-    router.replace("/provisioning");
+    router.replace("/linking-error");
   };
 
   return (
