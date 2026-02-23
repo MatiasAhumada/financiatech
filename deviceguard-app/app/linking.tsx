@@ -1,6 +1,7 @@
 import { YStack, Text } from "tamagui";
 import { LinkingAnimation } from "@/components/linking/LinkingAnimation";
 import { LinkingStatus } from "@/components/linking/LinkingStatus";
+import { LinkingSteps } from "@/components/linking/LinkingSteps";
 
 export default function LinkingScreen() {
   return (
@@ -12,9 +13,7 @@ export default function LinkingScreen() {
           Estableciendo conexión segura...
         </Text>
         
-        <Text fontSize={12} color="#6B7280" textAlign="center" letterSpacing={2}>
-          PROTOCOLO TLS 1.3
-        </Text>
+        <LinkingSteps />
       </YStack>
 
       <LinkingStatus />
