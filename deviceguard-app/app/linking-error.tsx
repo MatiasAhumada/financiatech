@@ -5,7 +5,7 @@ export default function LinkingErrorScreen() {
   const router = useRouter();
 
   const handleRetry = () => {
-    router.replace("/provisioning");
+    router.replace("/device-blocked");
   };
 
   return (

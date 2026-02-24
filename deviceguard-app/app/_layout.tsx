@@ -64,6 +64,10 @@ function RootLayoutNav() {
           name="linking-error"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="device-blocked"
+          options={{ headerShown: false }}
+        />
       </Stack>
     </ThemeProvider>
   );
