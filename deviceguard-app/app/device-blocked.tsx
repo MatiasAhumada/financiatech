@@ -6,7 +6,7 @@ export default function DeviceBlockedScreen() {
   const router = useRouter();
 
   const handlePayment = () => {
-    console.log("Redirigir a pago");
+    router.push("/payment-methods");
   };
 
   return (

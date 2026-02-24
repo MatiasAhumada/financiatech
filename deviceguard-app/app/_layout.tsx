@@ -68,6 +68,10 @@ function RootLayoutNav() {
           name="device-blocked"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="payment-methods"
+          options={{ headerShown: false }}
+        />
       </Stack>
     </ThemeProvider>
   );
