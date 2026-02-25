@@ -253,10 +253,11 @@ Reemplazar el texto de la card:
 
 ---
 
-### FASE 4 — Web: Enriquecer la respuesta de activación
+### ✅ FASE 4 — Web: Enriquecer la respuesta de activación *(COMPLETADA)*
 
-**Archivo a modificar:**
-- `deviceguard-web/src/server/services/deviceActivation.service.ts`
+**Archivos modificados:**
+- `deviceguard-web/src/server/services/deviceActivation.service.ts` ✅
+
 
 **Cambios:**  
 Incluir el nombre del admin/negocio en la respuesta para que la app pueda mostrarlo en `linking-success.tsx`:
@@ -284,48 +285,67 @@ return {
 
 ---
 
-### FASE 5 — Web: Nuevo endpoint de status por código de activación
+### ✅ FASE 5 — Web: Endpoint RESTful de estado de sincronización por venta *(COMPLETADA)*
 
-**Archivo a crear:**
-- `deviceguard-web/src/app/api/device-syncs/status/route.ts`
+> ⚠️ **Corrección RESTful aplicada**: el plan original proponía `GET /api/device-syncs/status?activationCode=XYZ`, lo cual viola REST por dos razones:
+> 1. `/status` es un sustantivo de acción (RPC-style), no un recurso navegable.
+> 2. Colisiona con la ruta dinámica `device-syncs/[imei]` ya existente en Next.js.
+>
+> La ruta correcta navega la jerarquía de recursos: `Sale` → su sub-recurso `sync`.
 
-Este endpoint es consultado periódicamente por el `ActivationCodeDisplay` de la web para saber si el celular ya se vinculó.
+**Archivos a crear/modificar:**
+- `deviceguard-web/src/app/api/sales/[activationCode]/sync/route.ts` ← nuevo endpoint RESTful
+- `deviceguard-web/src/server/services/deviceActivation.service.ts` ← agregar método `getSyncStatus()`
+
+**Endpoint RESTful:**
+```
+GET /api/sales/{activationCode}/sync
+```
+Semántica: *"Dame el estado de sincronización de la venta identificada por este código"*
+
+- `{ synced: true, deviceName: "..." }` → dispositivo ya vinculado
+- `{ synced: false }` → aún esperando vinculación
+- `404` → el código de activación no existe
 
 ```ts
-// GET /api/device-syncs/status?activationCode=XYZ
+// src/app/api/sales/[activationCode]/sync/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { DeviceStatus } from '@prisma/client';
-import httpStatus from 'http-status';
+import { deviceActivationService } from '@/server/services/deviceActivation.service';
 import apiErrorHandler, { ApiError } from '@/utils/handlers/apiError.handler';
+import httpStatus from 'http-status';
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ activationCode: string }> }
+) {
   try {
-    const activationCode = request.nextUrl.searchParams.get('activationCode');
-
-    if (!activationCode) {
-      throw new ApiError({ status: httpStatus.BAD_REQUEST, message: 'Código requerido' });
-    }
-
-    const sale = await prisma.sale.findUnique({
-      where: { activationCode },
-      include: { device: true },
-    });
-
-    if (!sale) {
-      throw new ApiError({ status: httpStatus.NOT_FOUND, message: 'Código no encontrado' });
-    }
-
-    const synced = sale.device.status === DeviceStatus.SOLD_SYNCED;
-
-    return NextResponse.json({
-      synced,
-      deviceName: sale.device.name,
-      deviceId: sale.device.id,
-    }, { status: httpStatus.OK });
+    const { activationCode } = await params;
+    const result = await deviceActivationService.getSyncStatus(activationCode);
+    return NextResponse.json(result, { status: httpStatus.OK });
   } catch (error) {
     return apiErrorHandler({ error: error as ApiError, request });
   }
+}
+```
+
+**Método `getSyncStatus()` a agregar en `DeviceActivationService`:**
+```ts
+async getSyncStatus(activationCode: string): Promise<{ synced: boolean; deviceName: string }> {
+  const sale = await this.saleRepository.findByActivationCode(activationCode);
+
+  if (!sale) {
+    throw new ApiError({
+      status: httpStatus.NOT_FOUND,
+      message: 'Código de activación no encontrado',
+    });
+  }
+
+  const synced = sale.device.status === DeviceStatus.SOLD_SYNCED;
+
+  return {
+    synced,
+    deviceName: sale.device.name,
+  };
 }
 ```
 
@@ -333,26 +353,42 @@ export async function GET(request: NextRequest) {
 
 ### FASE 6 — Web: Polling + Animación + Success State en `ActivationCodeDisplay`
 
-**Archivo a modificar:**
-- `deviceguard-web/src/components/sales/ActivationCodeDisplay.tsx`
+> ⚠️ **Corrección SOLID aplicada (SRP)**: el plan original metía polling, estado y render todo en `ActivationCodeDisplay`. Un componente de visualización no debe contener lógica de negocio asincrónica. Se separan las responsabilidades en 3 capas.
 
-Este es el **cambio más visible para el usuario web**. El componente debe:
+**Archivos a crear/modificar:**
+- `deviceguard-web/src/hooks/useActivationPolling.ts` ← ✨ nuevo hook (lógica de polling)
+- `deviceguard-web/src/components/sales/ActivationCodeDisplay.tsx` ← ✏️ solo orquesta estado
+- `deviceguard-web/src/components/sales/ActivationSuccessView.tsx` ← ✨ nuevo sub-componente de éxito
 
-1. **Estado `waiting`** — Mostrar animación de pulso/spinner alrededor del código + texto "Esperando vinculación..."
-2. **Hacer polling** cada 3 segundos a `GET /api/device-syncs/status?activationCode=XYZ`
-3. **Estado `success`** — Cuando `synced: true`, mostrar checkmark animado + "¡Dispositivo vinculado!" + nombre del dispositivo
+**Responsabilidades separadas:**
 
-**Lógica de polling:**
-```tsx
+```
+useActivationPolling(activationCode)
+  → encapsula: fetch, intervalo, cleanup, estado 'waiting'|'success'
+       ↓
+ActivationCodeDisplay({ activationCode })
+  → consume el hook, decide qué vista renderizar
+       ↓
+<ActivationWaitingView>   |   <ActivationSuccessView>
+  → solo render, sin lógica
+```
+
+**Hook `useActivationPolling` (Single Responsibility: solo polling):**
+```ts
+// src/hooks/useActivationPolling.ts
 'use client';
+import { useEffect, useRef, useState } from 'react';
 
-import { useEffect, useState, useRef } from 'react';
+export type SyncStatus = 'waiting' | 'success';
 
-type SyncStatus = 'waiting' | 'success';
+export interface ActivationPollResult {
+  status: SyncStatus;
+  deviceName: string;
+}
 
-export function ActivationCodeDisplay({ activationCode }: { activationCode: string }) {
+export function useActivationPolling(activationCode: string): ActivationPollResult {
   const [status, setStatus] = useState<SyncStatus>('waiting');
-  const [deviceName, setDeviceName] = useState<string>('');
+  const [deviceName, setDeviceName] = useState('');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -360,38 +396,54 @@ export function ActivationCodeDisplay({ activationCode }: { activationCode: stri
 
     const poll = async () => {
       try {
-        const res = await fetch(`/api/device-syncs/status?activationCode=${activationCode}`);
+        const res = await fetch(`/api/sales/${activationCode}/sync`);
+        if (!res.ok) return;
         const data = await res.json();
-
         if (data.synced) {
           setDeviceName(data.deviceName);
           setStatus('success');
-          if (intervalRef.current) clearInterval(intervalRef.current);
+          clearInterval(intervalRef.current!);
         }
-      } catch {
-        // Silencioso, sigue reintentando
-      }
+      } catch { /* silencioso — red caída, reintentará en el próximo tick */ }
     };
 
     intervalRef.current = setInterval(poll, 3000);
-    poll(); // Primera llamada inmediata
+    poll();
 
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    return () => clearInterval(intervalRef.current!);
   }, [activationCode]);
+
+  return { status, deviceName };
+}
+```
+
+**`ActivationCodeDisplay` (Single Responsibility: solo orquestación de vistas):**
+```tsx
+// src/components/sales/ActivationCodeDisplay.tsx
+'use client';
+import { useActivationPolling } from '@/hooks/useActivationPolling';
+import { ActivationSuccessView } from './ActivationSuccessView';
+// ... imports existentes
+
+export function ActivationCodeDisplay({ activationCode }: { activationCode: string }) {
+  const { status, deviceName } = useActivationPolling(activationCode);
 
   if (status === 'success') {
     return <ActivationSuccessView deviceName={deviceName} />;
   }
 
   return <ActivationWaitingView activationCode={activationCode} />;
+  // ActivationWaitingView: contenido actual del componente + animación de espera
 }
 ```
 
-**Vista `waiting`** — El código debe tener un borde animado con pulse/glow en rojo carmesí, y un spinner sutil indicando que está esperando.
+**Vista `waiting`** — El código debe tener un borde animado con `animate-pulse` / `@keyframes` glow en rojo carmesí, spinner sutil y el texto "Esperando vinculación del dispositivo...".
 
-**Vista `success`** — Checkmark grande con animación de entrada, texto "¡Dispositivo vinculado exitosamente!" y el nombre del dispositivo.
+**`ActivationSuccessView` (Single Responsibility: solo render de éxito):**
+- Checkmark grande con animación CSS de entrada (`scale` + `opacity`)
+- Texto: "¡Dispositivo vinculado exitosamente!"
+- Nombre del dispositivo vinculado
+- Indicador visual de que el modal ya puede cerrarse
 
 ---
 
@@ -399,39 +451,38 @@ export function ActivationCodeDisplay({ activationCode }: { activationCode: stri
 
 ### `deviceguard-web`
 
-| Archivo | Acción | Fase |
-|---|---|---|
-| `src/app/api/device-syncs/status/route.ts` | ✨ Crear | 5 |
-| `src/server/services/deviceActivation.service.ts` | ✏️ Modificar | 4 |
-| `src/components/sales/ActivationCodeDisplay.tsx` | ✏️ Modificar | 6 |
+| Archivo | Acción | Fase | Estado |
+|---|---|---|---|
+| `src/server/services/deviceActivation.service.ts` | ✏️ Modificar | 4 | ✅ |
+| `src/app/api/sales/[activationCode]/sync/route.ts` | ✨ Crear | 5 | ✅ |
+| `src/server/services/deviceActivation.service.ts` | ✏️ Agregar método `getSyncStatus()` | 5 | ✅ |
+| `src/hooks/useActivationPolling.ts` | ✨ Crear | 6 | ⏳ |
+| `src/components/sales/ActivationCodeDisplay.tsx` | ✏️ Refactorizar | 6 | ⏳ |
+| `src/components/sales/ActivationSuccessView.tsx` | ✨ Crear | 6 | ⏳ |
 
 ### `deviceguard-app`
 
-| Archivo | Acción | Fase |
-|---|---|---|
-| `src/hooks/useDeviceImei.ts` | ✨ Crear | 1 |
-| `src/services/provisioning.service.ts` | ✏️ Modificar | 2 |
-| `src/constants/api.constant.ts` | ✏️ Modificar | 2 |
-| `app/provisioning.tsx` | ✏️ Modificar | 2 |
-| `app/linking.tsx` | ✏️ Modificar | 3 |
-| `app/linking-success.tsx` | ✏️ Modificar | 3 |
+| Archivo | Acción | Fase | Estado |
+|---|---|---|---|
+| `src/hooks/useDeviceImei.ts` | ✨ Crear | 1 | ✅ |
+| `src/services/provisioning.service.ts` | ✏️ Modificar | 2 | ✅ |
+| `src/constants/api.constant.ts` | ✏️ Modificar | 2 | ✅ |
+| `app/provisioning.tsx` | ✏️ Modificar | 2 | ✅ |
+| `app/linking-error.tsx` | ✏️ Fix mensaje dinámico | 2 | ✅ |
+| `app/linking.tsx` | ✏️ Modificar | 3 | ✅ |
+| `app/linking-success.tsx` | ✏️ Modificar | 3 | ✅ |
 
 ---
 
-## ⚡ Orden de Ejecución Recomendado
+## ⚡ Estado de Ejecución
 
 ```
-FASE 5 → Crear GET /api/device-syncs/status  (base del polling de la web)
-   ↓
-FASE 4 → Enriquecer respuesta POST /api/device-syncs  (adminName + deviceName)
-   ↓
-FASE 6 → Polling + animación + success state en ActivationCodeDisplay
-   ↓
-FASE 1 → Hook useDeviceImei en la app
-   ↓
-FASE 2 → Conectar provisioning.tsx con la API real
-   ↓
-FASE 3 → linking-success.tsx con datos reales + fix del bug de router
+✅ FASE 1 → Hook useDeviceImei (app)
+✅ FASE 2 → provisioning.tsx conectado con API real (app)
+✅ FASE 3 → linking.tsx + linking-success.tsx con datos reales (app)
+✅ FASE 4 → Respuesta de activación enriquecida con adminName (web)
+✅ FASE 5 → GET /api/sales/[activationCode]/sync + getSyncStatus() (web)
+⏳ FASE 6 → useActivationPolling + ActivationCodeDisplay + ActivationSuccessView (web)
 ```
 
 ---
@@ -452,7 +503,9 @@ FASE 3 → linking-success.tsx con datos reales + fix del bug de router
 
 ## 📝 Notas Adicionales
 
-- **Permisos Android**: `READ_PHONE_STATE` es necesario para acceder al IMEI. En Android 10+ se requiere `READ_PRIVILEGED_PHONE_STATE` que solo apps del sistema pueden tener — en ese caso, usar `getUniqueId()` como identificador principal.
-- **Seguridad**: El endpoint `GET /api/device-syncs/status` no requiere auth ya que solo retorna `synced: boolean`, pero se puede agregar validación básica del formato del código si se desea.
-- **Polling vs WebSocket/SSE**: Se eligió polling simple por simplicidad. Si se desea tiempo real más estricto, se puede migrar a Server-Sent Events (SSE) en una iteración futura.
-- **`linking.tsx`**: Su rol cambia — deja de ser un stub con timeout y pasa a ser una pantalla de transición visual de ~3s mientras la respuesta de éxito ya fue confirmada por el servidor.
+- **Permisos Android**: `READ_PHONE_STATE` es necesario para acceder al IMEI real. En Android 10+ se requiere `READ_PRIVILEGED_PHONE_STATE` (solo apps del sistema). Por eso se usa `androidId` via `expo-application` — no requiere permisos y es suficientemente único.
+- **Seguridad del endpoint de polling**: `GET /api/sales/[activationCode]/sync` no requiere auth (el `activationCode` ya actúa como token de acceso temporal). Si se desea, se puede agregar validación del formato (`/^[A-Z0-9]{6}$/`) antes de consultar la BD.
+- **REST**: La ruta `GET /api/sales/[activationCode]/sync` sigue la jerarquía `Sale → DeviceSync`. Evita colisión con `device-syncs/[imei]` y es semánticamente correcta.
+- **SOLID (SRP)**: El hook `useActivationPolling` aísla el efecto asincrónico del componente visual. `ActivationCodeDisplay` solo decide qué renderizar. `ActivationSuccessView` solo renderiza el estado de éxito.
+- **Polling vs WebSocket/SSE**: Se eligió polling cada 3s por simplicidad y compatibilidad total con Next.js App Router. Si se desea menor latencia, se puede migrar a SSE sin cambiar los contratos de la API.
+- **`linking.tsx`** (app): Su rol es ahora solo una pantalla de transición visual de ~3s. La vinculación real ya fue confirmada por el servidor antes de llegar a esta pantalla.
