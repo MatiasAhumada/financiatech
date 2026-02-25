@@ -198,11 +198,12 @@ const handleVerify = async () => {
 
 ---
 
-### FASE 3 — App: `linking-success.tsx` con datos reales y fix del bug
+### ✅ FASE 3 — App: `linking-success.tsx` con datos reales y fix del bug *(COMPLETADA)*
 
-**Archivos a modificar:**
-- `deviceguard-app/app/linking.tsx`
-- `deviceguard-app/app/linking-success.tsx`
+**Archivos modificados:**
+- `deviceguard-app/app/linking.tsx` ✅
+- `deviceguard-app/app/linking-success.tsx` ✅
+
 
 **Cambios en `linking.tsx`:**  
 Remover el timeout hardcodeado de 10s y pasar los params recibidos hacia `linking-success`:

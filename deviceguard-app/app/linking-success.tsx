@@ -1,18 +1,35 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { YStack, Text, Button } from "tamagui";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 export default function LinkingSuccessScreen() {
-  const router = useRouter();
+  // Recibe los datos reales del dispositivo vinculado
+  const { deviceName, deviceId, adminName } = useLocalSearchParams<{
+    deviceName: string;
+    deviceId: string;
+    adminName: string;
+  }>();
 
+  // Una vez vinculado el dispositivo, no hay ninguna pantalla a la que navegar:
+  // la app permanece en esta vista como estado final de "equipo gestionado".
+  // El botón no hace nada — es intencional para que el usuario simplemente cierre
+  // la pantalla de configuración y comience a usar el dispositivo.
   const handleFinish = () => {
-    router.replace("/linking-error");
+    // No navegar. Esta pantalla es el destino final del proceso de vinculación.
+    // En futuras versiones aquí se puede navegar a un dashboard de estado del dispositivo.
   };
 
   return (
-    <YStack flex={1} backgroundColor="#000000" paddingHorizontal="$4" paddingTop="$10" justifyContent="space-between" alignItems="center">
+    <YStack
+      flex={1}
+      backgroundColor="#000000"
+      paddingHorizontal="$4"
+      paddingTop="$10"
+      justifyContent="space-between"
+      alignItems="center"
+    >
       <YStack alignItems="center" gap="$9" marginTop="$6" flex={1}>
-        {/* Icono hexagonal tipo badge (carmesí con borde más oscuro) */}
+        {/* Badge de éxito */}
         <YStack
           width={100}
           height={100}
@@ -23,7 +40,14 @@ export default function LinkingSuccessScreen() {
           justifyContent="center"
           alignItems="center"
         >
-          <YStack width={72} height={72} borderRadius={8} backgroundColor="#B91C1C" justifyContent="center" alignItems="center">
+          <YStack
+            width={72}
+            height={72}
+            borderRadius={8}
+            backgroundColor="#B91C1C"
+            justifyContent="center"
+            alignItems="center"
+          >
             <FontAwesome name="check" size={36} color="white" />
           </YStack>
         </YStack>
@@ -32,7 +56,13 @@ export default function LinkingSuccessScreen() {
           <Text fontSize={26} fontWeight="800" color="white" textAlign="center">
             ¡Dispositivo Vinculado!
           </Text>
-          <Text fontSize={14} color="#9CA3AF" textAlign="center" maxWidth={320} lineHeight={20}>
+          <Text
+            fontSize={14}
+            color="#9CA3AF"
+            textAlign="center"
+            maxWidth={320}
+            lineHeight={20}
+          >
             El dispositivo ahora está bajo la protección de{" "}
             <Text fontWeight="700" color="white">
               DeviceGuard
@@ -41,7 +71,7 @@ export default function LinkingSuccessScreen() {
           </Text>
         </YStack>
 
-        {/* Card de información */}
+        {/* Card con datos reales del dispositivo */}
         <YStack
           width="100%"
           alignSelf="stretch"
@@ -57,23 +87,41 @@ export default function LinkingSuccessScreen() {
               ORGANIZACIÓN
             </Text>
             <Text fontSize={18} color="white" fontWeight="700">
-              Corporativo Global S.A.
+              {adminName || "—"}
             </Text>
           </YStack>
 
-          <YStack gap="$1.5" paddingTop="$3" borderTopWidth={1} borderTopColor="#1E293B">
+          <YStack
+            gap="$1.5"
+            paddingTop="$3"
+            borderTopWidth={1}
+            borderTopColor="#1E293B"
+          >
             <Text fontSize={12} color="#6B7280" letterSpacing={0.8}>
-              ID DEL DISPOSITIVO
+              DISPOSITIVO
             </Text>
             <Text fontSize={18} color="white" fontWeight="700">
-              DG-7724X-PRO
+              {deviceName || "—"}
             </Text>
           </YStack>
         </YStack>
       </YStack>
 
-      <YStack width="100%" alignSelf="stretch" alignItems="center" gap="$4" paddingBottom="$6">
-        <Button backgroundColor="#B91C1C" borderRadius={12} height={56} width="100%" onPress={handleFinish} pressStyle={{ opacity: 0.85 }}>
+      <YStack
+        width="100%"
+        alignSelf="stretch"
+        alignItems="center"
+        gap="$4"
+        paddingBottom="$6"
+      >
+        <Button
+          backgroundColor="#B91C1C"
+          borderRadius={12}
+          height={56}
+          width="100%"
+          onPress={handleFinish}
+          pressStyle={{ opacity: 0.85 }}
+        >
           <Text color="white" fontSize={17} fontWeight="800" textAlign="center">
             Finalizar Configuración
           </Text>
