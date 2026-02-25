@@ -13,10 +13,8 @@ export class DevicesRepository {
       where: {
         adminId,
         deletedAt: null,
-        OR: [
-          { status: "ACTIVE" },
-          { status: "SOLD_PENDING" },
-        ],
+        // Sin filtro de status: se muestran todos los estados
+        // (ACTIVE, SOLD_PENDING, SOLD_SYNCED, BLOCKED, INACTIVE, MAINTENANCE)
         ...(search && {
           OR: [
             { name: { contains: search, mode: "insensitive" } },
@@ -31,6 +29,7 @@ export class DevicesRepository {
       orderBy: { createdAt: "desc" },
     });
   }
+
 
   async findById(id: string) {
     return prisma.device.findUnique({
