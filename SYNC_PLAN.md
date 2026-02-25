@@ -351,9 +351,12 @@ async getSyncStatus(activationCode: string): Promise<{ synced: boolean; deviceNa
 
 ---
 
-### FASE 6 — Web: Polling + Animación + Success State en `ActivationCodeDisplay`
+### ✅ FASE 6 — Web: Polling + Animación + Success State en `ActivationCodeDisplay` *(COMPLETADA)*
 
-> ⚠️ **Corrección SOLID aplicada (SRP)**: el plan original metía polling, estado y render todo en `ActivationCodeDisplay`. Un componente de visualización no debe contener lógica de negocio asincrónica. Se separan las responsabilidades en 3 capas.
+**Archivos creados/modificados:**
+- `deviceguard-web/src/hooks/useActivationPolling.ts` ✅
+- `deviceguard-web/src/components/sales/ActivationCodeDisplay.tsx` ✅
+- `deviceguard-web/src/components/sales/ActivationSuccessView.tsx` ✅: el plan original metía polling, estado y render todo en `ActivationCodeDisplay`. Un componente de visualización no debe contener lógica de negocio asincrónica. Se separan las responsabilidades en 3 capas.
 
 **Archivos a crear/modificar:**
 - `deviceguard-web/src/hooks/useActivationPolling.ts` ← ✨ nuevo hook (lógica de polling)
@@ -456,9 +459,9 @@ export function ActivationCodeDisplay({ activationCode }: { activationCode: stri
 | `src/server/services/deviceActivation.service.ts` | ✏️ Modificar | 4 | ✅ |
 | `src/app/api/sales/[activationCode]/sync/route.ts` | ✨ Crear | 5 | ✅ |
 | `src/server/services/deviceActivation.service.ts` | ✏️ Agregar método `getSyncStatus()` | 5 | ✅ |
-| `src/hooks/useActivationPolling.ts` | ✨ Crear | 6 | ⏳ |
-| `src/components/sales/ActivationCodeDisplay.tsx` | ✏️ Refactorizar | 6 | ⏳ |
-| `src/components/sales/ActivationSuccessView.tsx` | ✨ Crear | 6 | ⏳ |
+| `src/hooks/useActivationPolling.ts` | ✨ Crear | 6 | ✅ |
+| `src/components/sales/ActivationCodeDisplay.tsx` | ✏️ Refactorizar | 6 | ✅ |
+| `src/components/sales/ActivationSuccessView.tsx` | ✨ Crear | 6 | ✅ |
 
 ### `deviceguard-app`
 
@@ -482,7 +485,7 @@ export function ActivationCodeDisplay({ activationCode }: { activationCode: stri
 ✅ FASE 3 → linking.tsx + linking-success.tsx con datos reales (app)
 ✅ FASE 4 → Respuesta de activación enriquecida con adminName (web)
 ✅ FASE 5 → GET /api/sales/[activationCode]/sync + getSyncStatus() (web)
-⏳ FASE 6 → useActivationPolling + ActivationCodeDisplay + ActivationSuccessView (web)
+✅ FASE 6 → useActivationPolling + ActivationCodeDisplay + ActivationSuccessView (web)
 ```
 
 ---

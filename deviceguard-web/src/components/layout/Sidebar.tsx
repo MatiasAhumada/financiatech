@@ -23,7 +23,7 @@ import {
   SmartPhone02Icon,
   ShoppingCart01Icon,
 } from "hugeicons-react";
-import { Smartphone } from "lucide-react";
+
 
 const ICONS = {
   LayoutDashboard: DashboardSpeed01Icon,

@@ -28,7 +28,8 @@ export default function LinkingScreen() {
           adminName: params.adminName,
         },
       });
-    }, 3000);
+    }, 6000);
+
 
     return () => {
       clearTimeout(timeoutId);

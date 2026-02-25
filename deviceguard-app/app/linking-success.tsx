@@ -1,39 +1,32 @@
 import { useLocalSearchParams } from "expo-router";
-import { YStack, Text, Button } from "tamagui";
+import { YStack, Text, XStack } from "tamagui";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Dimensions } from "react-native";
+
+const { height } = Dimensions.get("window");
 
 export default function LinkingSuccessScreen() {
-  // Recibe los datos reales del dispositivo vinculado
-  const { deviceName, deviceId, adminName } = useLocalSearchParams<{
+  const { deviceName, adminName } = useLocalSearchParams<{
     deviceName: string;
     deviceId: string;
     adminName: string;
   }>();
 
-  // Una vez vinculado el dispositivo, no hay ninguna pantalla a la que navegar:
-  // la app permanece en esta vista como estado final de "equipo gestionado".
-  // El botón no hace nada — es intencional para que el usuario simplemente cierre
-  // la pantalla de configuración y comience a usar el dispositivo.
-  const handleFinish = () => {
-    // No navegar. Esta pantalla es el destino final del proceso de vinculación.
-    // En futuras versiones aquí se puede navegar a un dashboard de estado del dispositivo.
-  };
-
   return (
     <YStack
       flex={1}
       backgroundColor="#000000"
-      paddingHorizontal="$4"
-      paddingTop="$10"
-      justifyContent="space-between"
+      paddingHorizontal="$5"
+      justifyContent="center"
       alignItems="center"
+      gap="$8"
     >
-      <YStack alignItems="center" gap="$9" marginTop="$6" flex={1}>
-        {/* Badge de éxito */}
+      {/* Badge de éxito */}
+      <YStack alignItems="center" gap="$4">
         <YStack
-          width={100}
-          height={100}
-          borderRadius={12}
+          width={110}
+          height={110}
+          borderRadius={14}
           backgroundColor="#450A0A"
           borderWidth={2}
           borderColor="#7F1D1D"
@@ -41,96 +34,130 @@ export default function LinkingSuccessScreen() {
           alignItems="center"
         >
           <YStack
-            width={72}
-            height={72}
-            borderRadius={8}
+            width={80}
+            height={80}
+            borderRadius={10}
             backgroundColor="#B91C1C"
             justifyContent="center"
             alignItems="center"
           >
-            <FontAwesome name="check" size={36} color="white" />
+            <FontAwesome name="check" size={40} color="white" />
           </YStack>
         </YStack>
 
-        <YStack gap="$2" alignItems="center" paddingHorizontal="$3">
-          <Text fontSize={26} fontWeight="800" color="white" textAlign="center">
+        <YStack gap="$1" alignItems="center" paddingHorizontal="$3">
+          <Text fontSize={28} fontWeight="800" color="white" textAlign="center">
             ¡Dispositivo Vinculado!
           </Text>
           <Text
             fontSize={14}
             color="#9CA3AF"
             textAlign="center"
-            maxWidth={320}
+            maxWidth={300}
             lineHeight={20}
           >
-            El dispositivo ahora está bajo la protección de{" "}
+            Bajo la protección de{" "}
             <Text fontWeight="700" color="white">
               DeviceGuard
             </Text>
-            . Se han activado los permisos de administrador correctamente.
           </Text>
         </YStack>
+      </YStack>
 
-        {/* Card con datos reales del dispositivo */}
-        <YStack
-          width="100%"
-          alignSelf="stretch"
-          borderRadius={22}
-          backgroundColor="#0F172A"
-          paddingVertical="$5"
-          paddingHorizontal="$8"
-          marginStart="$7"
-          gap="$4"
-        >
-          <YStack gap="$1.5">
-            <Text fontSize={12} color="#6B7280" letterSpacing={0.8}>
-              ORGANIZACIÓN
-            </Text>
-            <Text fontSize={18} color="white" fontWeight="700">
+      {/* Card principal — grande, centrada, imponente */}
+      <YStack
+        width="100%"
+        borderRadius={28}
+        backgroundColor="#0F172A"
+        borderWidth={1}
+        borderColor="#1E3A5F"
+        overflow="hidden"
+      >
+        {/* Franja superior carmesí */}
+        <YStack height={5} backgroundColor="#B91C1C" />
+
+        <YStack paddingVertical="$7" paddingHorizontal="$7" gap="$6">
+          {/* ORGANIZACIÓN */}
+          <YStack gap="$2">
+            <XStack alignItems="center" gap="$2">
+              <YStack
+                width={3}
+                height={14}
+                borderRadius={2}
+                backgroundColor="#B91C1C"
+              />
+              <Text
+                fontSize={11}
+                color="#6B7280"
+                letterSpacing={1.5}
+                fontWeight="600"
+              >
+                ORGANIZACIÓN
+              </Text>
+            </XStack>
+            <Text
+              fontSize={26}
+              color="white"
+              fontWeight="800"
+              letterSpacing={-0.3}
+            >
               {adminName || "—"}
             </Text>
           </YStack>
 
-          <YStack
-            gap="$1.5"
-            paddingTop="$3"
-            borderTopWidth={1}
-            borderTopColor="#1E293B"
-          >
-            <Text fontSize={12} color="#6B7280" letterSpacing={0.8}>
-              DISPOSITIVO
-            </Text>
-            <Text fontSize={18} color="white" fontWeight="700">
+          {/* Divisor */}
+          <YStack height={1} backgroundColor="#1E293B" />
+
+          {/* DISPOSITIVO */}
+          <YStack gap="$2">
+            <XStack alignItems="center" gap="$2">
+              <YStack
+                width={3}
+                height={14}
+                borderRadius={2}
+                backgroundColor="#B91C1C"
+              />
+              <Text
+                fontSize={11}
+                color="#6B7280"
+                letterSpacing={1.5}
+                fontWeight="600"
+              >
+                DISPOSITIVO
+              </Text>
+            </XStack>
+            <Text
+              fontSize={26}
+              color="white"
+              fontWeight="800"
+              letterSpacing={-0.3}
+            >
               {deviceName || "—"}
             </Text>
           </YStack>
+
+          {/* Divisor */}
+          <YStack height={1} backgroundColor="#1E293B" />
+
+          {/* Estado */}
+          <XStack alignItems="center" gap="$3">
+            <YStack
+              width={10}
+              height={10}
+              borderRadius={5}
+              backgroundColor="#22C55E"
+            />
+            <Text fontSize={13} color="#22C55E" fontWeight="600">
+              Monitoreo activo
+            </Text>
+          </XStack>
         </YStack>
       </YStack>
 
-      <YStack
-        width="100%"
-        alignSelf="stretch"
-        alignItems="center"
-        gap="$4"
-        paddingBottom="$6"
-      >
-        <Button
-          backgroundColor="#B91C1C"
-          borderRadius={12}
-          height={56}
-          width="100%"
-          onPress={handleFinish}
-          pressStyle={{ opacity: 0.85 }}
-        >
-          <Text color="white" fontSize={17} fontWeight="800" textAlign="center">
-            Finalizar Configuración
-          </Text>
-        </Button>
-
-        <Text fontSize={10} color="#6B7280" letterSpacing={0.5}>
-          DEVICEGUARD SECURITY PROTOCOL V4.6
-        </Text>
-      </YStack>
+      {/* Footer */}
+      <Text fontSize={10} color="#374151" letterSpacing={1} textAlign="center">
+        DEVICEGUARD SECURITY PROTOCOL V4.6
+      </Text>
     </YStack>
   );
 }

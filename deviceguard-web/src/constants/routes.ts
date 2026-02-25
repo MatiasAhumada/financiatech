@@ -28,4 +28,9 @@ export const API_ROUTES = {
   REPORTS: "/api/reports",
   FINANCING_PLANS: "/api/financing-plans",
   SALES: "/api/sales",
+  DEVICE_SYNCS: {
+    ACTIVATE: "/api/device-syncs",
+    SYNC_STATUS: (activationCode: string) =>
+      `/api/sales/${activationCode}/sync`,
+  },
 } as const;

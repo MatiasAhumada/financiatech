@@ -14,7 +14,8 @@ const STEPS = [
   "Finalizando vinculación",
 ];
 
-const STEP_INTERVAL_MS = 1000;
+const STEP_INTERVAL_MS = 500;
+
 
 export function LinkingSteps() {
   const [currentStep, setCurrentStep] = useState(0);

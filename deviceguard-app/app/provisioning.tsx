@@ -54,6 +54,11 @@ export default function ProvisioningScreen() {
         },
       });
     } catch (error: any) {
+      // Log completo en desarrollo para diagnóstico
+      if (__DEV__) {
+        console.error("[provisioning] syncDevice error:", error?.message, error?.response?.data);
+      }
+
       const serverMessage =
         error?.response?.data?.message ||
         "No se pudo completar la vinculación. Verifica el código e inténtalo de nuevo.";
@@ -65,6 +70,7 @@ export default function ProvisioningScreen() {
     } finally {
       setIsLoading(false);
     }
+
   };
 
   return (

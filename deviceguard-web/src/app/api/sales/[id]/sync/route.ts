@@ -21,10 +21,13 @@ import httpStatus from "http-status";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ activationCode: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { activationCode } = await params;
+    // El segmento dinámico se llama [id] por compatibilidad con Next.js
+    // (no puede coexistir con otro slug en el mismo nivel).
+    // El valor pasado desde el cliente es el activationCode.
+    const { id: activationCode } = await params;
 
     const result = await deviceActivationService.getSyncStatus(activationCode);
 
