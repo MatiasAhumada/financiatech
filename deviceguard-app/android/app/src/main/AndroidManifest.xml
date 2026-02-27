@@ -7,6 +7,12 @@
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
   <uses-permission android:name="android.permission.BIND_DEVICE_ADMIN"/>
   <uses-permission android:name="android.permission.WAKE_LOCK"/>
+  <!-- Permisos adicionales para Device Owner -->
+  <uses-permission android:name="android.permission.MANAGE_DEVICE_ADMINS"/>
+  <uses-permission android:name="android.permission.CHANGE_CONFIGURATION"/>
+  <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
+  <uses-permission android:name="android.permission.REORDER_TASKS"/>
+  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
@@ -27,6 +33,9 @@
         <meta-data
             android:name="android.app.device_admin"
             android:resource="@xml/device_admin_rules" />
+        <meta-data
+            android:name="android.app.device_owner"
+            android:resource="@xml/device_owner_policy" />
         <intent-filter>
             <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
             <action android:name="android.intent.action.BOOT_COMPLETED" />

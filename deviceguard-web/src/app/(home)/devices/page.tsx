@@ -50,6 +50,8 @@ export default function DevicesPage() {
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deviceToDelete, setDeviceToDelete] = useState<IDevice | null>(null);
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [deviceToBlock, setDeviceToBlock] = useState<IDevice | null>(null);
 
   useEffect(() => {
     loadDevices();
@@ -60,10 +62,10 @@ export default function DevicesPage() {
   }, [debouncedSearch]);
 
   useEffect(() => {
-    if (isModalOpen || isDeleteModalOpen) {
+    if (isModalOpen || isDeleteModalOpen || isBlockModalOpen) {
       setOpenMenuId(null);
     }
-  }, [isModalOpen, isDeleteModalOpen]);
+  }, [isModalOpen, isDeleteModalOpen, isBlockModalOpen]);
 
   const loadDevices = async (search?: string) => {
     try {
@@ -123,6 +125,36 @@ export default function DevicesPage() {
     setDeviceToDelete(device);
     setOpenMenuId(null);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleToggleBlock = (device: IDevice) => {
+    setDeviceToBlock(device);
+    setOpenMenuId(null);
+    setIsBlockModalOpen(true);
+  };
+
+  const confirmToggleBlock = async () => {
+    if (!deviceToBlock) return;
+
+    try {
+      const willBlock = deviceToBlock.status !== DeviceStatus.BLOCKED;
+      const newStatus = willBlock ? DeviceStatus.BLOCKED : DeviceStatus.ACTIVE;
+      await deviceService.update(deviceToBlock.id, {
+        name: deviceToBlock.name,
+        type: deviceToBlock.type,
+        model: deviceToBlock.model || "",
+        serialNumber: deviceToBlock.serialNumber || "",
+        status: newStatus,
+      });
+      clientSuccessHandler(
+        `Dispositivo ${willBlock ? "bloqueado" : "desbloqueado"} exitosamente`
+      );
+      await loadDevices();
+      setIsBlockModalOpen(false);
+      setDeviceToBlock(null);
+    } catch (error) {
+      clientErrorHandler(error);
+    }
   };
 
   const confirmDelete = async () => {
@@ -342,6 +374,16 @@ export default function DevicesPage() {
                             Editar
                           </button>
                           <button
+                            onClick={() => handleToggleBlock(device)}
+                            className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx-600 flex items-center gap-3 transition-colors"
+                          >
+                            {device.status === DeviceStatus.BLOCKED ? (
+                              <span>Desbloquear</span>
+                            ) : (
+                              <span>Bloquear</span>
+                            )}
+                          </button>
+                          <button
                             onClick={() => handleDeleteDevice(device)}
                             className="w-full text-left px-4 py-2.5 text-sm text-strawberry_red hover:bg-onyx-600 rounded-b-lg flex items-center gap-3 transition-colors"
                           >
@@ -546,6 +588,39 @@ export default function DevicesPage() {
         >
           <p className="text-sm text-silver-400">
             Se eliminarán todos los datos asociados al dispositivo.
+          </p>
+        </GenericModal>
+
+        <GenericModal
+          open={isBlockModalOpen}
+          onOpenChange={setIsBlockModalOpen}
+          title={deviceToBlock?.status === DeviceStatus.BLOCKED ? "Desbloquear Dispositivo" : "Bloquear Dispositivo"}
+          description={
+            deviceToBlock?.status === DeviceStatus.BLOCKED
+              ? `¿Desbloquear ${deviceToBlock?.name}?`
+              : `¿Estás seguro de que deseas bloquear ${deviceToBlock?.name} para pruebas?`
+          }
+          footer={
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setIsBlockModalOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className={deviceToBlock?.status === DeviceStatus.BLOCKED ? "bg-green-600 hover:bg-green-700 text-white" : "bg-strawberry_red hover:bg-strawberry_red/90 text-white"}
+                onClick={confirmToggleBlock}
+              >
+                {deviceToBlock?.status === DeviceStatus.BLOCKED ? "Desbloquear" : "Bloquear"}
+              </Button>
+            </>
+          }
+        >
+          <p className="text-sm text-silver-400">
+            {deviceToBlock?.status === DeviceStatus.BLOCKED
+              ? "El dispositivo volverá a estar disponible para el usuario."
+              : "El dispositivo no podrá ser utilizado hasta que se desbloquee."}
           </p>
         </GenericModal>
       </div>

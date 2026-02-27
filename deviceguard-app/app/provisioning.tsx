@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { YStack, Text, Button } from "tamagui";
 import { ScrollView, Dimensions } from "react-native";
 import { useRouter } from "expo-router";
@@ -20,9 +21,65 @@ export default function ProvisioningScreen() {
   const [showLetters, setShowLetters] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [checkingSync, setCheckingSync] = useState(true);
+
+  // if the device is already synced on the server and marked as blocked we
+  // immediately redirect to the block screen so the user never gets to the
+  // provisioning flow again. we need to run this both when the screen gains
+  // focus and also as soon as the deviceId becomes available (first render).
+  const performStatusCheck = async () => {
+    if (!isDeviceReady || !deviceId) {
+      setCheckingSync(false);
+      return;
+    }
+
+    try {
+      setCheckingSync(true);
+      const status = await provisioningService.checkStatus(deviceId);
+      if (status.blocked) {
+        router.replace({ pathname: "/device-blocked" });
+        return;
+      }
+      if (status.deviceName && status.adminName) {
+        router.replace({
+          pathname: "/linking-success",
+          params: {
+            deviceName: status.deviceName,
+            deviceId,
+            adminName: status.adminName,
+          },
+        });
+        return;
+      }
+    } catch (err: any) {
+      if (err?.response?.status !== 404) {
+        console.warn("status check failed", err);
+      }
+    } finally {
+      setCheckingSync(false);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      performStatusCheck();
+    }, [isDeviceReady, deviceId, router])
+  );
+
+  useEffect(() => {
+    // also check once when deviceId becomes ready (initial bootstrap)
+    if (isDeviceReady && deviceId) {
+      performStatusCheck();
+    }
+  }, [isDeviceReady, deviceId]);
 
   // El botón está habilitado solo cuando el código está completo Y el deviceId ya fue resuelto
   const canVerify = isComplete() && isDeviceReady && !isLoading;
+
+  // mientras comprobamos sync, no renderizamos nada (evita flash)
+  if (isDeviceReady && checkingSync) {
+    return null;
+  }
 
   const handleVerify = async () => {
     const fullCode = getFullCode();

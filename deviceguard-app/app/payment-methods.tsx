@@ -1,12 +1,28 @@
 import { useRouter } from "expo-router";
 import { YStack, Text, Button } from "tamagui";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useEffect } from "react";
+import { useKioskMode } from "@/src/hooks/useKioskMode";
 
 export default function PaymentMethodsScreen() {
   const router = useRouter();
+  const kioskControl = useKioskMode(false);
+
+  // Desactivar kiosco al montarse esta pantalla para permitir interacción normal
+  useEffect(() => {
+    (async () => {
+      try {
+        await kioskControl.stopKiosk();
+      } catch (e) {
+        console.warn("Error disabling kiosk on payment screen", e);
+      }
+    })();
+  }, [kioskControl]);
 
   const handleBack = () => {
-    router.back();
+    // Navega directamente a device-blocked en lugar de usar router.back()
+    // Esto asegura que el navegador reconozca bien la ruta permitida
+    router.replace("/device-blocked");
   };
 
   return (

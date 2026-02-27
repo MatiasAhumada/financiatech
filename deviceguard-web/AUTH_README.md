@@ -18,8 +18,10 @@
 - `GET /api/devices` - Listar dispositivos
 - `POST /api/devices` - Crear dispositivo
 - `GET /api/devices/:id` - Obtener dispositivo
-- `PUT /api/devices/:id` - Actualizar dispositivo
+- `PUT /api/devices/:id` - Actualizar dispositivo (cambiar `status` a `BLOCKED`/`ACTIVE` sirve para bloquear o desbloquear)
 - `DELETE /api/devices/:id` - Eliminar dispositivo
+
+> **Nota**: la interfaz web incluye un botón "Bloquear/Desbloquear" en la tabla de dispositivos que realiza la llamada PUT con el nuevo estado. Esto se usa para pruebas de bloqueo y demostración.
 
 ## Roles y Permisos
 

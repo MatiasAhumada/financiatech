@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<device-owner xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-policies>
+        <!-- Capacidad de hacer lock del dispositivo -->
+        <force-lock />
+        
+        <!-- Capacidad de limpiar datos del dispositivo (factory reset) -->
+        <wipe-data />
+        
+        <!-- Capacidad de establecer restricciones de contraseña -->
+        <limit-password />
+        
+        <!-- Capacidad de deshabilitar cámara -->
+        <disable-camera />
+        
+        <!-- Capacidad de deshabilitar características del keyguard -->
+        <disable-keyguard-features />
+        
+        <!-- Capacidad de habilitar device owner features -->
+        <device-owner />
+    </uses-policies>
+</device-owner>

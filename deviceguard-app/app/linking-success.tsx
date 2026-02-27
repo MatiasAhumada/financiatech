@@ -1,16 +1,76 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useRef } from "react";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { YStack, Text, XStack } from "tamagui";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Dimensions } from "react-native";
+import { provisioningService } from "@/src/services/provisioning.service";
 
 const { height } = Dimensions.get("window");
 
 export default function LinkingSuccessScreen() {
-  const { deviceName, adminName } = useLocalSearchParams<{
+  const { deviceName, adminName, deviceId } = useLocalSearchParams<{
     deviceName: string;
     deviceId: string;
     adminName: string;
   }>();
+
+  const router = useRouter();
+  const isBlockedRef = useRef(false);
+
+  // chequea cada 3s si el dispositivo fue bloqueado desde la web
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!deviceId) return;
+
+      // ejecuta el check inmediato
+      (async () => {
+        try {
+          const status = await provisioningService.checkStatus(
+            deviceId as string
+          );
+          if (status.blocked) {
+            isBlockedRef.current = true;
+            router.replace({ pathname: "/device-blocked" });
+          }
+        } catch (e) {
+          console.warn("linking-success initial status check failed", e);
+        }
+      })();
+
+      // polling cada 3s para detectar cambios en tiempo real
+      const intervalId = setInterval(async () => {
+        try {
+          const status = await provisioningService.checkStatus(
+            deviceId as string
+          );
+          if (status.blocked && !isBlockedRef.current) {
+            isBlockedRef.current = true;
+            router.replace({ pathname: "/device-blocked" });
+          }
+        } catch (e) {
+          // ignore polling errors silently
+        }
+      }, 3000);
+
+      return () => clearInterval(intervalId);
+    }, [deviceId, router])
+  );
+
+  // evita salir de esta pantalla; el dispositivo ya está sincronizado
+  // pero permite que se navegue a device-blocked si fue bloqueado
+  const navigation = useNavigation();
+  useEffect(() => {
+    const unsub = navigation.addListener("beforeRemove", (e: any) => {
+      // permite la navegación programada a device-blocked (cuando se bloquea remotamente)
+      if (e.data?.action?.payload?.name === "device-blocked") {
+        return;
+      }
+      // bloquea intentos manuales del usuario (botones atrás, swipe back, etc)
+      e.preventDefault();
+    });
+    return unsub;
+  }, [navigation]);
 
   return (
     <YStack

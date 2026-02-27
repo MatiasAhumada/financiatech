@@ -1,4 +1,5 @@
 import { DeviceSyncRepository } from "../repository/deviceSync.repository";
+import { InstallmentRepository } from "../repository/installment.repository";
 import { SaleRepository } from "../repository/sale.repository";
 import { ApiError } from "@/utils/handlers/apiError.handler";
 import { prisma } from "@/lib/prisma";
@@ -24,10 +25,12 @@ export interface ActivationResult {
 
 export class DeviceActivationService {
   private deviceSyncRepository: DeviceSyncRepository;
+  private installmentRepository: InstallmentRepository;
   private saleRepository: SaleRepository;
 
   constructor() {
     this.deviceSyncRepository = new DeviceSyncRepository();
+    this.installmentRepository = new InstallmentRepository();
     this.saleRepository = new SaleRepository();
   }
 
@@ -61,6 +64,7 @@ export class DeviceActivationService {
     }
 
     return prisma.$transaction(async (tx) => {
+
       // 1. Actualizar el estado del dispositivo a SOLD_SYNCED
       await tx.device.update({
         where: { id: sale.deviceId },
@@ -103,7 +107,7 @@ export class DeviceActivationService {
   }
 
   async checkStatus(imei: string) {
-    const sync = await this.deviceSyncRepository.findByImei(imei);
+    const sync = await this.deviceSyncRepository.findByImeiWithDetails(imei);
 
     if (!sync) {
       throw new ApiError({
@@ -114,6 +118,17 @@ export class DeviceActivationService {
 
     await this.deviceSyncRepository.updateLastPing(sync.deviceId);
 
+    // obtiene la última cuota pendiente usando el repository
+    const pendingInstallment =
+      await this.installmentRepository.findLastPendingByDeviceId(sync.deviceId);
+
+    const pendingAmount = pendingInstallment
+      ? Number(pendingInstallment.amount.toString())
+      : 0;
+
+    const deviceName = sync.device.name;
+    const adminName = sync.device.admin?.user?.name ?? "Administrador";
+
     return {
       blocked: sync.device.status === DeviceStatus.BLOCKED,
       status: sync.device.status,
@@ -121,6 +136,9 @@ export class DeviceActivationService {
         sync.device.status === DeviceStatus.BLOCKED
           ? "Dispositivo bloqueado por mora en pagos"
           : "Dispositivo activo",
+      pendingAmount,
+      deviceName,
+      adminName,
     };
   }
 

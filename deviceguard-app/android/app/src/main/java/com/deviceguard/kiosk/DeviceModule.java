@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.view.WindowManager;
 import android.provider.Settings;
 import android.os.UserManager;
+import android.os.Build;
+import android.util.Log;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -16,13 +18,16 @@ import com.facebook.react.bridge.Promise;
 
 public class DeviceModule extends ReactContextBaseJavaModule {
     
+    private static final String TAG = "DeviceGuardModule";
     private DevicePolicyManager devicePolicyManager;
     private ComponentName deviceAdmin;
+    private ReactApplicationContext reactContext;
     
     public DeviceModule(ReactApplicationContext reactContext) {
         super(reactContext);
-        devicePolicyManager = (DevicePolicyManager) reactContext.getSystemService(Context.DEVICE_POLICY_SERVICE);
-        deviceAdmin = new ComponentName(reactContext, DeviceAdmin.class);
+        this.reactContext = reactContext;
+        this.devicePolicyManager = (DevicePolicyManager) reactContext.getSystemService(Context.DEVICE_POLICY_SERVICE);
+        this.deviceAdmin = new ComponentName(reactContext, DeviceAdmin.class);
     }
     
     @Override
@@ -123,6 +128,28 @@ public class DeviceModule extends ReactContextBaseJavaModule {
     }
     
     @ReactMethod
+    public void isDeviceOwnerActive(Promise promise) {
+        boolean isDeviceOwner = devicePolicyManager.isDeviceOwnerApp(reactContext.getPackageName());
+        promise.resolve(isDeviceOwner);
+    }
+    
+    @ReactMethod
+    public void getDeviceStatus(Promise promise) {
+        try {
+            boolean isDeviceOwner = devicePolicyManager.isDeviceOwnerApp(reactContext.getPackageName());
+            boolean isDeviceAdmin = devicePolicyManager.isAdminActive(deviceAdmin);
+            
+            promise.resolve(new java.util.HashMap<String, Object>() {{
+                put("isDeviceOwner", isDeviceOwner);
+                put("isDeviceAdmin", isDeviceAdmin);
+                put("sdkVersion", Build.VERSION.SDK_INT);
+            }});
+        } catch (Exception e) {
+            promise.reject("ERROR", e.getMessage());
+        }
+    }
+    
+    @ReactMethod
     public void preventUninstall() {
         if (devicePolicyManager.isDeviceOwnerApp(getReactApplicationContext().getPackageName())) {
             devicePolicyManager.setUninstallBlocked(deviceAdmin, 
@@ -154,6 +181,178 @@ public class DeviceModule extends ReactContextBaseJavaModule {
             devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_BLUETOOTH);
             devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_NETWORK_RESET);
             devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_AIRPLANE_MODE);
+    
+    /**
+     * Activa el bloqueo completo del dispositivo (modo kiosk con Device Owner).
+     * Solo funciona si la app es Device Owner.
+     */
+    @ReactMethod
+    public void activateFullLockdown(Promise promise) {
+        try {
+            if (!devicePolicyManager.isDeviceOwnerApp(reactContext.getPackageName())) {
+                promise.reject("NOT_DEVICE_OWNER", "Esta app no es Device Owner");
+                return;
+            }
+            
+            Activity activity = getCurrentActivity();
+            if (activity == null) {
+                promise.reject("ERROR", "Activity no disponible");
+                return;
+            }
+            
+            // Aplicar todas las restricciones de kiosk
+            applyFullRestrictions();
+            
+            // Iniciar kiosk mode
+            activity.startLockTask();
+            
+            // Guardar estado
+            reactContext.getSharedPreferences("DeviceGuardPrefs", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("isFullLockdownActive", true)
+                .apply();
+            
+            Log.i(TAG, "Full lockdown activated");
+            promise.resolve("Bloqueo completo activado");
+        } catch (Exception e) {
+            Log.e(TAG, "Error activating fullLockdown", e);
+            promise.reject("ERROR", e.getMessage());
+        }
+    }
+    
+    /**
+     * Desactiva el bloqueo completo del dispositivo.
+     * Requiere que el admin/propietario lo llame o que sea desde la app.
+     */
+    @ReactMethod
+    public void deactivateFullLockdown(Promise promise) {
+        try {
+            Activity activity = getCurrentActivity();
+            if (activity != null) {
+                activity.stopLockTask();
+            }
+            
+            if (devicePolicyManager.isDeviceOwnerApp(reactContext.getPackageName())) {
+                removeFullRestrictions();
+            }
+            
+            reactContext.getSharedPreferences("DeviceGuardPrefs", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("isFullLockdownActive", false)
+                .apply();
+            
+            Log.i(TAG, "Full lockdown deactivated");
+            promise.resolve("Bloqueo completo desactivado");
+        } catch (Exception e) {
+            Log.e(TAG, "Error deactivating fullLockdown", e);
+            promise.reject("ERROR", e.getMessage());
+        }
+    }
+    
+    /**
+     * Aplica todas las restricciones de Device Owner para kiosk mode completo.
+     * Solo funciona si la app es Device Owner.
+     */
+    private void applyFullRestrictions() {
+        if (!devicePolicyManager.isDeviceOwnerApp(reactContext.getPackageName())) {
+            Log.w(TAG, "App is not Device Owner, cannot apply full restrictions");
+            return;
+        }
+        
+        try {
+            String packageName = reactContext.getPackageName();
+            
+            // Deshabilitar desinstalación
+            devicePolicyManager.setUninstallBlocked(deviceAdmin, packageName, true);
+            
+            // Deshabilitar pantalla de bloqueo
+            devicePolicyManager.setKeyguardDisabled(deviceAdmin, true);
+            
+            // Configurar esta app como la única permitida en lock task mode
+            String[] lockedPackages = {packageName};
+            devicePolicyManager.setLockTaskPackages(deviceAdmin, lockedPackages);
+            
+            // Aplicar restricciones de usuario (solo en Device Owner)
+            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_FACTORY_RESET);
+            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_SAFE_BOOT);
+            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_ADD_USER);
+            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_REMOVE_USER);
+            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_DEBUGGING_FEATURES);
+            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_USB_FILE_TRANSFER);
+            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA);
+            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_MODIFY_ACCOUNTS);
+            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_WIFI);
+            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_MOBILE_NETWORKS);
+            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_BLUETOOTH);
+            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_NETWORK_RESET);
+            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_AIRPLANE_MODE);
+            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_SYSTEM_ERROR_DIALOGS);
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_CREATE_WINDOWS);
+            }
+            
+            // Deshabilitar barra de estado
+            devicePolicyManager.setStatusBarDisabled(deviceAdmin, true);
+            
+            // Configurar ajustes globales
+            devicePolicyManager.setGlobalSetting(deviceAdmin, Settings.Global.STAY_ON_WHILE_PLUGGED_IN, "7");
+            devicePolicyManager.setGlobalSetting(deviceAdmin, Settings.Global.ADB_ENABLED, "0");
+            devicePolicyManager.setGlobalSetting(deviceAdmin, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, "0");
+            
+            Log.i(TAG, "Full restrictions applied successfully");
+        } catch (Exception e) {
+            Log.e(TAG, "Error applying full restrictions", e);
+        }
+    }
+    
+    /**
+     * Remueve las restricciones de Device Owner.
+     * Solo funciona si la app es Device Owner.
+     */
+    private void removeFullRestrictions() {
+        if (!devicePolicyManager.isDeviceOwnerApp(reactContext.getPackageName())) {
+            Log.w(TAG, "App is not Device Owner, cannot remove full restrictions");
+            return;
+        }
+        
+        try {
+            String packageName = reactContext.getPackageName();
+            
+            // Re-habilitar pantalla de bloqueo
+            devicePolicyManager.setKeyguardDisabled(deviceAdmin, false);
+            
+            // Limpiar lock task packages
+            devicePolicyManager.setLockTaskPackages(deviceAdmin, new String[0]);
+            
+            // Remover restricciones de usuario
+            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_FACTORY_RESET);
+            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_SAFE_BOOT);
+            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_ADD_USER);
+            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_REMOVE_USER);
+            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_DEBUGGING_FEATURES);
+            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_USB_FILE_TRANSFER);
+            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA);
+            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_MODIFY_ACCOUNTS);
+            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_WIFI);
+            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_MOBILE_NETWORKS);
+            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_BLUETOOTH);
+            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_NETWORK_RESET);
+            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_AIRPLANE_MODE);
+            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_SYSTEM_ERROR_DIALOGS);
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_CREATE_WINDOWS);
+            }
+            
+            // Re-habilitar barra de estado
+            devicePolicyManager.setStatusBarDisabled(deviceAdmin, false);
+            
+            Log.i(TAG, "Full restrictions removed successfully");
+        } catch (Exception e) {
+            Log.e(TAG, "Error removing full restrictions", e);
+        }
+    }
             
             devicePolicyManager.setStatusBarDisabled(deviceAdmin, true);
             

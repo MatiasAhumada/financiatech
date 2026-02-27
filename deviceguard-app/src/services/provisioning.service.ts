@@ -31,4 +31,27 @@ export const provisioningService = {
     );
     return response.data;
   },
+
+  /**
+   * Consulta el estado actual del dispositivo (bloqueado/activo) junto al monto
+   * pendiente si existe.
+   */
+  checkStatus: async (deviceId: string): Promise<{
+    blocked: boolean;
+    status: string;
+    message: string;
+    pendingAmount: number;
+    deviceName?: string;
+    adminName?: string;
+  }> => {
+    const response = await clientAxios.get<{
+      blocked: boolean;
+      status: string;
+      message: string;
+      pendingAmount: number;
+      deviceName?: string;
+      adminName?: string;
+    }>(API_ENDPOINTS.DEVICES.CHECK_STATUS(deviceId));
+    return response.data;
+  },
 };

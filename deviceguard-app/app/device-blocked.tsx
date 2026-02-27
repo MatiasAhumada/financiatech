@@ -1,13 +1,64 @@
 import { useRouter } from "expo-router";
+import { useState, useEffect } from "react";
+import React from "react";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { YStack, Text, Button } from "tamagui";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useDeviceImei } from "@/src/hooks/useDeviceImei";
+import { provisioningService } from "@/src/services/provisioning.service";
+import { useKioskMode } from "@/src/hooks/useKioskMode";
 
 export default function DeviceBlockedScreen() {
   const router = useRouter();
+  const { deviceId, isReady } = useDeviceImei();
+  const [pending, setPending] = useState<number | null>(null);
+  const navigation = useNavigation();
+
+  // Activar modo kiosco cuando estemos en esta pantalla
+  const kioskControl = useKioskMode(true);
+
+  // Bloquear navegación: solo permitir ir a payment-methods y volver
+  useEffect(() => {
+    const unsub = navigation.addListener("beforeRemove", (e: any) => {
+      // permite navegar a payment-methods
+      if (e.data?.action?.payload?.name === "payment-methods") {
+        return;
+      }
+      // bloquea cualquier otra navegación (botones atrás, etc)
+      e.preventDefault();
+    });
+    return unsub;
+  }, [navigation]);
+
+  // Reactivar kiosco cuando se regresa de payment-methods
+  useFocusEffect(
+    React.useCallback(() => {
+      (async () => {
+        try {
+          await kioskControl.startKiosk();
+        } catch (e) {
+          console.warn("Error reactivating kiosk on focus", e);
+        }
+      })();
+    }, [kioskControl])
+  );
 
   const handlePayment = () => {
     router.push("/payment-methods");
   };
+
+  // load pending amount when we know the device id
+  useEffect(() => {
+    if (!isReady || !deviceId) return;
+    (async () => {
+      try {
+        const status = await provisioningService.checkStatus(deviceId);
+        setPending(status.pendingAmount);
+      } catch (e) {
+        console.warn("unable to fetch pending amount", e);
+      }
+    })();
+  }, [isReady, deviceId]);
 
   return (
     <YStack
@@ -75,7 +126,9 @@ export default function DeviceBlockedScreen() {
             SALDO PENDIENTE
           </Text>
           <Text fontSize={48} color="white" fontWeight="800">
-            $45.00
+            {pending != null
+              ? `$${pending.toFixed(2)}`
+              : "--"}
           </Text>
           <YStack flexDirection="row" gap="$2" alignItems="center">
             <YStack

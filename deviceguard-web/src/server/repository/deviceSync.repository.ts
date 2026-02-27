@@ -29,4 +29,26 @@ export class DeviceSyncRepository {
       data: { lastPing: new Date() },
     });
   }
+
+  /**
+   * Obtiene el deviceSync con toda la información necesaria:
+   * - device completo con su admin y usuario
+   * - sincronización del dispositivo
+   */
+  async findByImeiWithDetails(imei: string) {
+    return prisma.deviceSync.findUnique({
+      where: { imei },
+      include: {
+        device: {
+          include: {
+            admin: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
 }

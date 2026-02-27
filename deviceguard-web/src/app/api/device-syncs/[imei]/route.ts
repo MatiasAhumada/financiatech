@@ -10,6 +10,8 @@ export async function GET(
   try {
     const { imei } = await params;
 
+    // `status` now contains `blocked`, `status`, `message` and
+    // `pendingAmount` (ultimo monto pendiente) so the mobile app can show it.
     const status = await deviceActivationService.checkStatus(imei);
 
     return NextResponse.json(status, { status: httpStatus.OK });
