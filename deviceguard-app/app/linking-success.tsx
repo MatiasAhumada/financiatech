@@ -3,8 +3,9 @@ import React, { useEffect, useRef } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { YStack, Text, XStack } from "tamagui";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { Dimensions } from "react-native";
+import { Dimensions, NativeModules, Platform } from "react-native";
 import { provisioningService } from "@/src/services/provisioning.service";
+import { useKioskMode } from "@/src/hooks/useKioskMode";
 
 const { height } = Dimensions.get("window");
 
@@ -17,6 +18,28 @@ export default function LinkingSuccessScreen() {
 
   const router = useRouter();
   const isBlockedRef = useRef(false);
+  // Instanciar el control de kiosk pero SIN activarlo (enabled=false)
+  const kioskControl = useKioskMode(false);
+
+  // Garantizar que el kiosk NUNCA esté activo en esta pantalla.
+  // Esto cubre el caso donde se navega desde device-blocked con un
+  // desbloqueo remoto y el kiosk todavía pudiera estar corriendo.
+  useFocusEffect(
+    React.useCallback(() => {
+      kioskControl.stopKiosk().catch(() => {});
+    }, [kioskControl])
+  );
+
+  // Arrancar el foreground polling service (corre en background aunque la app esté cerrada).
+  useEffect(() => {
+    if (!deviceId || Platform.OS !== "android") return;
+    const { DeviceModule } = NativeModules;
+    if (!DeviceModule?.initPollingService) return;
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL ?? "http://192.168.1.39:3003";
+    DeviceModule.initPollingService(deviceId as string, apiUrl)
+      .then(() => console.log("[DG] Background polling service started"))
+      .catch((e: any) => console.warn("[DG] initPollingService error:", e));
+  }, [deviceId]);
 
   // chequea cada 3s si el dispositivo fue bloqueado desde la web
   useFocusEffect(

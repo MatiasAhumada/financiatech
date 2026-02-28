@@ -21,23 +21,38 @@ export interface KioskControlHandle {
   deactivateFullLockdown: () => Promise<string>;
 }
 
+export interface KioskModeOptions {
+  /**
+   * Si es true, llama stopKioskMode al desmontar el componente.
+   * Por defecto es FALSE para evitar que la navegación entre pantallas
+   * kiosk (device-blocked ↔ payment-methods) desactive el bloqueo.
+   * Solo pasar true si explícitamente querés desactivar el kiosk al salir.
+   */
+  stopOnUnmount?: boolean;
+}
+
 /**
  * Hook para controlar el modo kiosco en Android.
  * Soporta tanto Device Admin como Device Owner.
  * Solo funciona en Android.
+ *
+ * @param enabled - Si true, activa el kiosk al montarse
+ * @param options - { stopOnUnmount: false } por defecto — no detiene el kiosk
+ *                  al navegar entre pantallas del flujo bloqueado
  */
-export function useKioskMode(enabled: boolean = true): KioskControlHandle {
+export function useKioskMode(
+  enabled: boolean = true,
+  options: KioskModeOptions = { stopOnUnmount: false }
+): KioskControlHandle {
+  const { stopOnUnmount = false } = options;
+
   useEffect(() => {
     if (Platform.OS !== 'android' || !enabled) return;
-
-    let isActive = true;
 
     (async () => {
       try {
         if (DeviceModule) {
-          // Activar modo kiosco
           await DeviceModule.startKioskMode();
-          // Desactivar barra de estado para máxima seguridad
           await DeviceModule.setStatusBarDisabled(true);
         }
       } catch (error) {
@@ -45,10 +60,12 @@ export function useKioskMode(enabled: boolean = true): KioskControlHandle {
       }
     })();
 
-    // Cleanup: desactivar al desmontar o cuando enabled sea false
+    // Solo detener el kiosk al desmontar si se pide explícitamente.
+    // En el flujo device-blocked ↔ payment-methods, stopOnUnmount debe
+    // ser false para que el Lock Task Mode no se interrumpa entre pantallas.
+    if (!stopOnUnmount) return;
+
     return () => {
-      if (!isActive) return;
-      isActive = false;
       (async () => {
         try {
           if (DeviceModule) {
@@ -60,7 +77,7 @@ export function useKioskMode(enabled: boolean = true): KioskControlHandle {
         }
       })();
     };
-  }, [enabled]);
+  }, [enabled, stopOnUnmount]);
 
   return {
     startKiosk: async () => {

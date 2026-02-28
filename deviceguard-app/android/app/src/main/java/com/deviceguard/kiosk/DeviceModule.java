@@ -41,6 +41,30 @@ public class DeviceModule extends ReactContextBaseJavaModule {
             devicePolicyManager.lockNow();
         }
     }
+
+    /**
+     * Llamado desde React Native (linking-success) después de vincular.
+     * Persiste deviceId y apiUrl en SharedPreferences y arranca el foreground
+     * service de polling para que funcione sin que la app esté abierta.
+     */
+    @ReactMethod
+    public void initPollingService(String deviceId, String apiUrl, Promise promise) {
+        try {
+            reactContext.getSharedPreferences(DeviceGuardPollingService.PREFS_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putString(DeviceGuardPollingService.KEY_DEVICE_ID, deviceId)
+                .putString(DeviceGuardPollingService.KEY_API_URL, apiUrl)
+                .putBoolean(DeviceGuardPollingService.KEY_IS_LINKED, true)
+                .apply();
+
+            DeviceGuardPollingService.start(reactContext);
+            Log.i(TAG, "Polling service initialized — deviceId=" + deviceId);
+            promise.resolve("Polling service started");
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing polling service: " + e.getMessage());
+            promise.reject("ERROR", e.getMessage());
+        }
+    }
     
     @ReactMethod
     public void startKioskMode() {
@@ -49,15 +73,27 @@ public class DeviceModule extends ReactContextBaseJavaModule {
             if (devicePolicyManager.isDeviceOwnerApp(getReactApplicationContext().getPackageName())) {
                 String[] packages = {getReactApplicationContext().getPackageName()};
                 devicePolicyManager.setLockTaskPackages(deviceAdmin, packages);
-                activity.startLockTask();
                 
-                getReactApplicationContext().getSharedPreferences("DeviceGuardPrefs", Context.MODE_PRIVATE)
-                    .edit()
-                    .putBoolean("isLocked", true)
-                    .apply();
+                // Bloquear el menú de apagado (global actions dialog) que aparece
+                // al presionar el power button. LOCK_TASK_FEATURE_NONE deshabilita
+                // TODOS los elementos de sistema en Lock Task Mode, incluido el menú
+                // de opciones de reinicio/apagado. Requiere API 28 (Android 9+).
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    devicePolicyManager.setLockTaskFeatures(
+                        deviceAdmin,
+                        DevicePolicyManager.LOCK_TASK_FEATURE_NONE
+                    );
+                }
+                
+                activity.startLockTask();
             } else if (devicePolicyManager.isAdminActive(deviceAdmin)) {
                 activity.startLockTask();
             }
+            getReactApplicationContext().getSharedPreferences("DeviceGuardPrefs", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("isLocked", true)
+                .putBoolean("isFullLockdownActive", true)
+                .apply();
         }
     }
     
@@ -68,13 +104,22 @@ public class DeviceModule extends ReactContextBaseJavaModule {
             activity.stopLockTask();
             if (devicePolicyManager.isDeviceOwnerApp(getReactApplicationContext().getPackageName())) {
                 devicePolicyManager.setLockTaskPackages(deviceAdmin, new String[0]);
+                
+                // Restaurar las features de Lock Task Mode al salir del kiosk
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    devicePolicyManager.setLockTaskFeatures(
+                        deviceAdmin,
+                        DevicePolicyManager.LOCK_TASK_FEATURE_SYSTEM_INFO |
+                        DevicePolicyManager.LOCK_TASK_FEATURE_KEYGUARD
+                    );
+                }
             }
-            
-            getReactApplicationContext().getSharedPreferences("DeviceGuardPrefs", Context.MODE_PRIVATE)
-                .edit()
-                .putBoolean("isLocked", false)
-                .apply();
         }
+        getReactApplicationContext().getSharedPreferences("DeviceGuardPrefs", Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean("isLocked", false)
+            .putBoolean("isFullLockdownActive", false)
+            .apply();
     }
     
     @ReactMethod
@@ -181,6 +226,8 @@ public class DeviceModule extends ReactContextBaseJavaModule {
             devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_BLUETOOTH);
             devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_NETWORK_RESET);
             devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_AIRPLANE_MODE);
+        }
+    }
     
     /**
      * Activa el bloqueo completo del dispositivo (modo kiosk con Device Owner).
@@ -281,11 +328,12 @@ public class DeviceModule extends ReactContextBaseJavaModule {
             devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_USB_FILE_TRANSFER);
             devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA);
             devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_MODIFY_ACCOUNTS);
-            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_WIFI);
-            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_MOBILE_NETWORKS);
-            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_BLUETOOTH);
-            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_NETWORK_RESET);
-            devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_AIRPLANE_MODE);
+            // NO restringir WiFi ni redes móviles: el dispositivo NECESITA
+            // conectividad para recibir la señal de desbloqueo desde la web.
+            // devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_WIFI);
+            // devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_MOBILE_NETWORKS);
+            // devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_NETWORK_RESET);
+            // devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_AIRPLANE_MODE);
             devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_SYSTEM_ERROR_DIALOGS);
             
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -334,11 +382,6 @@ public class DeviceModule extends ReactContextBaseJavaModule {
             devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_USB_FILE_TRANSFER);
             devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA);
             devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_MODIFY_ACCOUNTS);
-            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_WIFI);
-            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_MOBILE_NETWORKS);
-            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_CONFIG_BLUETOOTH);
-            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_NETWORK_RESET);
-            devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_AIRPLANE_MODE);
             devicePolicyManager.clearUserRestriction(deviceAdmin, UserManager.DISALLOW_SYSTEM_ERROR_DIALOGS);
             
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -351,14 +394,6 @@ public class DeviceModule extends ReactContextBaseJavaModule {
             Log.i(TAG, "Full restrictions removed successfully");
         } catch (Exception e) {
             Log.e(TAG, "Error removing full restrictions", e);
-        }
-    }
-            
-            devicePolicyManager.setStatusBarDisabled(deviceAdmin, true);
-            
-            devicePolicyManager.setGlobalSetting(deviceAdmin, Settings.Global.STAY_ON_WHILE_PLUGGED_IN, "7");
-            devicePolicyManager.setGlobalSetting(deviceAdmin, Settings.Global.ADB_ENABLED, "0");
-            devicePolicyManager.setGlobalSetting(deviceAdmin, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, "0");
         }
     }
     

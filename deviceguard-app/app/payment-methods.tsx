@@ -1,23 +1,13 @@
 import { useRouter } from "expo-router";
 import { YStack, Text, Button } from "tamagui";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useEffect } from "react";
 import { useKioskMode } from "@/src/hooks/useKioskMode";
 
 export default function PaymentMethodsScreen() {
   const router = useRouter();
-  const kioskControl = useKioskMode(false);
-
-  // Desactivar kiosco al montarse esta pantalla para permitir interacción normal
-  useEffect(() => {
-    (async () => {
-      try {
-        await kioskControl.stopKiosk();
-      } catch (e) {
-        console.warn("Error disabling kiosk on payment screen", e);
-      }
-    })();
-  }, [kioskControl]);
+  // Mantener kiosk activo: el Lock Task Mode es a nivel de actividad,
+  // no de pantalla. Si se detiene aquí, los botones del sistema vuelven.
+  useKioskMode(true);
 
   const handleBack = () => {
     // Navega directamente a device-blocked en lugar de usar router.back()

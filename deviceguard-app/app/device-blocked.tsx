@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import React from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { YStack, Text, Button } from "tamagui";
@@ -13,6 +13,7 @@ export default function DeviceBlockedScreen() {
   const { deviceId, isReady } = useDeviceImei();
   const [pending, setPending] = useState<number | null>(null);
   const navigation = useNavigation();
+  const isUnblockedRef = useRef(false);
 
   // Activar modo kiosco cuando estemos en esta pantalla
   const kioskControl = useKioskMode(true);
@@ -30,9 +31,12 @@ export default function DeviceBlockedScreen() {
     return unsub;
   }, [navigation]);
 
-  // Reactivar kiosco cuando se regresa de payment-methods
+  // Reactivar kiosco cuando se regresa de payment-methods.
+  // Si ya se desbloqueó (isUnblockedRef=true), NO reiniciar — evita
+  // la race condition donde startKiosk corre DESPUÉS de stopKiosk.
   useFocusEffect(
     React.useCallback(() => {
+      if (isUnblockedRef.current) return;
       (async () => {
         try {
           await kioskControl.startKiosk();
@@ -43,11 +47,36 @@ export default function DeviceBlockedScreen() {
     }, [kioskControl])
   );
 
+  // Polling cada 3s para detectar DESBLOQUEO remoto desde la web
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!isReady || !deviceId) return;
+
+      const poll = async () => {
+        try {
+          const status = await provisioningService.checkStatus(deviceId as string);
+          if (!status.blocked && !isUnblockedRef.current) {
+            isUnblockedRef.current = true;
+            // Detener kiosk y volver a la pantalla principal vinculada
+            await kioskControl.stopKiosk();
+            router.replace({ pathname: "/linking-success" });
+          }
+        } catch (e) {
+          // Silencioso — reintenta en el siguiente tick
+        }
+      };
+
+      poll(); // check inmediato
+      const intervalId = setInterval(poll, 3000);
+      return () => clearInterval(intervalId);
+    }, [isReady, deviceId, router, kioskControl])
+  );
+
   const handlePayment = () => {
     router.push("/payment-methods");
   };
 
-  // load pending amount when we know the device id
+  // Cargar monto pendiente cuando tenemos el deviceId
   useEffect(() => {
     if (!isReady || !deviceId) return;
     (async () => {
