@@ -26,6 +26,22 @@ class MainActivity : ReactActivity() {
     SplashScreenManager.registerOnActivity(this)
     super.onCreate(null)
     
+    // Asegurar que la app pueda encender la pantalla y mostrarse sobre el bloqueo
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+        setShowWhenLocked(true)
+        setTurnScreenOn(true)
+        val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as android.app.KeyguardManager
+        keyguardManager.requestDismissKeyguard(this, null)
+    } else {
+        @Suppress("DEPRECATION")
+        window.addFlags(
+            android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+            android.view.WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+            android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+            android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+        )
+    }
+
     // 🛡️ REFUERZO: Asegurarnos de que el bloqueo de Reseteo de Fábrica
     // se aplique incondicionalmente cada vez que la app está abierta, 
     // por si el perfil de Device Owner se re-asignó sin pasar por onEnabled().
@@ -55,14 +71,13 @@ class MainActivity : ReactActivity() {
           ){})
   }
 
+  // Evita que el botón de retroceso minimice o cierre la app
+  override fun onBackPressed() {
+      // No hacemos nada para bloquear el botón "Atrás"
+  }
+
   override fun invokeDefaultOnBackPressed() {
-      if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
-          if (!moveTaskToBack(false)) {
-              super.invokeDefaultOnBackPressed()
-          }
-          return
-      }
-      super.invokeDefaultOnBackPressed()
+      // Tampoco invocamos el comportamiento por defecto
   }
 
   /**

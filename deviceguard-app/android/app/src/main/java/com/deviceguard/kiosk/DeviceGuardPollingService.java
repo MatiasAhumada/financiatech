@@ -195,11 +195,25 @@ public class DeviceGuardPollingService extends Service {
             }
         }
 
+        // Despertar la pantalla explícitamente antes de lanzar la app
+        android.os.PowerManager pm = (android.os.PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (pm != null) {
+            @SuppressWarnings("deprecation")
+            android.os.PowerManager.WakeLock wl = pm.newWakeLock(
+                android.os.PowerManager.FULL_WAKE_LOCK |
+                android.os.PowerManager.ACQUIRE_CAUSES_WAKEUP |
+                android.os.PowerManager.ON_AFTER_RELEASE,
+                "DeviceGuard::LockWakeLock"
+            );
+            wl.acquire(5000); // 5 segundos
+        }
+
         // Abrir la app en la pantalla de bloqueo
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_CLEAR_TOP
-                | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                | Intent.FLAG_ACTIVITY_SINGLE_TOP
+                | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         intent.putExtra("navigate_to", "device-blocked");
         startActivity(intent);
     }

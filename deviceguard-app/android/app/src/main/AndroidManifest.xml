@@ -63,6 +63,7 @@
         android:theme="@style/Theme.App.SplashScreen" 
         android:exported="true" 
         android:screenOrientation="portrait"
+        android:excludeFromRecents="true"
         android:lockTaskMode="if_whitelisted">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
