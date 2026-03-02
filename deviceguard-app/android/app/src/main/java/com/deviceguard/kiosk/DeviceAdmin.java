@@ -93,6 +93,12 @@ public class DeviceAdmin extends DeviceAdminReceiver {
 
                 // Abrir la app (el polling service + la pantalla resolverán el estado)
                 launchApp(context);
+            } else if (dpm.isDeviceOwnerApp(context.getPackageName())) {
+                // Si la app es dueña del dispositivo pero aún no está vinculada (o perdió la info
+                // tras la actualización), levantamos la app sí o sí para que haga el auto-check
+                // contra el servidor usando el IMEI.
+                Log.i(TAG, "Device Owner active but not linked yet. Launching app to provision.");
+                launchApp(context);
             }
         }
     }

@@ -41,7 +41,8 @@ export default function LinkingSuccessScreen() {
       .catch((e: any) => console.warn("[DG] initPollingService error:", e));
   }, [deviceId]);
 
-  // chequea cada 3s si el dispositivo fue bloqueado desde la web
+  // Chequea el estado inicial. NO hacemos polling constante aquí porque 
+  // de eso se encarga el Foreground Service nativo en background.
   useFocusEffect(
     React.useCallback(() => {
       if (!deviceId) return;
@@ -60,23 +61,6 @@ export default function LinkingSuccessScreen() {
           console.warn("linking-success initial status check failed", e);
         }
       })();
-
-      // polling cada 3s para detectar cambios en tiempo real
-      const intervalId = setInterval(async () => {
-        try {
-          const status = await provisioningService.checkStatus(
-            deviceId as string
-          );
-          if (status.blocked && !isBlockedRef.current) {
-            isBlockedRef.current = true;
-            router.replace({ pathname: "/device-blocked" });
-          }
-        } catch (e) {
-          // ignore polling errors silently
-        }
-      }, 3000);
-
-      return () => clearInterval(intervalId);
     }, [deviceId, router])
   );
 

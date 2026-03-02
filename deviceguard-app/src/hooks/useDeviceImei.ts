@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import * as Application from 'expo-application';
 import * as Device from 'expo-device';
-import { Platform } from 'react-native';
+import { Platform, NativeModules } from 'react-native';
+
+const { DeviceModule } = NativeModules;
 
 export interface DeviceIdentity {
   /** Identificador único del dispositivo usado como "IMEI" en el sistema.
@@ -29,9 +31,22 @@ export function useDeviceImei(): DeviceIdentity {
         let deviceId: string | null = null;
 
         if (Platform.OS === 'android') {
-          // androidId: único por (app, dispositivo, usuario). No requiere permisos.
-          // Persiste entre reinicios y actualizaciones (se resetea solo con factory reset).
-          deviceId = Application.getAndroidId();
+          // Intentar obtener el IMEI real desde nuestro módulo nativo (Requiere permisos o ser Device Owner)
+          if (DeviceModule && DeviceModule.getDeviceImei) {
+            try {
+              const imei = await DeviceModule.getDeviceImei();
+              if (imei) {
+                deviceId = imei;
+              }
+            } catch (err) {
+              console.warn('Error al obtener el IMEI real de Android:', err);
+            }
+          }
+
+          // Fallback al androidId si no se pudo obtener el IMEI
+          if (!deviceId) {
+            deviceId = Application.getAndroidId();
+          }
         } else if (Platform.OS === 'ios') {
           // identifierForVendor: único por (app vendor, dispositivo).
           deviceId = await Application.getIosIdForVendorAsync();

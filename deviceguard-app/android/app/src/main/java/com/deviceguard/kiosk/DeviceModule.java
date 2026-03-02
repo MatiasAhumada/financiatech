@@ -36,6 +36,34 @@ public class DeviceModule extends ReactContextBaseJavaModule {
     }
     
     @ReactMethod
+    public void getDeviceImei(Promise promise) {
+        try {
+            android.telephony.TelephonyManager tm = (android.telephony.TelephonyManager) reactContext.getSystemService(Context.TELEPHONY_SERVICE);
+            String imei = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                try {
+                    imei = tm.getImei();
+                } catch (SecurityException e) {
+                    Log.e(TAG, "SecurityException getting IMEI", e);
+                }
+            } else {
+                try {
+                    // Suppress deprecation warning for getDeviceId since it's the only way on older versions
+                    @SuppressWarnings("deprecation")
+                    String oldDeviceId = tm.getDeviceId();
+                    imei = oldDeviceId;
+                } catch (SecurityException e) {
+                    Log.e(TAG, "SecurityException getting Device ID", e);
+                }
+            }
+            promise.resolve(imei);
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting IMEI: " + e.getMessage());
+            promise.reject("ERROR", e.getMessage());
+        }
+    }
+    
+    @ReactMethod
     public void lockDevice() {
         if (devicePolicyManager.isAdminActive(deviceAdmin)) {
             devicePolicyManager.lockNow();

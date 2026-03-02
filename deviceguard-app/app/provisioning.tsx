@@ -130,7 +130,7 @@ export default function ProvisioningScreen() {
   return (
     <YStack flex={1} backgroundColor="#000000">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <YStack flex={1} paddingHorizontal="$4" paddingTop={height * 0.08} gap="$6">
+        <YStack flex={1} paddingTop={height * 0.08} gap="$6">
           <ProvisioningHeader />
 
           <CodeInput code={code} codeString={codeString} onChangeText={setCodeString} />
@@ -148,7 +148,7 @@ export default function ProvisioningScreen() {
             backgroundColor="#DC2626"
             borderRadius={10}
             width="100%"
-            marginTop="$8"
+           
             alignSelf="center"
             onPress={handleVerify}
             disabled={!canVerify}

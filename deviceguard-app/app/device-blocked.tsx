@@ -4,6 +4,7 @@ import React from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { YStack, Text, Button } from "tamagui";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Dimensions, NativeModules, Platform } from "react-native";
 import { useDeviceImei } from "@/src/hooks/useDeviceImei";
 import { provisioningService } from "@/src/services/provisioning.service";
 import { useKioskMode } from "@/src/hooks/useKioskMode";
@@ -14,6 +15,19 @@ export default function DeviceBlockedScreen() {
   const [pending, setPending] = useState<number | null>(null);
   const navigation = useNavigation();
   const isUnblockedRef = useRef(false);
+
+  // Inicializar Background polling service por si esta pantalla
+  // se carga directo post-reinicio sin haber pasado por linking-success localmente.
+  useEffect(() => {
+    if (!deviceId || Platform.OS !== "android") return;
+    const { DeviceModule } = NativeModules;
+    if (!DeviceModule?.initPollingService) return;
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL ?? "http://192.168.1.39:3003";
+    DeviceModule.initPollingService(deviceId as string, apiUrl)
+      .then(() => console.log("[DG] Background polling service started from block"))
+      .catch((e: any) => console.warn("[DG] initPollingService error:", e));
+  }, [deviceId]);
+
 
   // Activar modo kiosco cuando estemos en esta pantalla
   const kioskControl = useKioskMode(true);
