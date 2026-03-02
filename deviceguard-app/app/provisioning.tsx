@@ -5,8 +5,6 @@ import { ScrollView, Dimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { ProvisioningHeader } from "@/components/provisioning/ProvisioningHeader";
 import { CodeInput } from "@/components/provisioning/CodeInput";
-import { NumericKeyboard } from "@/components/provisioning/NumericKeyboard";
-import { AlphanumericKeyboard } from "@/components/provisioning/AlphanumericKeyboard";
 import { useProvisioningCode } from "@/src/hooks/useProvisioningCode";
 import { useDeviceImei } from "@/src/hooks/useDeviceImei";
 import { provisioningService } from "@/src/services/provisioning.service";
@@ -16,9 +14,8 @@ const { height } = Dimensions.get("window");
 
 export default function ProvisioningScreen() {
   const router = useRouter();
-  const { code, handleInput, handleDelete, getFullCode, isComplete } = useProvisioningCode();
+  const { code, codeString, setCodeString, getFullCode, isComplete } = useProvisioningCode();
   const { deviceId, isReady: isDeviceReady } = useDeviceImei();
-  const [showLetters, setShowLetters] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [checkingSync, setCheckingSync] = useState(true);
@@ -136,7 +133,7 @@ export default function ProvisioningScreen() {
         <YStack flex={1} paddingHorizontal="$4" paddingTop={height * 0.08} gap="$6">
           <ProvisioningHeader />
 
-          <CodeInput code={code} />
+          <CodeInput code={code} codeString={codeString} onChangeText={setCodeString} />
 
           {/* Mensaje de error inline (validación local) */}
           {errorMessage && (
@@ -167,19 +164,6 @@ export default function ProvisioningScreen() {
             </Text>
           </Button>
 
-          {showLetters ? (
-            <AlphanumericKeyboard
-              onInput={handleInput}
-              onDelete={handleDelete}
-              onToggleNumbers={() => setShowLetters(false)}
-            />
-          ) : (
-            <NumericKeyboard
-              onInput={handleInput}
-              onDelete={handleDelete}
-              onToggleLetters={() => setShowLetters(true)}
-            />
-          )}
         </YStack>
       </ScrollView>
     </YStack>

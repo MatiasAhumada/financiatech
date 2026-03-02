@@ -124,13 +124,16 @@ function App() {
 
       appendLog(`Ruta del APK a instalar: ${apkPath}`);
       try {
-        const installOut = await runCommand(`adb install -r "${apkPath}"`);
+        // Usamos -r (reinstall/update) y -d (allow downgrade) para actualizar transparentemente
+        const installOut = await runCommand(`adb install -r -d "${apkPath}"`);
         appendLog(`Respuesta: ${installOut}`);
+        appendLog(`✅ App instalada/actualizada correctamente.`);
       } catch (installErr: any) {
-        if (!installErr.includes("Success")) {
-          throw new Error(`Error en la instalación: ${installErr}`);
+        const errMsg = String(installErr);
+        if (!errMsg.includes("Success")) {
+          throw new Error(`Error en la instalación: ${errMsg}`);
         } else {
-          appendLog(`✅ App instalada correctamente.`);
+          appendLog(`✅ App instalada/actualizada correctamente.`);
         }
       }
 
@@ -138,25 +141,43 @@ function App() {
 
       // 3. Activar Device Owner
       setStatus("configuring");
-      appendLog("Activando el Modo Propietario (Device Owner)...");
+      appendLog("Verificando si la app ya es Device Owner...");
       
-      const ownerCmd = 'adb shell dpm set-device-owner com.deviceguard.kiosk/.DeviceAdmin';
+      let isAlreadyOwner = false;
       try {
-        const ownerOut = await runCommand(ownerCmd);
-        appendLog(`Respuesta DPM: ${ownerOut}`);
-        if (ownerOut.includes('Success')) {
-            appendLog('✅ Device Owner configurado con éxito.');
-        } else {
-            throw new Error(`Respuesta desconocida de dpm: ${ownerOut}`);
+        const policyOut = await runCommand('adb shell dumpsys device_policy');
+        if (policyOut.includes('com.deviceguard.kiosk/.DeviceAdmin') && (policyOut.includes('Device Owner:') || policyOut.includes('owner'))) {
+          isAlreadyOwner = true;
         }
-      } catch (ownerErr: any) {
-         if (ownerErr.includes("already some accounts")) {
-           throw new Error("Fallo al establecer Device Owner: ya hay cuentas o perfiles de usuario en el equipo. Debes eliminarlos desde los ajustes.");
-         } else if (ownerErr.includes("Success")) {
-           appendLog('✅ Device Owner configurado con éxito.');
-         } else {
-           throw new Error(`Ocurrió un error (DPM): ${ownerErr}`);
-         }
+      } catch (e) {
+        // Si falla el checkeo preliminar, lo intentamos configurar más abajo
+      }
+
+      if (isAlreadyOwner) {
+        appendLog('✅ La app YA ESTABA configurada como Device Owner. Saltando activación.');
+      } else {
+        appendLog("Activando el Modo Propietario (Device Owner)...");
+        const ownerCmd = 'adb shell dpm set-device-owner com.deviceguard.kiosk/.DeviceAdmin';
+        try {
+          const ownerOut = await runCommand(ownerCmd);
+          appendLog(`Respuesta DPM: ${ownerOut}`);
+          if (ownerOut.includes('Success')) {
+              appendLog('✅ Device Owner configurado con éxito.');
+          } else if (ownerOut.includes('already set') || ownerOut.includes('is already set')) {
+              appendLog('✅ Device Owner ya estaba configurado.');
+          } else {
+              throw new Error(`Respuesta desconocida de dpm: ${ownerOut}`);
+          }
+        } catch (ownerErr: any) {
+           const errMsg = String(ownerErr);
+           if (errMsg.includes("already some accounts")) {
+             throw new Error("Fallo al establecer Device Owner: ya hay cuentas o perfiles de usuario en el equipo. Debes eliminarlos desde los ajustes.");
+           } else if (errMsg.includes("Success") || errMsg.includes("already set") || errMsg.includes("is already set") || errMsg.includes("ya está")) {
+             appendLog('✅ Device Owner ya estaba configurado o se configuró con éxito.');
+           } else {
+             throw new Error(`Ocurrió un error (DPM): ${errMsg}`);
+           }
+        }
       }
 
       // Forzar que el sistema se entere de los bloqueos extras antes de apagar
