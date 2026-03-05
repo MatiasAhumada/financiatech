@@ -15,9 +15,6 @@ export function BlockRulesInput({
   firstWarningDay,
   secondWarningDay,
   blockDay,
-  onFirstWarningChange,
-  onSecondWarningChange,
-  onBlockDayChange,
 }: BlockRulesInputProps) {
   return (
     <div className="border border-carbon_black-600 rounded-lg p-4 bg-carbon_black">
@@ -31,11 +28,9 @@ export function BlockRulesInput({
           </Label>
           <Input
             type="number"
-            min="1"
-            max="31"
             value={firstWarningDay}
-            onChange={(e) => onFirstWarningChange(e.target.value)}
-            className="mt-1 bg-onyx-600 border-carbon_black-700 text-white"
+            disabled
+            className="mt-1 bg-onyx-600 border-carbon_black-700 text-white opacity-60 cursor-not-allowed"
           />
         </div>
         <div>
@@ -44,11 +39,9 @@ export function BlockRulesInput({
           </Label>
           <Input
             type="number"
-            min="1"
-            max="31"
             value={secondWarningDay}
-            onChange={(e) => onSecondWarningChange(e.target.value)}
-            className="mt-1 bg-onyx-600 border-carbon_black-700 text-white"
+            disabled
+            className="mt-1 bg-onyx-600 border-carbon_black-700 text-white opacity-60 cursor-not-allowed"
           />
         </div>
         <div>
@@ -57,11 +50,9 @@ export function BlockRulesInput({
           </Label>
           <Input
             type="number"
-            min="1"
-            max="31"
             value={blockDay}
-            onChange={(e) => onBlockDayChange(e.target.value)}
-            className="mt-1 bg-onyx-600 border-carbon_black-700 text-white"
+            disabled
+            className="mt-1 bg-onyx-600 border-carbon_black-700 text-white opacity-60 cursor-not-allowed"
           />
         </div>
         <p className="text-xs text-silver-400 italic">

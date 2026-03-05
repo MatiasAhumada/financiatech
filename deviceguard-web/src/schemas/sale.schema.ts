@@ -9,9 +9,9 @@ export const createSaleSchema = z.object({
   installments: z.number().int().min(1, "Mínimo 1 cuota"),
   paymentFrequency: z.nativeEnum(PaymentFrequency),
   financingPlanId: z.string().min(1, "El plan de financiamiento es requerido"),
-  firstWarningDay: z.number().int().min(1).max(31, "Día inválido"),
-  secondWarningDay: z.number().int().min(1).max(31, "Día inválido"),
-  blockDay: z.number().int().min(1).max(31, "Día inválido"),
+  firstWarningDay: z.number().int().min(1).max(31, "Día inválido").optional(),
+  secondWarningDay: z.number().int().min(1).max(31, "Día inválido").optional(),
+  blockDay: z.number().int().min(1).max(31, "Día inválido").optional(),
 });
 
 export type CreateSaleDto = z.infer<typeof createSaleSchema>;

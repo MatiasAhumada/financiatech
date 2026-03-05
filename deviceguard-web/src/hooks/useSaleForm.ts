@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { IFinancingPlan, ISale } from "@/types";
 import { PaymentFrequency } from "@prisma/client";
 import { saleService } from "@/services/sale.service";
+import { BLOCK_RULES_BY_FREQUENCY } from "@/constants/blockRules.constant";
 import {
   clientErrorHandler,
   clientSuccessHandler,
 } from "@/utils/handlers/clientError.handler";
-import { SALES_MESSAGES, SALES_DEFAULTS } from "@/constants/sales.constant";
+import { SALES_MESSAGES } from "@/constants/sales.constant";
 
 interface UseSaleFormProps {
   open: boolean;
@@ -32,15 +33,23 @@ export function useSaleForm({
   const [paymentFrequency, setPaymentFrequency] = useState<PaymentFrequency>(
     PaymentFrequency.MONTHLY
   );
+  const blockRules = BLOCK_RULES_BY_FREQUENCY[paymentFrequency];
   const [firstWarningDay, setFirstWarningDay] = useState(
-    SALES_DEFAULTS.FIRST_WARNING_DAY.toString()
+    blockRules.firstWarningDay.toString()
   );
   const [secondWarningDay, setSecondWarningDay] = useState(
-    SALES_DEFAULTS.SECOND_WARNING_DAY.toString()
+    blockRules.secondWarningDay.toString()
   );
-  const [blockDay, setBlockDay] = useState(SALES_DEFAULTS.BLOCK_DAY.toString());
+  const [blockDay, setBlockDay] = useState(blockRules.blockDay.toString());
   const [loading, setLoading] = useState(false);
   const [activationCode, setActivationCode] = useState("");
+
+  useEffect(() => {
+    const rules = BLOCK_RULES_BY_FREQUENCY[paymentFrequency];
+    setFirstWarningDay(rules.firstWarningDay.toString());
+    setSecondWarningDay(rules.secondWarningDay.toString());
+    setBlockDay(rules.blockDay.toString());
+  }, [paymentFrequency]);
 
   useEffect(() => {
     if (open && initialSale) {
@@ -65,10 +74,12 @@ export function useSaleForm({
     setAmount("");
     setInitialPayment("");
     setSelectedPlan(null);
-    setPaymentFrequency(PaymentFrequency.MONTHLY);
-    setFirstWarningDay(SALES_DEFAULTS.FIRST_WARNING_DAY.toString());
-    setSecondWarningDay(SALES_DEFAULTS.SECOND_WARNING_DAY.toString());
-    setBlockDay(SALES_DEFAULTS.BLOCK_DAY.toString());
+    const frequency = PaymentFrequency.MONTHLY;
+    setPaymentFrequency(frequency);
+    const rules = BLOCK_RULES_BY_FREQUENCY[frequency];
+    setFirstWarningDay(rules.firstWarningDay.toString());
+    setSecondWarningDay(rules.secondWarningDay.toString());
+    setBlockDay(rules.blockDay.toString());
     setActivationCode("");
   };
 

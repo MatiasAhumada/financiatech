@@ -4,6 +4,7 @@ import { FinancingPlanRepository } from "../repository/financingPlan.repository"
 import { ApiError } from "@/utils/handlers/apiError.handler";
 import { ISale } from "@/types";
 import { PAYMENT_FREQUENCY_DAYS } from "@/constants/paymentFrequency.constant";
+import { BLOCK_RULES_BY_FREQUENCY } from "@/constants/blockRules.constant";
 import httpStatus from "http-status";
 import { CreateSaleDto } from "@/schemas/sale.schema";
 
@@ -53,6 +54,7 @@ export class SaleService {
     const installmentAmount = totalWithInterest / data.installments;
     const activationCode = generateActivationCode();
     const daysPerInstallment = PAYMENT_FREQUENCY_DAYS[data.paymentFrequency];
+    const blockRules = BLOCK_RULES_BY_FREQUENCY[data.paymentFrequency];
 
     return this.saleRepository.createWithTransaction({
       deviceId: data.deviceId,
@@ -64,9 +66,9 @@ export class SaleService {
       paymentFrequency: data.paymentFrequency,
       activationCode,
       daysPerInstallment,
-      firstWarningDay: data.firstWarningDay,
-      secondWarningDay: data.secondWarningDay,
-      blockDay: data.blockDay,
+      firstWarningDay: data.firstWarningDay ?? blockRules.firstWarningDay,
+      secondWarningDay: data.secondWarningDay ?? blockRules.secondWarningDay,
+      blockDay: data.blockDay ?? blockRules.blockDay,
     });
   }
 
@@ -114,6 +116,7 @@ export class SaleService {
     const totalWithInterest = financedAmount * (1 + Number(plan.interestRate) / 100);
     const installmentAmount = totalWithInterest / data.installments;
     const daysPerInstallment = PAYMENT_FREQUENCY_DAYS[data.paymentFrequency];
+    const blockRules = BLOCK_RULES_BY_FREQUENCY[data.paymentFrequency];
 
     return this.saleRepository.updateWithTransaction(id, {
       deviceId: data.deviceId,
@@ -124,9 +127,9 @@ export class SaleService {
       installmentAmount,
       paymentFrequency: data.paymentFrequency,
       daysPerInstallment,
-      firstWarningDay: data.firstWarningDay,
-      secondWarningDay: data.secondWarningDay,
-      blockDay: data.blockDay,
+      firstWarningDay: data.firstWarningDay ?? blockRules.firstWarningDay,
+      secondWarningDay: data.secondWarningDay ?? blockRules.secondWarningDay,
+      blockDay: data.blockDay ?? blockRules.blockDay,
     });
   }
 }

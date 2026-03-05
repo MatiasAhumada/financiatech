@@ -12,10 +12,10 @@ export const SALES_MESSAGES = {
     INSTALLMENT_PAYMENT: "CUOTA",
     PAYMENT_FREQUENCY: "FRECUENCIA DE PAGO",
     FINANCING_PLAN: "PLAN DE FINANCIAMIENTO",
-    BLOCK_RULES: "REGLAS DE BLOQUEO",
-    FIRST_WARNING: "1RA NOTIFICACIÓN (DÍA DEL MES)",
-    SECOND_WARNING: "2DA NOTIFICACIÓN (DÍA DEL MES)",
-    AUTO_BLOCK: "BLOQUEO AUTOMÁTICO (DÍA DEL MES)",
+    BLOCK_RULES: "REGLAS DE BLOQUEO (AUTOMÁTICAS)",
+    FIRST_WARNING: "1RA NOTIFICACIÓN (DÍA DESDE VENTA)",
+    SECOND_WARNING: "2DA NOTIFICACIÓN (DÍA DESDE VENTA)",
+    AUTO_BLOCK: "BLOQUEO AUTOMÁTICO (DÍA DESDE VENTA)",
     ACTIVATION_CODE: "CÓDIGO DE ACTIVACIÓN",
   },
   PLACEHOLDERS: {
@@ -39,9 +39,9 @@ export const SALES_MESSAGES = {
   },
   INFO: {
     AUTO_BLOCK_WARNING:
-      "El dispositivo quedará bloqueado automáticamente vía DeviceGuard MDM en caso de mora superior a 72 horas.",
+      "El dispositivo quedará bloqueado automáticamente vía DeviceGuard MDM según las reglas configuradas.",
     BLOCK_RULES_EXAMPLE:
-      "Ejemplo: Si configuras día 10, 15 y 20, el sistema enviará notificaciones los días 10 y 15 de cada mes, y bloqueará el dispositivo el día 20.",
+      "Las reglas se calculan automáticamente según la frecuencia de pago. Semanal: días 5-6-7 | Quincenal: días 13-14-15 | Mensual: días 28-29-30 desde la fecha de venta.",
     SUCCESS_TITLE: "¡Venta Registrada Exitosamente!",
     SUCCESS_SUBTITLE: "Ahora debe vincular el dispositivo con la aplicación móvil",
     ACTIVATION_INSTRUCTIONS:
@@ -102,8 +102,8 @@ export const SALES_STATS = {
 } as const;
 
 export const SALES_DEFAULTS = {
-  FIRST_WARNING_DAY: 3,
-  SECOND_WARNING_DAY: 5,
-  BLOCK_DAY: 7,
+  FIRST_WARNING_DAY: 28,
+  SECOND_WARNING_DAY: 29,
+  BLOCK_DAY: 30,
   RECOMMENDED_INSTALLMENTS: 12,
 } as const;
