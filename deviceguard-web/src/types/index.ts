@@ -54,6 +54,7 @@ export interface IClientFormValues extends Omit<
 export interface IDevice extends PrismaDevice {
   admin: PrismaAdmin;
   client: PrismaClient | null;
+  installments?: PrismaInstallment[];
 }
 
 export interface IDeviceFormValues extends Omit<
@@ -62,7 +63,7 @@ export interface IDeviceFormValues extends Omit<
 > {}
 
 export interface ISale extends PrismaSale {
-  device: PrismaDevice;
+  device: IDevice;
   client: PrismaClient;
 }
 

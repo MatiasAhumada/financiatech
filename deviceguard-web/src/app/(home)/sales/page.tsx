@@ -137,7 +137,6 @@ export default function SalesPage() {
   const newDevicesCount = devices.filter((d) => d.status === "ACTIVE").length;
   const pendingPayments = 14;
   const avgTicket = sales.length > 0 ? todayTotal / sales.length : 0;
-
   return (
     <DashboardLayout>
       <div className="p-4 sm:p-6 lg:p-8 bg-onyx min-h-screen space-y-6">
@@ -353,32 +352,46 @@ export default function SalesPage() {
                       Cuotas del Plan de Financiamiento
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {Array.from({ length: sale.installments }, (_, i) => {
-                        const dueDate = new Date(sale.saleDate);
-                        dueDate.setDate(dueDate.getDate() + (i + 1) * (sale.paymentFrequency === 'WEEKLY' ? 7 : sale.paymentFrequency === 'BIWEEKLY' ? 15 : 30));
-                        
-                        return (
-                          <div
-                            key={`${sale.id}-installment-${i}`}
-                            className="border rounded-lg p-4 border-warning bg-warning/5"
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-silver-400 text-xs uppercase">
-                                Cuota {i + 1}
-                              </span>
-                              <span className="text-xs font-medium text-warning">
-                                PENDIENTE
-                              </span>
-                            </div>
-                            <p className="text-white font-bold text-lg">
-                              ${Number(sale.installmentAmount).toFixed(2)}
-                            </p>
-                            <p className="text-silver-400 text-xs mt-1">
-                              Vence: {dueDate.toLocaleDateString()}
-                            </p>
+                      {sale.device.installments?.map((installment) => (
+                        <div
+                          key={installment.id}
+                          className={`border rounded-lg p-4 ${
+                            installment.status === "PAID"
+                              ? "border-success bg-success/5"
+                              : installment.status === "OVERDUE"
+                                ? "border-strawberry_red bg-strawberry_red/5"
+                                : "border-warning bg-warning/5"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-silver-400 text-xs uppercase">
+                              Cuota {installment.number}
+                            </span>
+                            <span
+                              className={`text-xs font-medium ${
+                                installment.status === "PAID"
+                                  ? "text-success"
+                                  : installment.status === "OVERDUE"
+                                    ? "text-strawberry_red"
+                                    : "text-warning"
+                              }`}
+                            >
+                              {installment.status === "PAID"
+                                ? "PAGADO"
+                                : installment.status === "OVERDUE"
+                                  ? "VENCIDO"
+                                  : "PENDIENTE"}
+                            </span>
                           </div>
-                        );
-                      })}
+                          <p className="text-white font-bold text-lg">
+                            ${Number(installment.amount).toFixed(2)}
+                          </p>
+                          <p className="text-silver-400 text-xs mt-1">
+                            Vence:{" "}
+                            {new Date(installment.dueDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </td>

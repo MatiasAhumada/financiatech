@@ -40,7 +40,11 @@ export class SaleRepository {
         }),
       },
       include: {
-        device: true,
+        device: {
+          include: {
+            installments: { orderBy: { number: "asc" } },
+          },
+        },
         client: true,
       },
       orderBy: { createdAt: "desc" },
@@ -110,7 +114,8 @@ export class SaleRepository {
           number: i + 1,
           amount: data.installmentAmount,
           dueDate: new Date(
-            sale.saleDate.getTime() + (i + 1) * data.daysPerInstallment * 24 * 60 * 60 * 1000
+            sale.saleDate.getTime() +
+              (i + 1) * data.daysPerInstallment * 24 * 60 * 60 * 1000
           ),
           status: "PENDING" as const,
         })
@@ -147,7 +152,7 @@ export class SaleRepository {
         await tx.paymentPlan.deleteMany({ where: { deviceId: sale.deviceId } });
         await tx.blockRule.deleteMany({ where: { deviceId: sale.deviceId } });
         await tx.deviceSync.deleteMany({ where: { deviceId: sale.deviceId } });
-        
+
         return tx.sale.delete({ where: { id } });
       }
     });
@@ -224,7 +229,8 @@ export class SaleRepository {
           number: i + 1,
           amount: data.installmentAmount,
           dueDate: new Date(
-            updatedSale!.saleDate.getTime() + (i + 1) * data.daysPerInstallment * 24 * 60 * 60 * 1000
+            updatedSale!.saleDate.getTime() +
+              (i + 1) * data.daysPerInstallment * 24 * 60 * 60 * 1000
           ),
           status: "PENDING" as const,
         })

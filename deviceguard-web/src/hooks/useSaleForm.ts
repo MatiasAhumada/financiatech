@@ -45,6 +45,12 @@ export function useSaleForm({
   const [activationCode, setActivationCode] = useState("");
 
   useEffect(() => {
+    if (selectedPlan) {
+      setPaymentFrequency(selectedPlan.paymentFrequency);
+    }
+  }, [selectedPlan]);
+
+  useEffect(() => {
     const rules = BLOCK_RULES_BY_FREQUENCY[paymentFrequency];
     setFirstWarningDay(rules.firstWarningDay.toString());
     setSecondWarningDay(rules.secondWarningDay.toString());
