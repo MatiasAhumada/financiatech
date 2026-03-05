@@ -95,9 +95,9 @@ export class SaleRepository {
           totalAmount: financedAmount,
           installments: data.installments,
           monthlyAmount: data.installmentAmount,
-          startDate: new Date(),
+          startDate: sale.saleDate,
           endDate: new Date(
-            Date.now() +
+            sale.saleDate.getTime() +
               data.installments * data.daysPerInstallment * 24 * 60 * 60 * 1000
           ),
         },
@@ -110,7 +110,7 @@ export class SaleRepository {
           number: i + 1,
           amount: data.installmentAmount,
           dueDate: new Date(
-            Date.now() + (i + 1) * data.daysPerInstallment * 24 * 60 * 60 * 1000
+            sale.saleDate.getTime() + (i + 1) * data.daysPerInstallment * 24 * 60 * 60 * 1000
           ),
           status: "PENDING" as const,
         })
@@ -134,9 +134,22 @@ export class SaleRepository {
   }
 
   async delete(id: string) {
-    return prisma.sale.update({
-      where: { id },
-      data: { deletedAt: new Date() },
+    return prisma.$transaction(async (tx) => {
+      const sale = await tx.sale.findUnique({ where: { id } });
+
+      if (sale) {
+        await tx.device.update({
+          where: { id: sale.deviceId },
+          data: { status: DeviceStatus.ACTIVE, clientId: null },
+        });
+
+        await tx.installment.deleteMany({ where: { deviceId: sale.deviceId } });
+        await tx.paymentPlan.deleteMany({ where: { deviceId: sale.deviceId } });
+        await tx.blockRule.deleteMany({ where: { deviceId: sale.deviceId } });
+        await tx.deviceSync.deleteMany({ where: { deviceId: sale.deviceId } });
+        
+        return tx.sale.delete({ where: { id } });
+      }
     });
   }
 
@@ -202,6 +215,8 @@ export class SaleRepository {
 
       await tx.installment.deleteMany({ where: { deviceId: data.deviceId } });
 
+      const updatedSale = await tx.sale.findUnique({ where: { id } });
+
       const installmentsData = Array.from(
         { length: data.installments },
         (_, i) => ({
@@ -209,7 +224,7 @@ export class SaleRepository {
           number: i + 1,
           amount: data.installmentAmount,
           dueDate: new Date(
-            Date.now() + (i + 1) * data.daysPerInstallment * 24 * 60 * 60 * 1000
+            updatedSale!.saleDate.getTime() + (i + 1) * data.daysPerInstallment * 24 * 60 * 60 * 1000
           ),
           status: "PENDING" as const,
         })

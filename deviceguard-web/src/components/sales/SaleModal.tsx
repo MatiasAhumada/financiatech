@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GenericModal } from "@/components/common/GenericModal";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -48,13 +48,13 @@ export function SaleModal({
   const [isCreatePlanModalOpen, setIsCreatePlanModalOpen] = useState(false);
   const [isCreateDeviceModalOpen, setIsCreateDeviceModalOpen] = useState(false);
   const [isCreateClientModalOpen, setIsCreateClientModalOpen] = useState(false);
-  const [localDevices, setLocalDevices] = useState<IDevice[]>([]);
-  const [localClients, setLocalClients] = useState<IClient[]>([]);
+  const [localDevices, setLocalDevices] = useState<IDevice[]>(devices);
+  const [localClients, setLocalClients] = useState<IClient[]>(clients);
 
-  useState(() => {
+  useEffect(() => {
     setLocalDevices(devices);
     setLocalClients(clients);
-  });
+  }, [devices, clients]);
 
   const handleDeviceCreated = async () => {
     const updatedDevices = await deviceService.getAll();

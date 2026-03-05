@@ -354,9 +354,12 @@ export default function SalesPage() {
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                       {Array.from({ length: sale.installments }, (_, i) => {
+                        const dueDate = new Date(sale.saleDate);
+                        dueDate.setDate(dueDate.getDate() + (i + 1) * (sale.paymentFrequency === 'WEEKLY' ? 7 : sale.paymentFrequency === 'BIWEEKLY' ? 15 : 30));
+                        
                         return (
                           <div
-                            key={i}
+                            key={`${sale.id}-installment-${i}`}
                             className="border rounded-lg p-4 border-warning bg-warning/5"
                           >
                             <div className="flex items-center justify-between mb-2">
@@ -371,10 +374,7 @@ export default function SalesPage() {
                               ${Number(sale.installmentAmount).toFixed(2)}
                             </p>
                             <p className="text-silver-400 text-xs mt-1">
-                              Vence:{" "}
-                              {new Date(
-                                Date.now() + (i + 1) * 30 * 24 * 60 * 60 * 1000
-                              ).toLocaleDateString()}
+                              Vence: {dueDate.toLocaleDateString()}
                             </p>
                           </div>
                         );
