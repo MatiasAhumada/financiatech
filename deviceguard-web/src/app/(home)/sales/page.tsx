@@ -79,9 +79,9 @@ export default function SalesPage() {
   };
 
   const handleSaleCreated = async () => {
-    await loadData();
-    setSelectedSale(null);
     setIsModalOpen(false);
+    setSelectedSale(null);
+    await loadData();
   };
 
   const toggleRow = (saleId: string) => {
@@ -233,10 +233,10 @@ export default function SalesPage() {
             },
             {
               key: "monthly",
-              label: "CUOTA MENSUAL",
+              label: "CUOTA",
               render: (sale: ISale) => (
                 <p className="font-medium text-white">
-                  ${Number(sale.monthlyAmount).toFixed(2)}
+                  ${Number(sale.installmentAmount).toFixed(2)}
                 </p>
               ),
             },
@@ -356,7 +356,7 @@ export default function SalesPage() {
                               </span>
                             </div>
                             <p className="text-white font-bold text-lg">
-                              ${Number(sale.monthlyAmount).toFixed(2)}
+                              ${Number(sale.installmentAmount).toFixed(2)}
                             </p>
                             <p className="text-silver-400 text-xs mt-1">
                               Vence:{" "}
@@ -403,6 +403,7 @@ export default function SalesPage() {
           clients={clients}
           financingPlans={financingPlans}
           onSuccess={handleSaleCreated}
+          onPlansUpdate={setFinancingPlans}
           initialSale={selectedSale}
         />
 

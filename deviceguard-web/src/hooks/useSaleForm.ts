@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { IFinancingPlan, ISale } from "@/types";
+import { PaymentFrequency } from "@prisma/client";
 import { saleService } from "@/services/sale.service";
 import {
   clientErrorHandler,
@@ -28,6 +29,9 @@ export function useSaleForm({
   const [amount, setAmount] = useState("");
   const [initialPayment, setInitialPayment] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<IFinancingPlan | null>(null);
+  const [paymentFrequency, setPaymentFrequency] = useState<PaymentFrequency>(
+    PaymentFrequency.MONTHLY
+  );
   const [firstWarningDay, setFirstWarningDay] = useState(
     SALES_DEFAULTS.FIRST_WARNING_DAY.toString()
   );
@@ -61,6 +65,7 @@ export function useSaleForm({
     setAmount("");
     setInitialPayment("");
     setSelectedPlan(null);
+    setPaymentFrequency(PaymentFrequency.MONTHLY);
     setFirstWarningDay(SALES_DEFAULTS.FIRST_WARNING_DAY.toString());
     setSecondWarningDay(SALES_DEFAULTS.SECOND_WARNING_DAY.toString());
     setBlockDay(SALES_DEFAULTS.BLOCK_DAY.toString());
@@ -68,8 +73,12 @@ export function useSaleForm({
   };
 
   const handleClose = () => {
+    const wasStep3 = step === 3 && activationCode;
     resetForm();
     onClose();
+    if (wasStep3) {
+      onSuccess();
+    }
   };
 
   const handleNext = () => {
@@ -104,6 +113,7 @@ export function useSaleForm({
         totalAmount: parseFloat(amount),
         initialPayment: parseFloat(initialPayment),
         installments: selectedPlan.installments,
+        paymentFrequency,
         financingPlanId: selectedPlan.id,
         firstWarningDay: parseInt(firstWarningDay),
         secondWarningDay: parseInt(secondWarningDay),
@@ -149,6 +159,8 @@ export function useSaleForm({
     setInitialPayment,
     selectedPlan,
     setSelectedPlan,
+    paymentFrequency,
+    setPaymentFrequency,
     firstWarningDay,
     setFirstWarningDay,
     secondWarningDay,

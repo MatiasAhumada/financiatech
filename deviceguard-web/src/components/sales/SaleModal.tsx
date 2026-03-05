@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { financingPlanService } from "@/services/financingPlan.service";
 import { IDevice, IClient, IFinancingPlan, ISale } from "@/types";
 import { SALES_MESSAGES } from "@/constants/sales.constant";
+import { PAYMENT_FREQUENCY_LABELS } from "@/constants/paymentFrequency.constant";
 import { financingUtils } from "@/utils/financing.util";
 import { salesUtils } from "@/utils/sales.util";
 import { ShoppingCart01Icon } from "hugeicons-react";
@@ -26,6 +27,7 @@ interface SaleModalProps {
   clients: IClient[];
   financingPlans: IFinancingPlan[];
   onSuccess: () => void;
+  onPlansUpdate: (plans: IFinancingPlan[]) => void;
   initialSale?: ISale | null;
 }
 
@@ -36,6 +38,7 @@ export function SaleModal({
   clients,
   financingPlans,
   onSuccess,
+  onPlansUpdate,
   initialSale,
 }: SaleModalProps) {
   const [isCreatePlanModalOpen, setIsCreatePlanModalOpen] = useState(false);
@@ -226,9 +229,11 @@ export function SaleModal({
             </div>
 
             <div className="border border-carbon_black-600 rounded-lg p-6 bg-carbon_black">
-              <Label className="text-silver-400 text-xs uppercase">{SALES_MESSAGES.LABELS.MONTHLY_PAYMENT}</Label>
+              <Label className="text-silver-400 text-xs uppercase">{SALES_MESSAGES.LABELS.INSTALLMENT_PAYMENT}</Label>
               <p className="text-3xl font-bold text-white mt-2">{salesUtils.formatCurrency(monthlyPayment)}</p>
-              <p className="text-xs text-silver-400 mt-1">{selectedPlan?.installments || 0} cuotas</p>
+              <p className="text-xs text-silver-400 mt-1">
+                {selectedPlan?.installments || 0} cuotas {selectedPlan && PAYMENT_FREQUENCY_LABELS[selectedPlan.paymentFrequency].toLowerCase()}
+              </p>
             </div>
 
             <div className="border border-mahogany_red/50 rounded-lg p-4 bg-mahogany_red/5">
@@ -257,7 +262,7 @@ export function SaleModal({
         onOpenChange={setIsCreatePlanModalOpen}
         onSuccess={async () => {
           const plansData = await financingPlanService.getAll();
-          financingPlans.splice(0, financingPlans.length, ...plansData);
+          onPlansUpdate(plansData);
         }}
       />
     </GenericModal>

@@ -3,6 +3,7 @@ import { DevicesRepository } from "../repository/devices.repository";
 import { FinancingPlanRepository } from "../repository/financingPlan.repository";
 import { ApiError } from "@/utils/handlers/apiError.handler";
 import { ISale } from "@/types";
+import { PAYMENT_FREQUENCY_DAYS } from "@/constants/paymentFrequency.constant";
 import httpStatus from "http-status";
 import { CreateSaleDto } from "@/schemas/sale.schema";
 
@@ -49,8 +50,9 @@ export class SaleService {
 
     const financedAmount = data.totalAmount - data.initialPayment;
     const totalWithInterest = financedAmount * (1 + Number(plan.interestRate) / 100);
-    const monthlyAmount = totalWithInterest / data.installments;
+    const installmentAmount = totalWithInterest / data.installments;
     const activationCode = generateActivationCode();
+    const daysPerInstallment = PAYMENT_FREQUENCY_DAYS[data.paymentFrequency];
 
     return this.saleRepository.createWithTransaction({
       deviceId: data.deviceId,
@@ -58,8 +60,10 @@ export class SaleService {
       totalAmount: data.totalAmount,
       initialPayment: data.initialPayment,
       installments: data.installments,
-      monthlyAmount,
+      installmentAmount,
+      paymentFrequency: data.paymentFrequency,
       activationCode,
+      daysPerInstallment,
       firstWarningDay: data.firstWarningDay,
       secondWarningDay: data.secondWarningDay,
       blockDay: data.blockDay,
@@ -108,7 +112,8 @@ export class SaleService {
 
     const financedAmount = data.totalAmount - data.initialPayment;
     const totalWithInterest = financedAmount * (1 + Number(plan.interestRate) / 100);
-    const monthlyAmount = totalWithInterest / data.installments;
+    const installmentAmount = totalWithInterest / data.installments;
+    const daysPerInstallment = PAYMENT_FREQUENCY_DAYS[data.paymentFrequency];
 
     return this.saleRepository.updateWithTransaction(id, {
       deviceId: data.deviceId,
@@ -116,7 +121,9 @@ export class SaleService {
       totalAmount: data.totalAmount,
       initialPayment: data.initialPayment,
       installments: data.installments,
-      monthlyAmount,
+      installmentAmount,
+      paymentFrequency: data.paymentFrequency,
+      daysPerInstallment,
       firstWarningDay: data.firstWarningDay,
       secondWarningDay: data.secondWarningDay,
       blockDay: data.blockDay,

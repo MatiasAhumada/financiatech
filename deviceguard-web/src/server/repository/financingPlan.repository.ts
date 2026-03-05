@@ -9,7 +9,10 @@ export class FinancingPlanRepository {
   async findByAdminId(adminId: string) {
     return prisma.financingPlan.findMany({
       where: { adminId, deletedAt: null },
-      orderBy: { installments: Prisma.SortOrder.asc },
+      orderBy: [
+        { paymentFrequency: Prisma.SortOrder.asc },
+        { installments: Prisma.SortOrder.asc },
+      ],
     });
   }
 

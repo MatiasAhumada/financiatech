@@ -1,5 +1,6 @@
 import { FinancingPlanRepository } from "../repository/financingPlan.repository";
 import { ApiError } from "@/utils/handlers/apiError.handler";
+import { PaymentFrequency } from "@prisma/client";
 import httpStatus from "http-status";
 
 export class FinancingPlanService {
@@ -12,12 +13,14 @@ export class FinancingPlanService {
   async create(data: {
     name: string;
     installments: number;
+    paymentFrequency: PaymentFrequency;
     interestRate: number;
     adminId: string;
   }) {
     return this.financingPlanRepository.create({
       name: data.name,
       installments: data.installments,
+      paymentFrequency: data.paymentFrequency,
       interestRate: data.interestRate,
       admin: { connect: { id: data.adminId } },
     });
@@ -42,7 +45,12 @@ export class FinancingPlanService {
 
   async update(
     id: string,
-    data: { name: string; installments: number; interestRate: number }
+    data: {
+      name: string;
+      installments: number;
+      paymentFrequency: PaymentFrequency;
+      interestRate: number;
+    }
   ) {
     await this.findById(id);
 

@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { financingPlanService } from "@/services/financingPlan.service";
 import { createFinancingPlanSchema } from "@/schemas/financingPlan.schema";
+import { PaymentFrequency } from "@prisma/client";
+import { PAYMENT_FREQUENCY_LABELS } from "@/constants/paymentFrequency.constant";
 import {
   clientErrorHandler,
   clientSuccessHandler,
@@ -25,6 +27,9 @@ export function CreateFinancingPlanModal({
 }: CreateFinancingPlanModalProps) {
   const [name, setName] = useState("");
   const [installments, setInstallments] = useState("");
+  const [paymentFrequency, setPaymentFrequency] = useState<PaymentFrequency>(
+    PaymentFrequency.MONTHLY
+  );
   const [interestRate, setInterestRate] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -32,6 +37,7 @@ export function CreateFinancingPlanModal({
   const handleClose = () => {
     setName("");
     setInstallments("");
+    setPaymentFrequency(PaymentFrequency.MONTHLY);
     setInterestRate("");
     setErrors({});
     onOpenChange(false);
@@ -41,6 +47,7 @@ export function CreateFinancingPlanModal({
     const result = createFinancingPlanSchema.safeParse({
       name,
       installments: parseInt(installments),
+      paymentFrequency,
       interestRate: parseFloat(interestRate),
     });
 
@@ -109,6 +116,24 @@ export function CreateFinancingPlanModal({
           {errors.name && (
             <p className="text-xs text-mahogany_red">{errors.name}</p>
           )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="paymentFrequency">Frecuencia de Pago</Label>
+          <select
+            id="paymentFrequency"
+            value={paymentFrequency}
+            onChange={(e) =>
+              setPaymentFrequency(e.target.value as PaymentFrequency)
+            }
+            className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+          >
+            {Object.entries(PAYMENT_FREQUENCY_LABELS).map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="space-y-2">

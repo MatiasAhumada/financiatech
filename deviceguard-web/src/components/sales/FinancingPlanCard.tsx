@@ -1,5 +1,6 @@
 import { IFinancingPlan } from "@/types";
 import { salesUtils } from "@/utils/sales.util";
+import { PAYMENT_FREQUENCY_LABELS } from "@/constants/paymentFrequency.constant";
 import { SALES_DEFAULTS } from "@/constants/sales.constant";
 
 interface FinancingPlanCardProps {
@@ -30,8 +31,9 @@ export function FinancingPlanCard({
       <div className="flex items-center justify-between">
         <div>
           <p className="text-white font-medium text-lg">
-            {plan.installments} Meses
+            {plan.installments} {PAYMENT_FREQUENCY_LABELS[plan.paymentFrequency]}
             {plan.installments === SALES_DEFAULTS.RECOMMENDED_INSTALLMENTS &&
+              plan.paymentFrequency === "MONTHLY" &&
               " (Recomendado)"}
           </p>
           <p className="text-sm text-silver-400">
@@ -39,7 +41,7 @@ export function FinancingPlanCard({
           </p>
         </div>
         <p className="text-mahogany_red font-bold text-xl">
-          {salesUtils.formatCurrency(planMonthly)}/mes
+          {salesUtils.formatCurrency(planMonthly)}
         </p>
       </div>
     </button>

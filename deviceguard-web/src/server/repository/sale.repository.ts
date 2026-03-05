@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { ISale } from "@/types";
-import { DeviceStatus } from "@prisma/client";
+import { DeviceStatus, PaymentFrequency } from "@prisma/client";
 
 export class SaleRepository {
   async findByActivationCode(activationCode: string): Promise<ISale | null> {
@@ -49,8 +49,10 @@ export class SaleRepository {
     totalAmount: number;
     initialPayment: number;
     installments: number;
-    monthlyAmount: number;
+    installmentAmount: number;
+    paymentFrequency: PaymentFrequency;
     activationCode: string;
+    daysPerInstallment: number;
     firstWarningDay: number;
     secondWarningDay: number;
     blockDay: number;
@@ -71,7 +73,8 @@ export class SaleRepository {
           totalAmount: data.totalAmount,
           initialPayment: data.initialPayment,
           installments: data.installments,
-          monthlyAmount: data.monthlyAmount,
+          installmentAmount: data.installmentAmount,
+          paymentFrequency: data.paymentFrequency,
           activationCode: data.activationCode,
         },
         include: {
@@ -87,10 +90,10 @@ export class SaleRepository {
           deviceId: data.deviceId,
           totalAmount: financedAmount,
           installments: data.installments,
-          monthlyAmount: data.monthlyAmount,
+          monthlyAmount: data.installmentAmount,
           startDate: new Date(),
           endDate: new Date(
-            Date.now() + data.installments * 30 * 24 * 60 * 60 * 1000
+            Date.now() + data.installments * data.daysPerInstallment * 24 * 60 * 60 * 1000
           ),
         },
       });
@@ -100,8 +103,8 @@ export class SaleRepository {
         (_, i) => ({
           deviceId: data.deviceId,
           number: i + 1,
-          amount: data.monthlyAmount,
-          dueDate: new Date(Date.now() + (i + 1) * 30 * 24 * 60 * 60 * 1000),
+          amount: data.installmentAmount,
+          dueDate: new Date(Date.now() + (i + 1) * data.daysPerInstallment * 24 * 60 * 60 * 1000),
           status: "PENDING" as const,
         })
       );
@@ -136,7 +139,9 @@ export class SaleRepository {
     totalAmount: number;
     initialPayment: number;
     installments: number;
-    monthlyAmount: number;
+    installmentAmount: number;
+    paymentFrequency: PaymentFrequency;
+    daysPerInstallment: number;
     firstWarningDay: number;
     secondWarningDay: number;
     blockDay: number;
@@ -164,7 +169,8 @@ export class SaleRepository {
           totalAmount: data.totalAmount,
           initialPayment: data.initialPayment,
           installments: data.installments,
-          monthlyAmount: data.monthlyAmount,
+          installmentAmount: data.installmentAmount,
+          paymentFrequency: data.paymentFrequency,
         },
         include: { device: true, client: true },
       });
@@ -176,8 +182,8 @@ export class SaleRepository {
         data: {
           totalAmount: financedAmount,
           installments: data.installments,
-          monthlyAmount: data.monthlyAmount,
-          endDate: new Date(Date.now() + data.installments * 30 * 24 * 60 * 60 * 1000),
+          monthlyAmount: data.installmentAmount,
+          endDate: new Date(Date.now() + data.installments * data.daysPerInstallment * 24 * 60 * 60 * 1000),
         },
       });
 
@@ -186,8 +192,8 @@ export class SaleRepository {
       const installmentsData = Array.from({ length: data.installments }, (_, i) => ({
         deviceId: data.deviceId,
         number: i + 1,
-        amount: data.monthlyAmount,
-        dueDate: new Date(Date.now() + (i + 1) * 30 * 24 * 60 * 60 * 1000),
+        amount: data.installmentAmount,
+        dueDate: new Date(Date.now() + (i + 1) * data.daysPerInstallment * 24 * 60 * 60 * 1000),
         status: "PENDING" as const,
       }));
 
