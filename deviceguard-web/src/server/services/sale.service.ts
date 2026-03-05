@@ -23,7 +23,7 @@ export class SaleService {
     this.financingPlanRepository = new FinancingPlanRepository();
   }
 
-  async create(data: CreateSaleDto): Promise<ISale> {
+  async create(data: CreateSaleDto) {
     const device = await this.devicesRepository.findById(data.deviceId);
 
     if (!device) {
@@ -75,7 +75,7 @@ export class SaleService {
     });
   }
 
-  async findByActivationCode(activationCode: string): Promise<ISale | null> {
+  async findByActivationCode(activationCode: string) {
     return this.saleRepository.findByActivationCode(activationCode);
   }
 

@@ -3,7 +3,7 @@ import { ISale } from "@/types";
 import { DeviceStatus, PaymentFrequency } from "@prisma/client";
 
 export class SaleRepository {
-  async findByActivationCode(activationCode: string): Promise<ISale | null> {
+  async findByActivationCode(activationCode: string) {
     return prisma.sale.findUnique({
       where: { activationCode },
       include: {
@@ -13,7 +13,7 @@ export class SaleRepository {
     });
   }
 
-  async findByDeviceId(deviceId: string): Promise<ISale | null> {
+  async findByDeviceId(deviceId: string) {
     return prisma.sale.findUnique({
       where: { deviceId },
       include: {
@@ -64,7 +64,7 @@ export class SaleRepository {
     firstWarningDay: number;
     secondWarningDay: number;
     blockDay: number;
-  }): Promise<ISale> {
+  }) {
     return prisma.$transaction(async (tx) => {
       await tx.device.update({
         where: { id: data.deviceId },
