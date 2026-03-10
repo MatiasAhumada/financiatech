@@ -9,7 +9,6 @@ import { useProvisioningCode } from "@/src/hooks/useProvisioningCode";
 import { useDeviceImei } from "@/src/hooks/useDeviceImei";
 import { provisioningService } from "@/src/services/provisioning.service";
 import { validateProvisioningCode } from "@/src/utils/validation.util";
-import { getFCMToken } from "@/src/services/firebase.service";
 
 const { height } = Dimensions.get("window");
 
@@ -97,8 +96,19 @@ export default function ProvisioningScreen() {
 
     try {
       // Obtener FCM token antes de sincronizar
-      const fcmToken = await getFCMToken();
-      console.log('[PROVISIONING] FCM Token obtained:', fcmToken);
+      let fcmToken: string | null = null;
+      try {
+        const { requestNotificationPermission, getFCMToken } = await import('@/src/services/firebase.service');
+        const hasPermission = await requestNotificationPermission();
+        if (hasPermission) {
+          fcmToken = await getFCMToken();
+          console.log('[PROVISIONING] FCM Token obtained:', fcmToken ? 'YES' : 'NO');
+        } else {
+          console.warn('[PROVISIONING] Notification permission denied');
+        }
+      } catch (fcmError) {
+        console.warn('[PROVISIONING] Error getting FCM token:', fcmError);
+      }
       
       const result = await provisioningService.syncDevice(fullCode, deviceId, fcmToken || undefined);
 
