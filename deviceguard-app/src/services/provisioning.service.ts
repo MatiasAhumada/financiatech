@@ -20,14 +20,16 @@ export const provisioningService = {
    * Vincula este dispositivo físico con la venta registrada en la web.
    * @param activationCode Código de 6 caracteres ingresado por el usuario
    * @param deviceId Identificador único del dispositivo (androidId o IDFV)
+   * @param fcmToken Token de Firebase Cloud Messaging para notificaciones push
    */
   syncDevice: async (
     activationCode: string,
-    deviceId: string
+    deviceId: string,
+    fcmToken?: string
   ): Promise<SyncDeviceResponse> => {
     const response = await clientAxios.post<SyncDeviceResponse>(
       API_ENDPOINTS.DEVICES.SYNC,
-      { activationCode, imei: deviceId }
+      { activationCode, imei: deviceId, fcmToken }
     );
     return response.data;
   },

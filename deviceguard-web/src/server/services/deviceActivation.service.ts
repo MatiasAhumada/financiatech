@@ -36,7 +36,8 @@ export class DeviceActivationService {
 
   async activate(
     activationCode: string,
-    imei: string
+    imei: string,
+    fcmToken?: string
   ): Promise<ActivationResult> {
     const sale = await this.saleRepository.findByActivationCode(activationCode);
 
@@ -70,16 +71,19 @@ export class DeviceActivationService {
         data: { status: DeviceStatus.SOLD_SYNCED },
       });
 
-      // 2. Crear el registro DeviceSync
+      // 2. Crear el registro DeviceSync con el FCM token si se proporcionó
       const sync = await tx.deviceSync.create({
         data: {
           deviceId: sale.deviceId,
           imei,
+          fcmToken: fcmToken || null,
         },
         include: {
           device: true,
         },
       });
+
+      console.log('[ACTIVATION] DeviceSync created with FCM token:', fcmToken ? 'YES' : 'NO');
 
       // 3. Obtener el nombre del admin/negocio para la respuesta a la app mobile.
       //    Se hace una query separada dentro de la misma transacción para no

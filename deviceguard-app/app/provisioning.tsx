@@ -9,6 +9,7 @@ import { useProvisioningCode } from "@/src/hooks/useProvisioningCode";
 import { useDeviceImei } from "@/src/hooks/useDeviceImei";
 import { provisioningService } from "@/src/services/provisioning.service";
 import { validateProvisioningCode } from "@/src/utils/validation.util";
+import { getFCMToken } from "@/src/services/firebase.service";
 
 const { height } = Dimensions.get("window");
 
@@ -95,7 +96,11 @@ export default function ProvisioningScreen() {
     setIsLoading(true);
 
     try {
-      const result = await provisioningService.syncDevice(fullCode, deviceId);
+      // Obtener FCM token antes de sincronizar
+      const fcmToken = await getFCMToken();
+      console.log('[PROVISIONING] FCM Token obtained:', fcmToken);
+      
+      const result = await provisioningService.syncDevice(fullCode, deviceId, fcmToken || undefined);
 
       // Navega a la pantalla de animación de vinculación pasando los datos
       // reales del dispositivo para que linking-success.tsx los muestre
