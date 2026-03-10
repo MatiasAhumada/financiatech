@@ -473,4 +473,23 @@ public class DeviceModule extends ReactContextBaseJavaModule {
             });
         }
     }
+    
+    @ReactMethod
+    public void restartApp() {
+        try {
+            Activity activity = getCurrentActivity();
+            if (activity != null) {
+                Intent intent = reactContext.getPackageManager()
+                    .getLaunchIntentForPackage(reactContext.getPackageName());
+                if (intent != null) {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    activity.finish();
+                    reactContext.startActivity(intent);
+                    System.exit(0);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error restarting app", e);
+        }
+    }
 }

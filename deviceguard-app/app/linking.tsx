@@ -4,7 +4,7 @@ import { YStack, Text } from "tamagui";
 import { LinkingAnimation } from "@/components/linking/LinkingAnimation";
 import { LinkingStatus } from "@/components/linking/LinkingStatus";
 import { LinkingSteps } from "@/components/linking/LinkingSteps";
-import * as Updates from 'expo-updates';
+import { NativeModules, Platform } from "react-native";
 
 export default function LinkingScreen() {
   const router = useRouter();
@@ -18,26 +18,17 @@ export default function LinkingScreen() {
   }>();
 
   useEffect(() => {
-    const timeoutId = setTimeout(async () => {
-      try {
-        await Updates.reloadAsync();
-      } catch (error) {
-        console.warn('[LINKING] Error reloading app:', error);
-        router.replace({
-          pathname: "/linking-success",
-          params: {
-            deviceName: params.deviceName,
-            deviceId: params.deviceId,
-            adminName: params.adminName,
-          },
-        });
+    const timeoutId = setTimeout(() => {
+      if (Platform.OS === 'android') {
+        const { DeviceModule } = NativeModules;
+        DeviceModule?.restartApp?.();
       }
     }, 6000);
 
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [router, params.deviceName, params.deviceId, params.adminName]);
+  }, []);
 
   return (
     <YStack
