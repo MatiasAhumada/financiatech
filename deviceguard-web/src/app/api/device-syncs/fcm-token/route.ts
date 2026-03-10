@@ -4,10 +4,17 @@ import httpStatus from "http-status";
 import apiErrorHandler, { ApiError } from "@/utils/handlers/apiError.handler";
 import { registerFCMTokenSchema, RegisterFCMTokenDto } from "@/schemas/fcmToken.schema";
 
+// Headers CORS para permitir conexiones desde la app mobile
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
 /**
  * POST /api/device-syncs/fcm-token
  * Registra o actualiza el token FCM de un dispositivo
- * 
+ *
  * El imei debe ser el mismo que se usó durante la activación del dispositivo
  */
 export async function POST(request: NextRequest) {
@@ -41,8 +48,19 @@ export async function POST(request: NextRequest) {
       success: true,
       message: "Token FCM registrado exitosamente",
       deviceSync,
-    }, { status: httpStatus.OK });
+    }, { 
+      status: httpStatus.OK,
+      headers: corsHeaders,
+    });
   } catch (error: any) {
     return apiErrorHandler({ error: error as ApiError, request });
   }
+}
+
+// Manejar preflight requests
+export async function OPTIONS() {
+  return NextResponse.json(null, { 
+    status: 204,
+    headers: corsHeaders,
+  });
 }
