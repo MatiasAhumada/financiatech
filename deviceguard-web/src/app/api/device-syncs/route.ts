@@ -9,6 +9,13 @@ const createSyncSchema = z.object({
   imei: z.string().min(1, "IMEI requerido"),
 });
 
+// Headers CORS para permitir conexiones desde la app mobile
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -19,8 +26,19 @@ export async function POST(request: NextRequest) {
       validatedData.imei
     );
 
-    return NextResponse.json(result, { status: httpStatus.CREATED });
+    return NextResponse.json(result, { 
+      status: httpStatus.CREATED,
+      headers: corsHeaders,
+    });
   } catch (error) {
     return apiErrorHandler({ error: error as ApiError, request });
   }
+}
+
+// Manejar preflight requests
+export async function OPTIONS() {
+  return NextResponse.json(null, { 
+    status: 204,
+    headers: corsHeaders,
+  });
 }
