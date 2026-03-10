@@ -7,11 +7,9 @@ import { API_ENDPOINTS } from '@/src/constants/api.constant';
  */
 export interface SyncDeviceResponse {
   success: boolean;
-  /** Nombre del dispositivo registrado en la venta (ej: "Samsung Galaxy A54") */
   deviceName: string;
-  /** ID interno del dispositivo en la BD */
   deviceId: string;
-  /** Nombre del admin/negocio propietario del dispositivo */
+  imei: string;
   adminName: string;
 }
 

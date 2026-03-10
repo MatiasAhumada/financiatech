@@ -13,13 +13,10 @@ import { DeviceStatus } from "@prisma/client";
  */
 export interface ActivationResult {
   success: boolean;
-  /** Nombre del dispositivo registrado en la venta (ej: "Samsung Galaxy A54") */
   deviceName: string;
-  /** ID interno del dispositivo en la BD */
   deviceId: string;
-  /** Nombre del admin/negocio propietario del plan de financiamiento */
+  imei: string;
   adminName: string;
-  /** Registro de sincronización creado */
   sync: IDeviceSync;
 }
 
@@ -103,6 +100,7 @@ export class DeviceActivationService {
         success: true,
         deviceName: sale.device.name,
         deviceId: sale.deviceId,
+        imei,
         adminName,
         sync,
       };

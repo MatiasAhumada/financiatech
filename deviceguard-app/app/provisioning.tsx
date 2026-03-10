@@ -118,7 +118,7 @@ export default function ProvisioningScreen() {
         pathname: "/linking",
         params: {
           deviceName: result.deviceName,
-          deviceId: result.deviceId,
+          deviceId: result.imei,
           adminName: result.adminName,
         },
       });

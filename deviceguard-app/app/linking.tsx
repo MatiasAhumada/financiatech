@@ -4,6 +4,7 @@ import { YStack, Text } from "tamagui";
 import { LinkingAnimation } from "@/components/linking/LinkingAnimation";
 import { LinkingStatus } from "@/components/linking/LinkingStatus";
 import { LinkingSteps } from "@/components/linking/LinkingSteps";
+import * as Updates from 'expo-updates';
 
 export default function LinkingScreen() {
   const router = useRouter();
@@ -17,19 +18,21 @@ export default function LinkingScreen() {
   }>();
 
   useEffect(() => {
-    // Esta pantalla es una transición visual de ~3s mientras el usuario ve
-    // la animación de "conexión segura". El servidor ya confirmó el éxito.
-    const timeoutId = setTimeout(() => {
-      router.replace({
-        pathname: "/linking-success",
-        params: {
-          deviceName: params.deviceName,
-          deviceId: params.deviceId,
-          adminName: params.adminName,
-        },
-      });
+    const timeoutId = setTimeout(async () => {
+      try {
+        await Updates.reloadAsync();
+      } catch (error) {
+        console.warn('[LINKING] Error reloading app:', error);
+        router.replace({
+          pathname: "/linking-success",
+          params: {
+            deviceName: params.deviceName,
+            deviceId: params.deviceId,
+            adminName: params.adminName,
+          },
+        });
+      }
     }, 6000);
-
 
     return () => {
       clearTimeout(timeoutId);
