@@ -242,6 +242,25 @@ public class DeviceGuardPollingService extends Service {
             int responseCode = conn.getResponseCode();
             Log.d(TAG, "Poll response code: " + responseCode);
             
+            if (responseCode == 404) {
+                // El dispositivo no existe en el servidor (DB fue reseteada)
+                // Limpiar estado de vinculación y detener polling
+                Log.w(TAG, "Device not found on server (404) - clearing sync state");
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                prefs.edit()
+                     .putBoolean(KEY_IS_LINKED, false)
+                     .putBoolean(KEY_IS_LOCKED, false)
+                     .putBoolean(KEY_LOCKDOWN_ACTIVE, false)
+                     .remove(KEY_DEVICE_ID)
+                     .remove(KEY_API_URL)
+                     .apply();
+                
+                // Detener el servicio de polling
+                stopSelf();
+                conn.disconnect();
+                return;
+            }
+            
             if (responseCode != 200) {
                 Log.w(TAG, "Poll returned HTTP " + responseCode);
                 conn.disconnect();
@@ -318,6 +337,24 @@ public class DeviceGuardPollingService extends Service {
 
             int responseCode = conn.getResponseCode();
             Log.d(TAG, "Unlock fallback response code: " + responseCode);
+            
+            if (responseCode == 404) {
+                // El dispositivo no existe en el servidor (DB fue reseteada)
+                Log.w(TAG, "Device not found on server (404) during unlock fallback - clearing sync state");
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                prefs.edit()
+                     .putBoolean(KEY_IS_LINKED, false)
+                     .putBoolean(KEY_IS_LOCKED, false)
+                     .putBoolean(KEY_LOCKDOWN_ACTIVE, false)
+                     .remove(KEY_DEVICE_ID)
+                     .remove(KEY_API_URL)
+                     .apply();
+                
+                // Detener el servicio de polling
+                stopSelf();
+                conn.disconnect();
+                return;
+            }
             
             if (responseCode != 200) {
                 Log.w(TAG, "Unlock fallback returned HTTP " + responseCode);

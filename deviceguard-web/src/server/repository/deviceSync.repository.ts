@@ -1,5 +1,26 @@
 import { prisma } from "@/lib/prisma";
-import { IDeviceSync } from "@/types";
+import { IDeviceSync, DeviceStatusCheckResult } from "@/types";
+import { DeviceStatus } from "@prisma/client";
+
+interface DeviceSyncWithDetails {
+  deviceId: string;
+  device: {
+    status: DeviceStatus;
+    name: string;
+    admin: {
+      user: {
+        name: string;
+      };
+    };
+  };
+}
+
+interface DeviceSyncStatusRaw {
+  deviceId: string;
+  status: DeviceStatus;
+  deviceName: string;
+  adminName: string;
+}
 
 export class DeviceSyncRepository {
   async create(deviceId: string, imei: string): Promise<IDeviceSync> {
@@ -30,25 +51,38 @@ export class DeviceSyncRepository {
     });
   }
 
-  /**
-   * Obtiene el deviceSync con toda la información necesaria:
-   * - device completo con su admin y usuario
-   * - sincronización del dispositivo
-   */
-  async findByImeiWithDetails(imei: string) {
-    return prisma.deviceSync.findUnique({
+  async findDeviceStatusByImei(imei: string): Promise<DeviceSyncStatusRaw | null> {
+    const result = await prisma.deviceSync.findUnique({
       where: { imei },
-      include: {
+      select: {
+        deviceId: true,
         device: {
-          include: {
+          select: {
+            status: true,
+            name: true,
             admin: {
-              include: {
-                user: true,
+              select: {
+                user: {
+                  select: {
+                    name: true,
+                  },
+                },
               },
             },
           },
         },
       },
-    });
+    }) as DeviceSyncWithDetails | null;
+
+    if (!result) {
+      return null;
+    }
+
+    return {
+      deviceId: result.deviceId,
+      status: result.device.status,
+      deviceName: result.device.name,
+      adminName: result.device.admin.user.name,
+    };
   }
 }

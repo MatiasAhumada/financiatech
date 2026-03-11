@@ -188,6 +188,8 @@ model Device {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  @@index([status], name: "idx_devices_status")
+  @@index([adminId, status], name: "idx_devices_admin_status")
   @@map("devices")
 }
 
@@ -226,6 +228,7 @@ model Installment {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  @@index([deviceId, status, dueDate], name: "idx_installments_device_status_due")
   @@map("installments")
 }
 
@@ -286,6 +289,7 @@ model Sale {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  @@index([activationCode], name: "idx_sales_activation_code")
   @@map("sales")
 }
 
@@ -321,6 +325,7 @@ model DeviceSync {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([lastPing], name: "idx_device_syncs_lastping")
   @@map("device_syncs")
 }
 

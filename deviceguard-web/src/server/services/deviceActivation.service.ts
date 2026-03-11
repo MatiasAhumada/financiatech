@@ -3,14 +3,12 @@ import { InstallmentRepository } from "../repository/installment.repository";
 import { SaleRepository } from "../repository/sale.repository";
 import { ApiError } from "@/utils/handlers/apiError.handler";
 import { prisma } from "@/lib/prisma";
-import { IDeviceSync } from "@/types";
+import { cache } from "@/lib/cache";
+import { batchUpdater } from "@/lib/batchUpdater";
+import { IDeviceSync, DeviceStatusCheckResult } from "@/types";
 import httpStatus from "http-status";
-import { DeviceStatus } from "@prisma/client";
+import { DeviceStatus, InstallmentStatus } from "@prisma/client";
 
-/**
- * Respuesta de la activación enriquecida con los datos que la app mobile
- * necesita mostrar en la pantalla linking-success.tsx
- */
 export interface ActivationResult {
   success: boolean;
   deviceName: string;
@@ -62,13 +60,11 @@ export class DeviceActivationService {
     }
 
     return prisma.$transaction(async (tx) => {
-      // 1. Actualizar el estado del dispositivo a SOLD_SYNCED
       await tx.device.update({
         where: { id: sale.deviceId },
         data: { status: DeviceStatus.SOLD_SYNCED },
       });
 
-      // 2. Crear el registro DeviceSync con el FCM token si se proporcionó
       const sync = await tx.deviceSync.create({
         data: {
           deviceId: sale.deviceId,
@@ -82,14 +78,18 @@ export class DeviceActivationService {
 
       console.log('[ACTIVATION] DeviceSync created with FCM token:', fcmToken ? 'YES' : 'NO');
 
-      // 3. Obtener el nombre del admin/negocio para la respuesta a la app mobile.
-      //    Se hace una query separada dentro de la misma transacción para no
-      //    alterar la forma de IDeviceSync ni IDevice.
       const deviceWithAdmin = await tx.device.findUnique({
         where: { id: sale.deviceId },
-        include: {
+        select: {
+          name: true,
           admin: {
-            include: { user: true },
+            select: {
+              user: {
+                select: {
+                  name: true,
+                },
+              },
+            },
           },
         },
       });
@@ -107,47 +107,58 @@ export class DeviceActivationService {
     });
   }
 
-  async checkStatus(imei: string) {
-    const sync = await this.deviceSyncRepository.findByImeiWithDetails(imei);
+  async checkStatus(imei: string): Promise<DeviceStatusCheckResult> {
+    const cacheKey = `device:${imei}`;
+    const cached = cache.get(cacheKey);
 
-    if (!sync) {
+    if (cached) {
+      this.addLastPingUpdate(imei);
+      return cached;
+    }
+
+    const deviceStatus = await this.deviceSyncRepository.findDeviceStatusByImei(imei);
+
+    if (!deviceStatus) {
       throw new ApiError({
         status: httpStatus.NOT_FOUND,
         message: "Dispositivo no encontrado",
       });
     }
 
-    await this.deviceSyncRepository.updateLastPing(sync.deviceId);
+    this.addLastPingUpdate(deviceStatus.deviceId);
 
-    // obtiene la última cuota pendiente usando el repository
-    const pendingInstallment =
-      await this.installmentRepository.findLastPendingByDeviceId(sync.deviceId);
+    const isBlocked = deviceStatus.status === DeviceStatus.BLOCKED;
 
-    const pendingAmount = pendingInstallment
-      ? Number(pendingInstallment.amount.toString())
-      : 0;
+    let pendingAmount = 0;
+    if (isBlocked) {
+      const pendingInstallment =
+        await this.installmentRepository.findFirstPendingByDeviceId(deviceStatus.deviceId);
 
-    const deviceName = sync.device.name;
-    const adminName = sync.device.admin?.user?.name ?? "Administrador";
+      pendingAmount = pendingInstallment
+        ? Number(pendingInstallment.amount)
+        : 0;
+    }
 
-    return {
-      blocked: sync.device.status === DeviceStatus.BLOCKED,
-      status: sync.device.status,
-      message:
-        sync.device.status === DeviceStatus.BLOCKED
-          ? "Dispositivo bloqueado por mora en pagos"
-          : "Dispositivo activo",
+    const result: DeviceStatusCheckResult = {
+      blocked: isBlocked,
+      status: deviceStatus.status,
+      message: isBlocked
+        ? "Dispositivo bloqueado por mora en pagos"
+        : "Dispositivo activo",
       pendingAmount,
-      deviceName,
-      adminName,
+      deviceName: deviceStatus.deviceName,
+      adminName: deviceStatus.adminName,
     };
+
+    cache.set(cacheKey, result);
+
+    return result;
   }
 
-  /**
-   * Consulta si una venta ya tiene su dispositivo vinculado.
-   * Usado por el polling del frontend web (ActivationCodeDisplay)
-   * via GET /api/sales/[activationCode]/sync
-   */
+  private addLastPingUpdate(deviceIdOrImei: string): void {
+    batchUpdater.addDeviceId(deviceIdOrImei);
+  }
+
   async getSyncStatus(
     activationCode: string
   ): Promise<{ synced: boolean; deviceName: string }> {

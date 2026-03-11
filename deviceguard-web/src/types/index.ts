@@ -10,6 +10,7 @@ import {
   Notification as PrismaNotification,
   Installment as PrismaInstallment,
   FinancingPlan as PrismaFinancingPlan,
+  DeviceStatus,
 } from "@prisma/client";
 
 export type {
@@ -24,6 +25,7 @@ export type {
   PrismaNotification,
   PrismaInstallment,
   PrismaFinancingPlan,
+  DeviceStatus,
 };
 
 export interface IClient extends PrismaClient {
@@ -78,3 +80,12 @@ export interface INotification extends PrismaNotification {
 }
 
 export interface IFinancingPlan extends PrismaFinancingPlan {}
+
+export interface DeviceStatusCheckResult {
+  blocked: boolean;
+  status: DeviceStatus;
+  message: string;
+  pendingAmount: number;
+  deviceName: string;
+  adminName: string;
+}

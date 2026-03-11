@@ -1,11 +1,5 @@
-/**
- * Servicio de Control de Dispositivos
- *
- * Maneja operaciones remotas como bloqueo, desbloqueo, etc.
- * Integración con notificaciones push y WebSockets para comunicación en tiempo real
- */
-
 import { prisma } from "@/lib/prisma";
+import { cache } from "@/lib/cache";
 import { DeviceStatus, NotificationType } from "@prisma/client";
 
 export interface LockDeviceInput {
@@ -25,18 +19,10 @@ export interface DeviceControlResponse {
 }
 
 export const deviceControlService = {
-  /**
-   * Bloquea remotamente un dispositivo
-   * 1. Actualiza el estado del dispositivo a BLOCKED
-   * 2. Crea una notificación de bloqueo
-   * 3. Intenta enviar un push notification al dispositivo
-   * 4. Registra el evento en los logs
-   */
   async lockDevice(input: LockDeviceInput): Promise<DeviceControlResponse> {
     const { deviceId, reason } = input;
 
     try {
-      // Verificar que el dispositivo existe
       const device = await prisma.device.findUnique({
         where: { id: deviceId },
         include: {
@@ -54,7 +40,6 @@ export const deviceControlService = {
         throw new Error("Dispositivo no encontrado");
       }
 
-      // Actualizar estado del dispositivo a BLOCKED
       const updatedDevice = await prisma.device.update({
         where: { id: deviceId },
         data: {
@@ -62,7 +47,6 @@ export const deviceControlService = {
         },
       });
 
-      // Crear notificación de bloqueo si hay una cuota pendiente
       if (device.installments.length > 0) {
         await prisma.notification.create({
           data: {
@@ -75,10 +59,10 @@ export const deviceControlService = {
         });
       }
 
-      // TODO: Enviar push notification al dispositivo
-      // TODO: Usar Firebase Cloud Messaging o similar para notificar al móvil
+      if (device.sync) {
+        cache.invalidateDevice(device.sync.imei);
+      }
 
-     
       return {
         success: true,
         message: `Dispositivo ${device.name} bloqueado exitosamente`,
@@ -94,20 +78,14 @@ export const deviceControlService = {
     }
   },
 
-  /**
-   * Desbloquea remotamente un dispositivo
-   * 1. Actualiza el estado del dispositivo a SOLD_SYNCED
-   * 2. Crea una notificación de desbloqueo
-   * 3. Intenta enviar un push notification al dispositivo
-   */
   async unlockDevice(input: UnlockDeviceInput): Promise<DeviceControlResponse> {
     const { deviceId } = input;
 
     try {
-      // Verificar que el dispositivo existe
       const device = await prisma.device.findUnique({
         where: { id: deviceId },
         include: {
+          sync: true,
           installments: {
             where: { status: "PENDING" },
             orderBy: { dueDate: "asc" },
@@ -120,7 +98,6 @@ export const deviceControlService = {
         throw new Error("Dispositivo no encontrado");
       }
 
-      // Actualizar estado del dispositivo a SOLD_SYNCED
       const updatedDevice = await prisma.device.update({
         where: { id: deviceId },
         data: {
@@ -128,7 +105,6 @@ export const deviceControlService = {
         },
       });
 
-      // Crear notificación de desbloqueo
       if (device.installments.length > 0) {
         await prisma.notification.create({
           data: {
@@ -140,9 +116,9 @@ export const deviceControlService = {
         });
       }
 
-      // TODO: Enviar push notification al dispositivo
-
-    
+      if (device.sync) {
+        cache.invalidateDevice(device.sync.imei);
+      }
 
       return {
         success: true,
@@ -159,9 +135,6 @@ export const deviceControlService = {
     }
   },
 
-  /**
-   * Obtiene el estado actual de un dispositivo
-   */
   async getDeviceStatus(deviceId: string) {
     try {
       const device = await prisma.device.findUnique({
@@ -202,9 +175,6 @@ export const deviceControlService = {
     }
   },
 
-  /**
-   * Obtiene todos los dispositivos bloqueados
-   */
   async getBlockedDevices(adminId: string) {
     try {
       const blockedDevices = await prisma.device.findMany({
