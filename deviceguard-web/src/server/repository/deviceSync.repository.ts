@@ -51,8 +51,10 @@ export class DeviceSyncRepository {
     });
   }
 
-  async findDeviceStatusByImei(imei: string): Promise<DeviceSyncStatusRaw | null> {
-    const result = await prisma.deviceSync.findUnique({
+  async findDeviceStatusByImei(
+    imei: string
+  ): Promise<DeviceSyncStatusRaw | null> {
+    const result = (await prisma.deviceSync.findUnique({
       where: { imei },
       select: {
         deviceId: true,
@@ -72,7 +74,7 @@ export class DeviceSyncRepository {
           },
         },
       },
-    }) as DeviceSyncWithDetails | null;
+    })) as DeviceSyncWithDetails | null;
 
     if (!result) {
       return null;

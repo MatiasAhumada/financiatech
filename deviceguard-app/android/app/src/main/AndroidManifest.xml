@@ -80,7 +80,17 @@
         android:exported="false"
         android:foregroundServiceType="dataSync"
         android:stopWithTask="false" />
-    
+
+    <!-- DeviceGuardFirebaseService - Firebase Cloud Messaging -->
+    <service
+        android:name=".DeviceGuardFirebaseService"
+        android:enabled="true"
+        android:exported="false">
+        <intent-filter>
+            <action android:name="com.google.firebase.MESSAGING_EVENT" />
+        </intent-filter>
+    </service>
+
     <!-- PersistentService - Guardián que asegura que el polling siempre esté activo -->
     <service
         android:name=".PersistentService"

@@ -11,7 +11,10 @@ import {
   createDeviceSchema,
   DEVICE_TYPE_LABELS,
 } from "@/schemas/device.schema";
-import { sendNotificationSchema, SendNotificationDto } from "@/schemas/notification.schema";
+import {
+  sendNotificationSchema,
+  SendNotificationDto,
+} from "@/schemas/notification.schema";
 import { deviceService } from "@/services/device.service";
 import { clientService } from "@/services/client.service";
 import { notificationService } from "@/services/notification.service";
@@ -58,11 +61,13 @@ export default function DevicesPage() {
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [deviceToSendNotification, setDeviceToSendNotification] =
     useState<IDevice | null>(null);
-  const [notificationData, setNotificationData] = useState<SendNotificationDto>({
-    title: "",
-    message: "",
-    type: NotificationType.WARNING_1,
-  });
+  const [notificationData, setNotificationData] = useState<SendNotificationDto>(
+    {
+      title: "",
+      message: "",
+      type: NotificationType.WARNING_1,
+    }
+  );
 
   useEffect(() => {
     loadDevices();
@@ -217,8 +222,8 @@ export default function DevicesPage() {
       setDeviceToSendNotification(null);
     } catch (error: unknown) {
       const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        "Error al enviar notificación";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Error al enviar notificación";
       clientErrorHandler({ message: errorMessage });
     }
   };
@@ -445,18 +450,19 @@ export default function DevicesPage() {
                               <span>Bloquear</span>
                             )}
                           </button>
-                          {device.status === DeviceStatus.SOLD_SYNCED && device.sync && (
-                            <button
-                              onClick={() => handleSendNotification(device)}
-                              className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx-600 flex items-center gap-3 transition-colors"
-                            >
-                              <Notification03Icon
-                                size={16}
-                                className="text-silver-400"
-                              />
-                              Notificaciones
-                            </button>
-                          )}
+                          {device.status === DeviceStatus.SOLD_SYNCED &&
+                            device.sync && (
+                              <button
+                                onClick={() => handleSendNotification(device)}
+                                className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx-600 flex items-center gap-3 transition-colors"
+                              >
+                                <Notification03Icon
+                                  size={16}
+                                  className="text-silver-400"
+                                />
+                                Notificaciones
+                              </button>
+                            )}
                           <button
                             onClick={() => handleDeleteDevice(device)}
                             className="w-full text-left px-4 py-2.5 text-sm text-strawberry_red hover:bg-onyx-600 rounded-b-lg flex items-center gap-3 transition-colors"

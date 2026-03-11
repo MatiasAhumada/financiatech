@@ -76,7 +76,10 @@ export class DeviceActivationService {
         },
       });
 
-      console.log('[ACTIVATION] DeviceSync created with FCM token:', fcmToken ? 'YES' : 'NO');
+      console.log(
+        "[ACTIVATION] DeviceSync created with FCM token:",
+        fcmToken ? "YES" : "NO"
+      );
 
       const deviceWithAdmin = await tx.device.findUnique({
         where: { id: sale.deviceId },
@@ -116,7 +119,8 @@ export class DeviceActivationService {
       return cached;
     }
 
-    const deviceStatus = await this.deviceSyncRepository.findDeviceStatusByImei(imei);
+    const deviceStatus =
+      await this.deviceSyncRepository.findDeviceStatusByImei(imei);
 
     if (!deviceStatus) {
       throw new ApiError({
@@ -132,7 +136,9 @@ export class DeviceActivationService {
     let pendingAmount = 0;
     if (isBlocked) {
       const pendingInstallment =
-        await this.installmentRepository.findFirstPendingByDeviceId(deviceStatus.deviceId);
+        await this.installmentRepository.findFirstPendingByDeviceId(
+          deviceStatus.deviceId
+        );
 
       pendingAmount = pendingInstallment
         ? Number(pendingInstallment.amount)

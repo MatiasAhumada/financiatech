@@ -320,13 +320,30 @@ model DeviceSync {
   syncedAt DateTime @default(now())
   lastPing DateTime @default(now())
 
-  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  device          Device          @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  pendingCommands PendingCommand[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([lastPing], name: "idx_device_syncs_lastping")
   @@map("device_syncs")
+}
+
+model PendingCommand {
+  id        String   @id @default(cuid())
+  deviceId  String
+  type      String
+  status    String   @default("PENDING")
+  sentAt    DateTime?
+  ackedAt   DateTime?
+
+  deviceSync DeviceSync @relation(fields: [deviceId], references: [deviceId], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("pending_commands")
 }
 
 model Notification {

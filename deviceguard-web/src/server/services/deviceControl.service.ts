@@ -61,6 +61,15 @@ export const deviceControlService = {
 
       if (device.sync) {
         cache.invalidateDevice(device.sync.imei);
+
+        await prisma.pendingCommand.create({
+          data: {
+            deviceId: device.sync.deviceId,
+            type: "DEVICE_BLOCKED",
+            status: "PENDING",
+            sentAt: new Date(),
+          },
+        });
       }
 
       return {
@@ -118,6 +127,15 @@ export const deviceControlService = {
 
       if (device.sync) {
         cache.invalidateDevice(device.sync.imei);
+
+        await prisma.pendingCommand.create({
+          data: {
+            deviceId: device.sync.deviceId,
+            type: "DEVICE_UNBLOCKED",
+            status: "PENDING",
+            sentAt: new Date(),
+          },
+        });
       }
 
       return {

@@ -12,9 +12,9 @@ const createSyncSchema = z.object({
 
 // Headers CORS para permitir conexiones desde la app mobile
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
 };
 
 export async function POST(request: NextRequest) {
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       validatedData.fcmToken
     );
 
-    return NextResponse.json(result, { 
+    return NextResponse.json(result, {
       status: httpStatus.CREATED,
       headers: corsHeaders,
     });
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
 // Manejar preflight requests
 export async function OPTIONS() {
-  return NextResponse.json(null, { 
+  return NextResponse.json(null, {
     status: 204,
     headers: corsHeaders,
   });

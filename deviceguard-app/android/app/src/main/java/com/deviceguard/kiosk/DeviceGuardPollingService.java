@@ -52,14 +52,12 @@ public class DeviceGuardPollingService extends Service {
     private static final String TAG = "DGPollingService";
     private static final String CHANNEL_ID = "deviceguard_polling";
     private static final int NOTIFICATION_ID = 1001;
-    
-    // Polling cada 30 segundos - único punto de polling para toda la app
-    private static final long POLL_INTERVAL_NORMAL_MS = 30000;
-    // Fallback de desbloqueo: cada 5 minutos verifica si el servidor desbloqueó
-    // Esto es solo por si la app no puede recibir notificaciones push
-    private static final long UNLOCK_FALLBACK_INTERVAL_MS = 300000; // 5 minutos
-    
-    private static final long RESTART_DELAY_MS = 2000; // 2 segundos para restart
+
+    private static final long POLL_INTERVAL_ACTIVE_MS = 30000;
+    private static final long POLL_INTERVAL_BLOCKED_MS = 300000;
+    private static final long UNLOCK_FALLBACK_INTERVAL_MS = 300000;
+
+    private static final long RESTART_DELAY_MS = 2000;
 
     static final String PREFS_NAME = "DeviceGuardPrefs";
     static final String KEY_DEVICE_ID = "deviceId";
@@ -67,6 +65,9 @@ public class DeviceGuardPollingService extends Service {
     static final String KEY_IS_LINKED = "isLinked";
     static final String KEY_IS_LOCKED = "isLocked";
     static final String KEY_LOCKDOWN_ACTIVE = "isFullLockdownActive";
+    static final String KEY_LAST_KNOWN_STATE = "lastKnownState";
+    static final String KEY_LAST_SUCCESSFUL_POLL = "lastSuccessfulPoll";
+    private static final long CACHE_MAX_AGE_MS = 3600000;
 
     private Handler handler;
     private boolean lastKnownBlocked = false;
@@ -74,19 +75,37 @@ public class DeviceGuardPollingService extends Service {
     private AlarmManager alarmManager;
     private PendingIntent pollPendingIntent;
     private PendingIntent unlockFallbackPendingIntent;
+    private int consecutiveFailures = 0;
+    private static final long MAX_BACKOFF_MS = 300000;
 
     private final Runnable pollRunnable = new Runnable() {
         @Override
         public void run() {
-            // Ejecutar polling en un hilo separado para evitar bloquear el hilo principal
             new Thread(() -> {
                 pollServer();
             }).start();
-            
-            // Programar siguiente ejecución
-            handler.postDelayed(this, POLL_INTERVAL_NORMAL_MS);
+
+            long nextInterval = getCurrentPollInterval();
+            handler.postDelayed(this, nextInterval);
         }
     };
+
+    private long getCurrentPollInterval() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean isBlocked = prefs.getBoolean(KEY_IS_LOCKED, false);
+        
+        if (isBlocked) {
+            return POLL_INTERVAL_BLOCKED_MS;
+        }
+        
+        return POLL_INTERVAL_ACTIVE_MS;
+    }
+
+    private long calculateBackoff() {
+        consecutiveFailures++;
+        long backoff = (long) (1000 * Math.pow(2, consecutiveFailures));
+        return Math.min(backoff, MAX_BACKOFF_MS);
+    }
 
     // ─────────────────────────────────────────────────────────────────────
     // Ciclo de vida del Service
@@ -196,23 +215,17 @@ public class DeviceGuardPollingService extends Service {
     // Polling
     // ─────────────────────────────────────────────────────────────────────
 
-    /**
-     * Inicia el polling al servidor solo cuando el dispositivo NO está bloqueado.
-     */
     private void startPolling() {
-        // Primero detener cualquier polling existente
         stopPolling();
-        
+
         handler.post(pollRunnable);
-        Log.i(TAG, "Polling STARTED with interval: " + POLL_INTERVAL_NORMAL_MS + "ms");
+        long interval = getCurrentPollInterval();
+        Log.i(TAG, "Polling STARTED with interval: " + interval + "ms");
     }
 
-    /**
-     * Detiene el polling al servidor de forma definitiva.
-     */
     private void stopPolling() {
         handler.removeCallbacks(pollRunnable);
-        Log.i(TAG, "Polling STOPPED - no server requests will be made");
+        Log.i(TAG, "Polling STOPPED");
     }
 
     private void pollServer() {
@@ -225,28 +238,23 @@ public class DeviceGuardPollingService extends Service {
             return;
         }
 
-        Log.d(TAG, "Polling server for IMEI: " + imei + " at " + apiUrl);
+        Log.d(TAG, "Polling server for IMEI: " + imei);
 
         try {
-            // GET /api/device-syncs/{imei}
             String endpoint = apiUrl + "/api/device-syncs/" + imei;
-            Log.d(TAG, "Poll endpoint: " + endpoint);
-            
+
             URL url = new URL(endpoint);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            conn.setConnectTimeout(8000);
-            conn.setReadTimeout(8000);
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
             conn.setRequestProperty("Accept", "application/json");
 
             int responseCode = conn.getResponseCode();
             Log.d(TAG, "Poll response code: " + responseCode);
-            
+
             if (responseCode == 404) {
-                // El dispositivo no existe en el servidor (DB fue reseteada)
-                // Limpiar estado de vinculación y detener polling
                 Log.w(TAG, "Device not found on server (404) - clearing sync state");
-                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
                 prefs.edit()
                      .putBoolean(KEY_IS_LINKED, false)
                      .putBoolean(KEY_IS_LOCKED, false)
@@ -254,20 +262,18 @@ public class DeviceGuardPollingService extends Service {
                      .remove(KEY_DEVICE_ID)
                      .remove(KEY_API_URL)
                      .apply();
-                
-                // Detener el servicio de polling
+
                 stopSelf();
                 conn.disconnect();
                 return;
             }
-            
+
             if (responseCode != 200) {
-                Log.w(TAG, "Poll returned HTTP " + responseCode);
+                useCacheOrBackoff(prefs);
                 conn.disconnect();
                 return;
             }
 
-            // Leer respuesta JSON manualmente (sin librería externa)
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(conn.getInputStream()));
             StringBuilder sb = new StringBuilder();
@@ -277,35 +283,47 @@ public class DeviceGuardPollingService extends Service {
             conn.disconnect();
 
             String body = sb.toString();
-            Log.d(TAG, "Poll response body: " + body);
-            
-            // Parseo simple: buscar "blocked":true o "blocked":false
             boolean isBlocked = body.contains("\"blocked\":true");
 
-            Log.d(TAG, "Poll result — blocked=" + isBlocked + " lastKnown=" + lastKnownBlocked);
+            prefs.edit()
+                 .putBoolean(KEY_LAST_KNOWN_STATE, isBlocked)
+                 .putLong(KEY_LAST_SUCCESSFUL_POLL, System.currentTimeMillis())
+                 .apply();
+
+            consecutiveFailures = 0;
 
             if (isBlocked && !lastKnownBlocked) {
-                // Transición: libre → bloqueado
                 lastKnownBlocked = true;
                 onDeviceBlocked();
             } else if (!isBlocked && lastKnownBlocked) {
-                // Transición: bloqueado → libre
                 lastKnownBlocked = false;
                 onDeviceUnblocked();
-            } else if (isBlocked && lastKnownBlocked) {
-                // Ya está bloqueado, el servidor confirma que sigue bloqueado
-                Log.d(TAG, "Device still blocked - awaiting payment");
             }
 
         } catch (java.net.UnknownHostException e) {
-            Log.e(TAG, "Poll failed: Unknown host - " + e.getMessage());
+            useCacheOrBackoff(prefs);
         } catch (java.net.ConnectException e) {
-            Log.e(TAG, "Poll failed: Connection refused - " + e.getMessage());
+            useCacheOrBackoff(prefs);
         } catch (java.net.SocketTimeoutException e) {
-            Log.e(TAG, "Poll failed: Connection timeout - " + e.getMessage());
+            useCacheOrBackoff(prefs);
         } catch (Exception e) {
-            Log.e(TAG, "Poll failed: " + e.getClass().getSimpleName() + " - " + e.getMessage(), e);
+            useCacheOrBackoff(prefs);
         }
+    }
+
+    private void useCacheOrBackoff(SharedPreferences prefs) {
+        long lastSuccess = prefs.getLong(KEY_LAST_SUCCESSFUL_POLL, 0);
+        boolean useCache = (System.currentTimeMillis() - lastSuccess) < CACHE_MAX_AGE_MS;
+
+        if (useCache) {
+            boolean cachedState = prefs.getBoolean(KEY_LAST_KNOWN_STATE, false);
+            Log.d(TAG, "Using cached state: blocked=" + cachedState);
+            return;
+        }
+
+        long backoff = calculateBackoff();
+        Log.w(TAG, "Poll failed, retrying in " + backoff + "ms");
+        handler.postDelayed(pollRunnable, backoff);
     }
 
     /**

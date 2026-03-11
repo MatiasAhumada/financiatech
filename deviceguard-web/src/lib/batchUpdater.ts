@@ -52,4 +52,3 @@ class BatchUpdater {
 }
 
 export const batchUpdater = new BatchUpdater();
-

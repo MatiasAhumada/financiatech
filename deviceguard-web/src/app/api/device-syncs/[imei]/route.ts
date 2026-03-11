@@ -4,14 +4,14 @@ import apiErrorHandler, { ApiError } from "@/utils/handlers/apiError.handler";
 import httpStatus from "http-status";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
 };
 
 const cacheHeaders = {
   ...corsHeaders,
-  'Cache-Control': 'private, max-age=20, stale-while-revalidate=5',
+  "Cache-Control": "private, max-age=20, stale-while-revalidate=5",
 };
 
 export async function GET(

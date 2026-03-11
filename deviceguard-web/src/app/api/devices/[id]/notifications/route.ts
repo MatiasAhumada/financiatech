@@ -5,7 +5,10 @@ import httpStatus from "http-status";
 import apiErrorHandler, { ApiError } from "@/utils/handlers/apiError.handler";
 import { prisma } from "@/lib/prisma";
 import { sendPushNotification } from "@/services/firebase.service";
-import { sendNotificationSchema, SendNotificationDto } from "@/schemas/notification.schema";
+import {
+  sendNotificationSchema,
+  SendNotificationDto,
+} from "@/schemas/notification.schema";
 
 /**
  * POST /api/devices/:id/notifications
@@ -42,7 +45,8 @@ export async function POST(
     if (device.adminId !== payload.adminId) {
       throw new ApiError({
         status: httpStatus.FORBIDDEN,
-        message: "No tienes permiso para enviar notificaciones a este dispositivo",
+        message:
+          "No tienes permiso para enviar notificaciones a este dispositivo",
       });
     }
 
@@ -50,21 +54,23 @@ export async function POST(
     if (!device.sync) {
       throw new ApiError({
         status: httpStatus.BAD_REQUEST,
-        message: "El dispositivo no está vinculado. El cliente debe vincular el dispositivo con la app móvil primero.",
+        message:
+          "El dispositivo no está vinculado. El cliente debe vincular el dispositivo con la app móvil primero.",
       });
     }
 
     const fcmToken = device.sync.fcmToken;
 
-    console.log('[NOTIFICATION] Device:', deviceId);
-    console.log('[NOTIFICATION] Device name:', device.name);
-    console.log('[NOTIFICATION] IMEI:', device.sync.imei);
-    console.log('[NOTIFICATION] FCM Token:', fcmToken);
+    console.log("[NOTIFICATION] Device:", deviceId);
+    console.log("[NOTIFICATION] Device name:", device.name);
+    console.log("[NOTIFICATION] IMEI:", device.sync.imei);
+    console.log("[NOTIFICATION] FCM Token:", fcmToken);
 
     if (!fcmToken) {
       throw new ApiError({
         status: httpStatus.BAD_REQUEST,
-        message: "El dispositivo no tiene token FCM registrado. Asegurate de que la app móvil esté instalada y vinculada.",
+        message:
+          "El dispositivo no tiene token FCM registrado. Asegurate de que la app móvil esté instalada y vinculada.",
       });
     }
 
