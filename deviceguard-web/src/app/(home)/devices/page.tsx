@@ -16,6 +16,7 @@ import {
   SendNotificationDto,
 } from "@/schemas/notification.schema";
 import { deviceService } from "@/services/device.service";
+import { deviceControlService } from "@/services/deviceControl.service";
 import { clientService } from "@/services/client.service";
 import { notificationService } from "@/services/notification.service";
 import { IDevice, IDeviceFormValues } from "@/types";
@@ -164,17 +165,35 @@ export default function DevicesPage() {
 
     try {
       const willBlock = deviceToBlock.status !== DeviceStatus.BLOCKED;
-      const newStatus = willBlock ? DeviceStatus.BLOCKED : DeviceStatus.ACTIVE;
-      await deviceService.update(deviceToBlock.id, {
-        name: deviceToBlock.name,
-        type: deviceToBlock.type,
-        model: deviceToBlock.model || "",
-        serialNumber: deviceToBlock.serialNumber || "",
-        status: newStatus,
-      });
-      clientSuccessHandler(
-        `Dispositivo ${willBlock ? "bloqueado" : "desbloqueado"} exitosamente`
-      );
+      
+      // Usar FCM para bloqueo/desbloqueo en dispositivos sincronizados
+      if (deviceToBlock.sync) {
+        if (willBlock) {
+          await deviceControlService.lockDevice(deviceToBlock.id);
+          clientSuccessHandler(
+            `📱 ${deviceToBlock.name} ha sido bloqueado. Notificación enviada al dispositivo.`
+          );
+        } else {
+          await deviceControlService.unlockDevice(deviceToBlock.id);
+          clientSuccessHandler(
+            `📱 ${deviceToBlock.name} ha sido desbloqueado. Notificación enviada al dispositivo.`
+          );
+        }
+      } else {
+        // Para dispositivos no sincronizados, solo actualizar estado localmente
+        const newStatus = willBlock ? DeviceStatus.BLOCKED : DeviceStatus.ACTIVE;
+        await deviceService.update(deviceToBlock.id, {
+          name: deviceToBlock.name,
+          type: deviceToBlock.type,
+          model: deviceToBlock.model || "",
+          serialNumber: deviceToBlock.serialNumber || "",
+          status: newStatus,
+        });
+        clientSuccessHandler(
+          `Dispositivo ${willBlock ? "bloqueado" : "desbloqueado"} exitosamente`
+        );
+      }
+      
       await loadDevices();
       setIsBlockModalOpen(false);
       setDeviceToBlock(null);
