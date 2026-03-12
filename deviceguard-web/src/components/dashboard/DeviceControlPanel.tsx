@@ -38,12 +38,18 @@ export const DeviceControlPanel: React.FC<DeviceControlPanelProps> = ({
   const handleLockDevice = async () => {
     try {
       setIsLoading(true);
-      await deviceControlService.lockDevice(
-        deviceId,
-        `Bloqueo remoto: ${clientName} - ${new Date().toLocaleString()}`
-      );
+      const response = await deviceControlService.lockDevice(deviceId);
 
-      clientSuccessHandler(`✅ ${deviceName} ha sido bloqueado correctamente`);
+      if (response.fcmSent) {
+        clientSuccessHandler(
+          `✅ ${deviceName} ha sido bloqueado. Notificación enviada al dispositivo.`
+        );
+      } else {
+        clientSuccessHandler(
+          `✅ ${deviceName} ha sido bloqueado. El dispositivo se bloqueará cuando tenga conexión.`
+        );
+      }
+
       setCurrentStatus(true);
       setShowConfirmDialog(false);
       onStatusChange?.(true);
@@ -57,11 +63,18 @@ export const DeviceControlPanel: React.FC<DeviceControlPanelProps> = ({
   const handleUnlockDevice = async () => {
     try {
       setIsLoading(true);
-      await deviceControlService.unlockDevice(deviceId);
+      const response = await deviceControlService.unlockDevice(deviceId);
 
-      clientSuccessHandler(
-        `✅ ${deviceName} ha sido desbloqueado correctamente`
-      );
+      if (response.fcmSent) {
+        clientSuccessHandler(
+          `✅ ${deviceName} ha sido desbloqueado. Notificación enviada al dispositivo.`
+        );
+      } else {
+        clientSuccessHandler(
+          `✅ ${deviceName} ha sido desbloqueado. El dispositivo se desbloqueará cuando tenga conexión.`
+        );
+      }
+
       setCurrentStatus(false);
       setShowConfirmDialog(false);
       onStatusChange?.(false);
