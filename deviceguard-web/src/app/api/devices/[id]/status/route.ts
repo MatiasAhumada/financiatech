@@ -23,7 +23,7 @@ export async function PATCH(
     const { status } = validatedData;
 
     const deviceSyncRepository = new DeviceSyncRepository();
-    const deviceSync = await deviceSyncRepository.findByImei(id);
+    const deviceSync = await deviceSyncRepository.findByDeviceId(id);
 
     if (!deviceSync) {
       throw new ApiError({
