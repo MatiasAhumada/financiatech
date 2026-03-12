@@ -44,6 +44,15 @@ export class DeviceSyncRepository {
     });
   }
 
+  async findByDeviceId(deviceId: string): Promise<IDeviceSync | null> {
+    return prisma.deviceSync.findUnique({
+      where: { deviceId },
+      include: {
+        device: true,
+      },
+    });
+  }
+
   async updateLastPing(deviceId: string) {
     return prisma.deviceSync.update({
       where: { deviceId },
