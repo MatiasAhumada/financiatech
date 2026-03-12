@@ -66,6 +66,14 @@ class MainActivity : ReactActivity() {
     val isLocked = prefs.getBoolean("isLocked", false)
     val isLinked = prefs.getBoolean("isLinked", false)
 
+    // Iniciar el servicio guardián que reabre la app si se cierra
+    try {
+      AppGuardianService.start(this)
+      android.util.Log.i("MainActivity", "AppGuardianService started")
+    } catch (e: Exception) {
+      android.util.Log.e("MainActivity", "Failed to start AppGuardianService", e)
+    }
+
     // Verificar si venimos de un desbloqueo
     val unlocked = intent?.getBooleanExtra("unlocked", false) ?: false
     if (unlocked) {

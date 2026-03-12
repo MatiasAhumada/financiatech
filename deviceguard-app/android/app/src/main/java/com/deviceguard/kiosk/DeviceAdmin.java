@@ -19,16 +19,7 @@ public class DeviceAdmin extends DeviceAdminReceiver {
     @Override
     public void onEnabled(Context context, Intent intent) {
         super.onEnabled(context, intent);
-
-        DevicePolicyManager dpm = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
-        ComponentName adminComponent = new ComponentName(context, DeviceAdmin.class);
-
-        if (dpm.isDeviceOwnerApp(context.getPackageName())) {
-            dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_FACTORY_RESET);
-            dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_SAFE_BOOT);
-            Log.i(TAG, "Device Owner enabled - Applied Factory Reset restriction.");
-        }
-
+        Log.i(TAG, "Device Admin enabled");
         launchApp(context);
     }
 
@@ -42,16 +33,13 @@ public class DeviceAdmin extends DeviceAdminReceiver {
         super.onReceive(context, intent);
         String action = intent.getAction();
 
+        DevicePolicyManager dpm = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+        ComponentName adminComponent = new ComponentName(context, DeviceAdmin.class);
+
         if ("com.deviceguard.kiosk.FORCE_RESTRICTIONS".equals(action)) {
-            DevicePolicyManager dpm = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
-            ComponentName adminComponent = new ComponentName(context, DeviceAdmin.class);
             if (dpm.isDeviceOwnerApp(context.getPackageName())) {
-                dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_FACTORY_RESET);
-                dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_SAFE_BOOT);
-                // Bloqueos extras antimanipulación (cuentas y configuraciones)
-                dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_ADD_USER);
-                dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_REMOVE_USER);
-                Log.i(TAG, "Forced permanent restrictions via Intent!");
+                applyFullRestrictions(dpm, adminComponent);
+                Log.i(TAG, "Forced full restrictions via Intent!");
             }
             return;
         }
@@ -60,10 +48,10 @@ public class DeviceAdmin extends DeviceAdminReceiver {
             Intent.ACTION_LOCKED_BOOT_COMPLETED.equals(action) ||
             Intent.ACTION_USER_PRESENT.equals(action)) {
 
-            DevicePolicyManager dpm = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
-            ComponentName adminComponent = new ComponentName(context, DeviceAdmin.class);
-
-            if (!dpm.isAdminActive(adminComponent)) return;
+            if (!dpm.isAdminActive(adminComponent)) {
+                Log.w(TAG, "Device Admin not active");
+                return;
+            }
 
             SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             boolean isLinked = prefs.getBoolean(DeviceGuardPollingService.KEY_IS_LINKED, false);
@@ -71,37 +59,99 @@ public class DeviceAdmin extends DeviceAdminReceiver {
 
             Log.i(TAG, "Boot received — isLinked=" + isLinked + " isLocked=" + isLocked);
 
-            if (isLinked) {
-                // Siempre arrancar el polling service si el dispositivo está vinculado
-                DeviceGuardPollingService.start(context);
+            if (isLinked && isLocked && dpm.isDeviceOwnerApp(context.getPackageName())) {
+                applyFullRestrictions(dpm, adminComponent);
+                dpm.setKeyguardDisabled(adminComponent, true);
 
-                // Si estaba bloqueado, deshabilitar keyguard y lanzar la app en kiosk
-                if (isLocked && dpm.isDeviceOwnerApp(context.getPackageName())) {
-                    dpm.setKeyguardDisabled(adminComponent, true);
-
-                    // Configurar lock task packages
-                    try {
-                        String[] packages = {context.getPackageName()};
-                        dpm.setLockTaskPackages(adminComponent, packages);
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                            dpm.setLockTaskFeatures(adminComponent,
-                                    DevicePolicyManager.LOCK_TASK_FEATURE_NONE);
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error configuring lock task on boot: " + e.getMessage());
+                try {
+                    String[] packages = {context.getPackageName()};
+                    dpm.setLockTaskPackages(adminComponent, packages);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        dpm.setLockTaskFeatures(adminComponent,
+                                DevicePolicyManager.LOCK_TASK_FEATURE_NONE);
                     }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error configuring lock task on boot: " + e.getMessage());
                 }
+            } else if (isLinked && dpm.isDeviceOwnerApp(context.getPackageName())) {
+                applyLinkedRestrictions(dpm, adminComponent);
+            }
 
-                // Abrir la app (el polling service + la pantalla resolverán el estado)
+            if (isLinked) {
+                DeviceGuardPollingService.start(context);
                 launchApp(context);
             } else if (dpm.isDeviceOwnerApp(context.getPackageName())) {
-                // Si la app es dueña del dispositivo pero aún no está vinculada (o perdió la info
-                // tras la actualización), levantamos la app sí o sí para que haga el auto-check
-                // contra el servidor usando el IMEI.
                 Log.i(TAG, "Device Owner active but not linked yet. Launching app to provision.");
                 launchApp(context);
+                // NO iniciar el servicio de polling si no está vinculado
             }
         }
+    }
+
+    private void applyProvisioningRestrictions(DevicePolicyManager dpm, ComponentName adminComponent) {
+        dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_FACTORY_RESET);
+        dpm.setUninstallBlocked(adminComponent, adminComponent.getPackageName(), true);
+        Log.i(TAG, "Provisioning restrictions applied (no factory reset, no uninstall)");
+    }
+
+    private void applyLinkedRestrictions(DevicePolicyManager dpm, ComponentName adminComponent) {
+        applyProvisioningRestrictions(dpm, adminComponent);
+        dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_SAFE_BOOT);
+        dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_DEBUGGING_FEATURES);
+        Log.i(TAG, "Linked restrictions applied (no debug, no safe boot)");
+    }
+
+    private void applyFullRestrictions(DevicePolicyManager dpm, ComponentName adminComponent) {
+        applyLinkedRestrictionsStatic(dpm, adminComponent);
+        
+        dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_ADD_USER);
+        dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_REMOVE_USER);
+        dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_USB_FILE_TRANSFER);
+        dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA);
+        dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_MODIFY_ACCOUNTS);
+        dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_CONFIG_MOBILE_NETWORKS);
+        dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_NETWORK_RESET);
+        dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_AIRPLANE_MODE);
+        
+        Log.i(TAG, "Full restrictions applied (kiosk mode active)");
+    }
+
+    public static void applyFullRestrictions(Context context) {
+        DevicePolicyManager dpm = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+        ComponentName adminComponent = new ComponentName(context, DeviceAdmin.class);
+        
+        if (dpm != null && dpm.isDeviceOwnerApp(context.getPackageName())) {
+            applyLinkedRestrictionsStatic(dpm, adminComponent);
+            
+            dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_ADD_USER);
+            dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_REMOVE_USER);
+            dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_USB_FILE_TRANSFER);
+            dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA);
+            dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_MODIFY_ACCOUNTS);
+            dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_CONFIG_MOBILE_NETWORKS);
+            dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_NETWORK_RESET);
+            dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_AIRPLANE_MODE);
+            
+            Log.i(TAG, "Full restrictions applied via static method");
+        }
+    }
+
+    public static void applyLinkedRestrictions(Context context) {
+        DevicePolicyManager dpm = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+        ComponentName adminComponent = new ComponentName(context, DeviceAdmin.class);
+        
+        if (dpm != null && dpm.isDeviceOwnerApp(context.getPackageName())) {
+            applyLinkedRestrictionsStatic(dpm, adminComponent);
+            Log.i(TAG, "Linked restrictions applied via static method");
+        }
+    }
+
+    private static void applyLinkedRestrictionsStatic(DevicePolicyManager dpm, ComponentName adminComponent) {
+        dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_FACTORY_RESET);
+        dpm.setUninstallBlocked(adminComponent, adminComponent.getPackageName(), true);
+        dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_SAFE_BOOT);
+        dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_DEBUGGING_FEATURES);
+        Log.i(TAG, "Linked restrictions applied");
     }
 
     /**

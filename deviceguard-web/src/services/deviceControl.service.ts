@@ -1,69 +1,50 @@
-/**
- * Servicio de Control de Dispositivos (Cliente)
- * Llama a los endpoints de la API para bloquear/desbloquear dispositivos
- */
-
 import clientAxios from "@/utils/clientAxios.util";
+import { DeviceStatus } from "@prisma/client";
 
-interface LockDeviceRequest {
-  deviceId: string;
-  reason?: string;
-}
-
-interface DeviceControlResponse {
+export interface DeviceControlResponse {
   success: boolean;
   message: string;
   deviceId: string;
-  status: string;
+  status: DeviceStatus;
+  fcmSent: boolean;
+  deliveryPending: boolean;
 }
 
-interface DeviceStatusResponse {
+export interface DeviceStatusResponse {
   id: string;
   name: string;
-  status: string;
+  status: DeviceStatus;
   clientName: string;
   isBlocked: boolean;
   isSynced: boolean;
-  lastPing?: Date;
-  pendingInstallment?: any;
-  blockRule?: any;
+  pendingAmount: number;
 }
 
 export const deviceControlService = {
-  /**
-   * Bloquea un dispositivo de forma remota
-   * POST /api/devices/control
-   */
-  async lockDevice(
-    deviceId: string,
-    reason?: string
-  ): Promise<DeviceControlResponse> {
-    const { data } = await clientAxios.post("/api/devices/control/lock", {
-      deviceId,
-      reason: reason || "El dispositivo ha sido bloqueado",
+  async lockDevice(deviceId: string): Promise<DeviceControlResponse> {
+    const { data } = await clientAxios.patch(`/api/devices/${deviceId}/status`, {
+      status: "BLOCKED",
     });
     return data;
   },
 
-  /**
-   * Desbloquea un dispositivo de forma remota
-   * POST /api/devices/control/unlock
-   */
   async unlockDevice(deviceId: string): Promise<DeviceControlResponse> {
-    const { data } = await clientAxios.post("/api/devices/control/unlock", {
-      deviceId,
+    const { data } = await clientAxios.patch(`/api/devices/${deviceId}/status`, {
+      status: "SOLD_SYNCED",
     });
     return data;
   },
 
-  /**
-   * Obtiene el estado actual de un dispositivo
-   * GET /api/devices/control?deviceId=...
-   */
   async getDeviceStatus(deviceId: string): Promise<DeviceStatusResponse> {
-    const { data } = await clientAxios.get("/api/devices/control", {
-      params: { deviceId },
-    });
-    return data;
+    const { data } = await clientAxios.get(`/api/device-syncs/${deviceId}`);
+    return {
+      id: data.deviceId,
+      name: data.deviceName,
+      status: data.status,
+      clientName: data.adminName,
+      isBlocked: data.blocked,
+      isSynced: true,
+      pendingAmount: data.pendingAmount,
+    };
   },
 };

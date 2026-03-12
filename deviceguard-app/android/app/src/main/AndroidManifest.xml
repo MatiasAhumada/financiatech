@@ -98,6 +98,13 @@
         android:exported="false"
         android:stopWithTask="false" />
     
+    <!-- AppGuardianService - Guardián simple que reabre la app cuando se cierra -->
+    <service
+        android:name=".AppGuardianService"
+        android:enabled="true"
+        android:exported="false"
+        android:stopWithTask="false" />
+    
     <activity android:name=".MainActivity"
         android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode"
         android:launchMode="singleTask"

@@ -36,23 +36,18 @@ public class BootReceiver extends BroadcastReceiver {
             
             Log.i(TAG, "Initiating DeviceGuard startup sequence...");
             
-            // 1. Iniciar el servicio persistente guardián primero
+            // SIEMPRE iniciar el servicio guardián que reabre la app
             try {
-                PersistentService.start(context);
-                Log.i(TAG, "PersistentService guardian started");
+                AppGuardianService.start(context);
+                Log.i(TAG, "AppGuardianService started");
             } catch (Exception e) {
-                Log.e(TAG, "Failed to start persistent service: " + e.getMessage());
+                Log.e(TAG, "Failed to start AppGuardianService: " + e.getMessage());
             }
-
-            // 2. Iniciar el servicio de polling inmediatamente
-            try {
-                DeviceGuardPollingService.start(context);
-                Log.i(TAG, "Polling service started successfully");
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to start polling service: " + e.getMessage());
-            }
-
-            // 3. Lanzar la aplicación en segundo plano
+            
+            SharedPreferences prefs = context.getSharedPreferences("DeviceGuardPrefs", Context.MODE_PRIVATE);
+            boolean isLinked = prefs.getBoolean("isLinked", false);
+            
+            // SIEMPRE lanzar la app al iniciar el dispositivo
             try {
                 Intent launchIntent = context.getPackageManager()
                         .getLaunchIntentForPackage(context.getPackageName());
@@ -68,8 +63,33 @@ public class BootReceiver extends BroadcastReceiver {
             } catch (Exception e) {
                 Log.e(TAG, "Failed to launch app: " + e.getMessage());
             }
+            
+            // Solo iniciar servicios si el dispositivo está vinculado
+            if (!isLinked) {
+                Log.i(TAG, "Device not linked yet. Services will NOT start.");
+                return;
+            }
+            
+            // Dispositivo vinculado - iniciar servicios
+            Log.i(TAG, "Device is linked. Starting services...");
+            
+            // 1. Iniciar el servicio persistente guardián primero
+            try {
+                PersistentService.start(context);
+                Log.i(TAG, "PersistentService guardian started");
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to start persistent service: " + e.getMessage());
+            }
 
-            // 4. Programar reinicio del servicio como backup (Android puede matar servicios)
+            // 2. Iniciar el servicio de polling
+            try {
+                DeviceGuardPollingService.start(context);
+                Log.i(TAG, "Polling service started successfully");
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to start polling service: " + e.getMessage());
+            }
+
+            // 3. Programar reinicio del servicio como backup (Android puede matar servicios)
             scheduleServiceRestart(context);
         }
     }
@@ -77,11 +97,20 @@ public class BootReceiver extends BroadcastReceiver {
     /**
      * Programa un reinicio del servicio de polling después de 10 segundos.
      * Esto actúa como mecanismo de respaldo en caso de que Android mate el servicio.
+     * SOLO si el dispositivo está vinculado.
      */
     private void scheduleServiceRestart(Context context) {
         Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(() -> {
             try {
+                SharedPreferences prefs = context.getSharedPreferences("DeviceGuardPrefs", Context.MODE_PRIVATE);
+                boolean isLinked = prefs.getBoolean("isLinked", false);
+                
+                if (!isLinked) {
+                    Log.d(TAG, "Device not linked, skipping service restart check");
+                    return;
+                }
+                
                 // Verificar si el servicio sigue corriendo
                 boolean isServiceRunning = isServiceRunning(context, DeviceGuardPollingService.class);
                 boolean isPersistentRunning = isServiceRunning(context, PersistentService.class);
@@ -97,11 +126,9 @@ public class BootReceiver extends BroadcastReceiver {
                 }
                 
                 // Si la app está bloqueada, asegurar que se abra
-                SharedPreferences prefs = context.getSharedPreferences("DeviceGuardPrefs", Context.MODE_PRIVATE);
                 boolean isLocked = prefs.getBoolean("isLocked", false);
-                boolean isLinked = prefs.getBoolean("isLinked", false);
                 
-                if (isLinked && isLocked) {
+                if (isLocked) {
                     // Forzar apertura de la app
                     Intent launchIntent = context.getPackageManager()
                             .getLaunchIntentForPackage(context.getPackageName());

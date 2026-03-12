@@ -116,9 +116,9 @@ public class DeviceModule extends ReactContextBaseJavaModule {
                 .apply();
 
             if (devicePolicyManager.isDeviceOwnerApp(reactContext.getPackageName())) {
-                // Bloqueos de seguridad permanentes cuando se enlaza
                 devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_FACTORY_RESET);
-                devicePolicyManager.addUserRestriction(deviceAdmin, UserManager.DISALLOW_SAFE_BOOT);
+                devicePolicyManager.setUninstallBlocked(deviceAdmin, reactContext.getPackageName(), true);
+                Log.i(TAG, "Provisioning restrictions applied after linking");
             }
 
             DeviceGuardPollingService.start(reactContext);

@@ -3,6 +3,8 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 // Apply Google Services plugin for Firebase
 apply plugin: "com.google.gms.google-services"
+// Apply build config para leer .env
+apply from: "build-config.gradle"
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
@@ -98,6 +100,12 @@ android {
         versionName "1.0.0"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
+        
+        // Inyectar variables de entorno en BuildConfig
+        buildConfigField "String", "API_URL", "\"${getEnvOrProp('EXPO_PUBLIC_API_URL', 'https://deviceguard.matiasahumada.online')}\""
+        
+        // Inyectar en recursos de Android para que React Native pueda leerlas
+        resValue "string", "expo_public_api_url", getEnvOrProp('EXPO_PUBLIC_API_URL', 'https://deviceguard.matiasahumada.online')
     }
     signingConfigs {
         debug {
@@ -181,4 +189,8 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    // Firebase Messaging
+    implementation platform('com.google.firebase:firebase-bom:34.8.0')
+    implementation 'com.google.firebase:firebase-messaging'
 }

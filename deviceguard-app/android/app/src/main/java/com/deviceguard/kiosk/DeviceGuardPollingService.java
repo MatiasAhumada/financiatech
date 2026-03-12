@@ -77,6 +77,7 @@ public class DeviceGuardPollingService extends Service {
     private PendingIntent unlockFallbackPendingIntent;
     private int consecutiveFailures = 0;
     private static final long MAX_BACKOFF_MS = 300000;
+    private boolean intentionalStop = false;
 
     private final Runnable pollRunnable = new Runnable() {
         @Override
@@ -148,6 +149,10 @@ public class DeviceGuardPollingService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent != null ? intent.getAction() : null;
         
+        if (intent != null && intent.getBooleanExtra("intentional_stop", false)) {
+            intentionalStop = true;
+        }
+        
         // Manejar fallback de desbloqueo
         if ("com.deviceguard.kiosk.ACTION_UNLOCK_FALLBACK".equals(action)) {
             handleUnlockFallback();
@@ -162,6 +167,7 @@ public class DeviceGuardPollingService extends Service {
 
         if (!isLinked) {
             Log.d(TAG, "Device not linked yet, stopping service.");
+            intentionalStop = true;
             stopSelf();
             return START_NOT_STICKY;
         }
@@ -191,9 +197,15 @@ public class DeviceGuardPollingService extends Service {
     public void onDestroy() {
         handler.removeCallbacks(pollRunnable);
         sIsRunning = false;
-        Log.w(TAG, "Polling service destroyed. Scheduling restart...");
-        // Programar reinicio inmediato si se destruye inesperadamente
-        scheduleImmediateRestart();
+        
+        if (intentionalStop) {
+            Log.d(TAG, "Polling service destroyed intentionally (device not linked).");
+            cancelAllAlarms();
+        } else {
+            Log.w(TAG, "Polling service destroyed. Scheduling restart...");
+            scheduleImmediateRestart();
+        }
+        
         super.onDestroy();
     }
 
@@ -254,16 +266,14 @@ public class DeviceGuardPollingService extends Service {
             Log.d(TAG, "Poll response code: " + responseCode);
 
             if (responseCode == 404) {
-                Log.w(TAG, "Device not found on server (404) - clearing sync state");
-                prefs.edit()
-                     .putBoolean(KEY_IS_LINKED, false)
-                     .putBoolean(KEY_IS_LOCKED, false)
-                     .putBoolean(KEY_LOCKDOWN_ACTIVE, false)
-                     .remove(KEY_DEVICE_ID)
-                     .remove(KEY_API_URL)
-                     .apply();
-
-                stopSelf();
+                Log.w(TAG, "Device not found on server (404) - waiting for reprovisioning");
+                consecutiveFailures++;
+                
+                if (consecutiveFailures >= 10) {
+                    Log.w(TAG, "10 consecutive 404 responses - device may need reprovisioning");
+                }
+                
+                useCacheOrBackoff(prefs);
                 conn.disconnect();
                 return;
             }
@@ -357,9 +367,7 @@ public class DeviceGuardPollingService extends Service {
             Log.d(TAG, "Unlock fallback response code: " + responseCode);
             
             if (responseCode == 404) {
-                // El dispositivo no existe en el servidor (DB fue reseteada)
                 Log.w(TAG, "Device not found on server (404) during unlock fallback - clearing sync state");
-                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
                 prefs.edit()
                      .putBoolean(KEY_IS_LINKED, false)
                      .putBoolean(KEY_IS_LOCKED, false)
@@ -367,8 +375,7 @@ public class DeviceGuardPollingService extends Service {
                      .remove(KEY_DEVICE_ID)
                      .remove(KEY_API_URL)
                      .apply();
-                
-                // Detener el servicio de polling
+
                 stopSelf();
                 conn.disconnect();
                 return;
@@ -678,9 +685,10 @@ public class DeviceGuardPollingService extends Service {
     }
 
     public static void stop(Context context) {
-        // Cancelar watchdog antes de detener
         cancelWatchdog(context);
-        context.stopService(new Intent(context, DeviceGuardPollingService.class));
+        Intent intent = new Intent(context, DeviceGuardPollingService.class);
+        intent.putExtra("intentional_stop", true);
+        context.stopService(intent);
     }
 
     public static boolean isRunning() {
@@ -708,22 +716,23 @@ public class DeviceGuardPollingService extends Service {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        // Usar setExactAndAllowWhileIdle para máxima precisión incluso en Doze mode
+        long watchdogInterval = POLL_INTERVAL_ACTIVE_MS * 2;
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
-                System.currentTimeMillis() + (POLL_INTERVAL_NORMAL_MS * 2),
+                System.currentTimeMillis() + watchdogInterval,
                 pendingIntent
             );
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             alarmManager.setExact(
                 AlarmManager.RTC_WAKEUP,
-                System.currentTimeMillis() + (POLL_INTERVAL_NORMAL_MS * 2),
+                System.currentTimeMillis() + watchdogInterval,
                 pendingIntent
             );
         }
 
-        Log.d(TAG, "Watchdog scheduled for " + (POLL_INTERVAL_NORMAL_MS * 2) + "ms");
+        Log.d(TAG, "Watchdog scheduled for " + watchdogInterval + "ms");
     }
 
     /**
@@ -744,6 +753,38 @@ public class DeviceGuardPollingService extends Service {
 
         alarmManager.cancel(pendingIntent);
         Log.d(TAG, "Watchdog cancelled");
+    }
+
+    /**
+     * Cancela todas las alarmas programadas (watchdog, unlock fallback, restart).
+     */
+    private void cancelAllAlarms() {
+        if (alarmManager == null) return;
+
+        Intent watchdogIntent = new Intent(this, DeviceGuardPollingService.class);
+        watchdogIntent.setAction("com.deviceguard.kiosk.ACTION_WATCHDOG");
+        PendingIntent watchdogPendingIntent = PendingIntent.getService(
+            this,
+            0,
+            watchdogIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+        alarmManager.cancel(watchdogPendingIntent);
+
+        Intent restartIntent = new Intent(this, DeviceGuardPollingService.class);
+        PendingIntent restartPendingIntent = PendingIntent.getService(
+            this,
+            1,
+            restartIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+        alarmManager.cancel(restartPendingIntent);
+
+        if (unlockFallbackPendingIntent != null) {
+            alarmManager.cancel(unlockFallbackPendingIntent);
+        }
+
+        Log.d(TAG, "All alarms cancelled");
     }
 
     /**

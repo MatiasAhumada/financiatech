@@ -8,7 +8,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "build:apk": "set NODE_ENV=production&& cd android && .\\gradlew assembleRelease && cd ..",
-    "build:desktop": "set NODE_ENV=production&& cd android && .\\gradlew assembleRelease && cd .. && copy \".\\android\\app\\build\\outputs\\apk\\release\\app-release.apk\" \"..\\deviceguard-desktop\\bin\\app-release.apk\" /Y && cd ..\\deviceguard-desktop && pnpm run dist"
+    "build:desktop": "set NODE_ENV=production&& cd android && .\\gradlew assembleRelease && cd .. && copy \".\\android\\app\\build\\outputs\\apk\\release\\app-release.apk\" \"..\\deviceguard-desktop\\bin\\app-release.apk\" /Y && cd ..\\deviceguard-desktop && pnpm run dist",
+    "clean:android": "cd android && .\\gradlew clean && cd .."
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

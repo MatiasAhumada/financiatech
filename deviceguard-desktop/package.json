@@ -18,10 +18,11 @@
     "appId": "com.deviceguard.provisioner",
     "productName": "DeviceGuard Provisioner",
     "win": {
-      "target": "portable"
+      "target": "portable",
+      "signAndEditExecutable": false
     },
     "directories": {
-      "output": "dist-electron"
+      "output": "release"
     },
     "files": [
       "dist/**/*",

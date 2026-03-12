@@ -32,6 +32,7 @@ public class PersistentService extends Service {
     private Handler handler;
     private PowerManager.WakeLock wakeLock;
     private static boolean sIsRunning = false;
+    private boolean intentionalStop = false;
 
     private final Runnable checkRunnable = new Runnable() {
         @Override
@@ -53,17 +54,27 @@ public class PersistentService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "PersistentService started");
 
-        // Adquirir wake lock parcial para mantener el CPU activo
+        if (intent != null && intent.getBooleanExtra("intentional_stop", false)) {
+            intentionalStop = true;
+        }
+
+        SharedPreferences prefs = getSharedPreferences("DeviceGuardPrefs", Context.MODE_PRIVATE);
+        boolean isLinked = prefs.getBoolean("isLinked", false);
+
+        if (!isLinked) {
+            Log.d(TAG, "Device not linked yet. Stopping PersistentService.");
+            intentionalStop = true;
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+
         acquireWakeLock();
 
-        // Iniciar verificación periódica
         handler.removeCallbacks(checkRunnable);
         handler.post(checkRunnable);
 
-        // Verificación inmediata
         ensurePollingServiceRunning();
 
-        // Programar alarma de respaldo
         scheduleBackupAlarm();
 
         return START_STICKY;
@@ -71,13 +82,17 @@ public class PersistentService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.w(TAG, "PersistentService destroyed. Restarting...");
         handler.removeCallbacks(checkRunnable);
         releaseWakeLock();
         sIsRunning = false;
 
-        // Programar reinicio inmediato
-        scheduleRestart();
+        if (intentionalStop) {
+            Log.d(TAG, "PersistentService destroyed intentionally (device not linked).");
+            cancelAllAlarms();
+        } else {
+            Log.w(TAG, "PersistentService destroyed. Restarting...");
+            scheduleRestart();
+        }
 
         super.onDestroy();
     }
@@ -90,43 +105,44 @@ public class PersistentService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         Log.w(TAG, "Task removed. Restarting PersistentService and app...");
-        
+
         SharedPreferences prefs = getSharedPreferences("DeviceGuardPrefs", Context.MODE_PRIVATE);
         boolean isLocked = prefs.getBoolean("isLocked", false);
         boolean isLinked = prefs.getBoolean("isLinked", false);
-        
+
+        // SIEMPRE reabrir la app cuando se cierra desde recent apps
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (pm != null) {
+            @SuppressWarnings("deprecation")
+            PowerManager.WakeLock wl = pm.newWakeLock(
+                PowerManager.FULL_WAKE_LOCK |
+                PowerManager.ACQUIRE_CAUSES_WAKEUP |
+                PowerManager.ON_AFTER_RELEASE,
+                "DeviceGuard::TaskRemovedWakeLock"
+            );
+            wl.acquire(3000);
+        }
+
+        Intent launchIntent = getPackageManager()
+                .getLaunchIntentForPackage(getPackageName());
+        if (launchIntent != null) {
+            launchIntent.addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK |
+                Intent.FLAG_ACTIVITY_CLEAR_TOP |
+                Intent.FLAG_ACTIVITY_SINGLE_TOP
+            );
+            if (isLinked && isLocked) {
+                launchIntent.putExtra("navigate_to", "device-blocked");
+            }
+            startActivity(launchIntent);
+            Log.i(TAG, "App relaunched after task removal");
+        }
+
+        // Solo reiniciar el servicio si está vinculado
         if (isLinked) {
-            // Despertar pantalla primero
-            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            if (pm != null) {
-                @SuppressWarnings("deprecation")
-                PowerManager.WakeLock wl = pm.newWakeLock(
-                    PowerManager.FULL_WAKE_LOCK |
-                    PowerManager.ACQUIRE_CAUSES_WAKEUP |
-                    PowerManager.ON_AFTER_RELEASE,
-                    "DeviceGuard::TaskRemovedWakeLock"
-                );
-                wl.acquire(3000);
-            }
-            
-            // Reabrir app inmediatamente
-            Intent launchIntent = getPackageManager()
-                    .getLaunchIntentForPackage(getPackageName());
-            if (launchIntent != null) {
-                launchIntent.addFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK |
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP |
-                    Intent.FLAG_ACTIVITY_SINGLE_TOP
-                );
-                if (isLocked) {
-                    launchIntent.putExtra("navigate_to", "device-blocked");
-                }
-                startActivity(launchIntent);
-                Log.i(TAG, "App relaunched after task removal");
-            }
+            scheduleRestart();
         }
         
-        scheduleRestart();
         super.onTaskRemoved(rootIntent);
     }
 
@@ -134,11 +150,30 @@ public class PersistentService extends Service {
      * Verifica que DeviceGuardPollingService esté corriendo y lo inicia si no.
      */
     private void ensurePollingServiceRunning() {
+        SharedPreferences prefs = getSharedPreferences("DeviceGuardPrefs", Context.MODE_PRIVATE);
+        boolean isLinked = prefs.getBoolean("isLinked", false);
+        
+        if (!isLinked) {
+            Log.d(TAG, "Device not linked yet. Not starting polling service.");
+            return;
+        }
+        
         if (!DeviceGuardPollingService.isRunning()) {
             Log.w(TAG, "PollingService not running. Starting it now...");
             DeviceGuardPollingService.start(this);
         } else {
             Log.d(TAG, "PollingService is running");
+        }
+        
+        boolean isLocked = prefs.getBoolean("isLocked", false);
+        
+        if (isLocked) {
+            DeviceAdmin.applyFullRestrictions(this);
+            DeviceAdmin.startKioskMode(this);
+            Log.d(TAG, "Full restrictions and kiosk mode ensured");
+        } else {
+            DeviceAdmin.applyLinkedRestrictions(this);
+            Log.d(TAG, "Linked restrictions ensured");
         }
     }
 
@@ -201,6 +236,34 @@ public class PersistentService extends Service {
     }
 
     /**
+     * Cancela todas las alarmas programadas.
+     */
+    private void cancelAllAlarms() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager == null) return;
+
+        Intent backupIntent = new Intent(this, PersistentService.class);
+        PendingIntent backupPendingIntent = PendingIntent.getService(
+            this,
+            100,
+            backupIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+        alarmManager.cancel(backupPendingIntent);
+
+        Intent restartIntent = new Intent(this, PersistentService.class);
+        PendingIntent restartPendingIntent = PendingIntent.getService(
+            this,
+            101,
+            restartIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+        alarmManager.cancel(restartPendingIntent);
+
+        Log.d(TAG, "All alarms cancelled");
+    }
+
+    /**
      * Programa un reinicio inmediato del servicio.
      */
     private void scheduleRestart() {
@@ -244,7 +307,9 @@ public class PersistentService extends Service {
      * Detiene el PersistentService.
      */
     public static void stop(Context context) {
-        context.stopService(new Intent(context, PersistentService.class));
+        Intent intent = new Intent(context, PersistentService.class);
+        intent.putExtra("intentional_stop", true);
+        context.stopService(intent);
     }
 
     /**

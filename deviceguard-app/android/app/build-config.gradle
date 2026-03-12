@@ -1,0 +1,14 @@
+// Lee variables de entorno del archivo .env
+def envFile = file("../../.env")
+def envProps = new Properties()
+
+if (envFile.exists()) {
+    envFile.withInputStream { stream ->
+        envProps.load(stream)
+    }
+}
+
+// Función para obtener variable de entorno
+project.ext.getEnvOrProp = { String key, String defaultValue = "" ->
+    return envProps.getProperty(key) ?: System.getenv(key) ?: defaultValue
+}

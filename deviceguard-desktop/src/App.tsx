@@ -243,7 +243,7 @@ function App() {
     // Comando para ver logs de DeviceGuard y Firebase
     // Usamos findstr para filtrar las etiquetas relevantes
     // -s para imprimir líneas que coinciden, -i para ignorar mayúsculas/minúsculas
-    const logcatCommand = `"${adbPath}" -s ${connectedDevice} logcat -s DGPollingService DeviceGuard FCM NOTIFICATION firebase.messaging`;
+    const logcatCommand = `"${adbPath}" -s ${connectedDevice} logcat -s DGPollingService DeviceGuard DeviceGuardJS FCM NOTIFICATION firebase.messaging CONFIG PROVISIONING AppGuardian MainActivity BootReceiver PersistentService DeviceAdmin DeviceModule`;
 
     appendLog("📱 Iniciando visor de logs del dispositivo móvil...");
     appendLog(`Comando: ${logcatCommand}`);
@@ -479,7 +479,7 @@ function App() {
               <div className="log-info">
                 <span>Mostrando últimos {mobileLogs.length} logs</span>
                 <span className="log-filters">
-                  Filtros: DGPollingService | DeviceGuard | FCM | NOTIFICATION | firebase.messaging
+                  Filtros: DeviceGuardJS | DGPollingService | DeviceGuard | CONFIG | PROVISIONING | AppGuardian | MainActivity
                 </span>
               </div>
             </div>
