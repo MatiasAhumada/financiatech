@@ -77,7 +77,16 @@ class MainActivity : ReactActivity() {
     // Verificar si venimos de un desbloqueo
     val unlocked = intent?.getBooleanExtra("unlocked", false) ?: false
     if (unlocked) {
-      android.util.Log.i("MainActivity", "Device unlocked from server - allowing normal navigation")
+      android.util.Log.i("MainActivity", "Device unlocked from server - stopping kiosk and navigating")
+      
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isKioskActive()) {
+        try {
+          stopLockTask()
+          android.util.Log.i("MainActivity", "Lock task stopped for unlock")
+        } catch (e: Exception) {
+          android.util.Log.e("MainActivity", "Failed to stop lock task", e)
+        }
+      }
     }
 
     if (isLinked && isLocked && !unlocked) {
@@ -102,9 +111,8 @@ class MainActivity : ReactActivity() {
     val isLinked = prefs.getBoolean("isLinked", false)
 
     // Verificar si venimos de un desbloqueo (navegación desde el servicio)
-    val unlocked = intent?.getStringExtra("unlocked")?.toBoolean() ?: false
+    val unlocked = intent?.getBooleanExtra("unlocked", false) ?: false
     if (unlocked) {
-      // El servidor desbloqueó el dispositivo - NO activar kiosk mode
       android.util.Log.i("MainActivity", "Device unlocked from server - allowing normal navigation")
       intent.removeExtra("unlocked")
       return

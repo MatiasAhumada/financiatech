@@ -1,14 +1,15 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import { TamaguiProvider } from "tamagui";
 import config from "../tamagui.config";
-import { useColorScheme } from "react-native";
+import { useColorScheme, NativeModules, Platform } from "react-native";
 import { usePushNotifications } from "@/src/hooks/usePushNotifications";
+import * as Linking from "expo-linking";
 
 
 export { ErrorBoundary } from "expo-router";
@@ -48,9 +49,39 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
 
-  // Inicializar notificaciones push
   usePushNotifications();
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+
+    const checkUnlockIntent = async () => {
+      const { DeviceModule } = NativeModules;
+      const url = await Linking.getInitialURL();
+      
+      if (url && url.includes("unlocked=true")) {
+        const deviceName = url.match(/deviceName=([^&]+)/)?.[1] || "";
+        const adminName = url.match(/adminName=([^&]+)/)?.[1] || "";
+        const deviceId = url.match(/deviceId=([^&]+)/)?.[1] || "";
+
+        if (deviceName && adminName && deviceId) {
+          setTimeout(() => {
+            router.replace({
+              pathname: "/linking-success",
+              params: {
+                deviceName: decodeURIComponent(deviceName),
+                adminName: decodeURIComponent(adminName),
+                deviceId: decodeURIComponent(deviceId),
+              },
+            });
+          }, 500);
+        }
+      }
+    };
+
+    checkUnlockIntent();
+  }, [router]);
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>

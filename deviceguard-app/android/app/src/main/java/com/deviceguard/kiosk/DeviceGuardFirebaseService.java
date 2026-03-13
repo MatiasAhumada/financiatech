@@ -97,13 +97,11 @@ public class DeviceGuardFirebaseService extends FirebaseMessagingService {
                  .putBoolean(DeviceGuardPollingService.KEY_LOCKDOWN_ACTIVE, false)
                  .apply();
 
-            DeviceModule.emitDeviceStateChanged(
-                getReactContext(),
-                false
-            );
-
             deactivateKioskMode();
-            navigateToUnblockedScreen();
+
+            new Thread(() -> {
+                fetchDeviceDataAndNavigate(imei);
+            }).start();
         }
     }
 
@@ -191,12 +189,11 @@ public class DeviceGuardFirebaseService extends FirebaseMessagingService {
             try {
                 dpm.setKeyguardDisabled(admin, false);
                 dpm.setLockTaskPackages(admin, new String[0]);
+                Log.i(TAG, "Kiosk mode deactivated successfully");
             } catch (Exception e) {
                 Log.e(TAG, "Error disabling kiosk: " + e.getMessage());
             }
         }
-
-        navigateToUnblockedScreen();
     }
 
     private void navigateToBlockedScreen() {
@@ -210,7 +207,80 @@ public class DeviceGuardFirebaseService extends FirebaseMessagingService {
         startActivity(intent);
     }
 
-    private void navigateToUnblockedScreen() {
+    private void fetchDeviceDataAndNavigate(String imei) {
+        SharedPreferences prefs = getSharedPreferences(
+            DeviceGuardPollingService.PREFS_NAME,
+            Context.MODE_PRIVATE
+        );
+        String apiUrl = prefs.getString(DeviceGuardPollingService.KEY_API_URL, null);
+
+        if (apiUrl == null) {
+            Log.e(TAG, "API URL not found, cannot fetch device data");
+            navigateToUnblockedScreenFallback();
+            return;
+        }
+
+        try {
+            String endpoint = apiUrl + "/api/device-syncs/" + imei;
+            URL url = new URL(endpoint);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+            conn.setRequestProperty("Accept", "application/json");
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode == 200) {
+                java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(conn.getInputStream())
+                );
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+                reader.close();
+                conn.disconnect();
+
+                String response = sb.toString();
+                String deviceName = extractJsonValue(response, "deviceName");
+                String adminName = extractJsonValue(response, "adminName");
+
+                navigateToUnblockedScreen(deviceName, adminName, imei);
+            } else {
+                Log.w(TAG, "Failed to fetch device data: HTTP " + responseCode);
+                conn.disconnect();
+                navigateToUnblockedScreenFallback();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching device data: " + e.getMessage());
+            navigateToUnblockedScreenFallback();
+        }
+    }
+
+    private String extractJsonValue(String json, String key) {
+        try {
+            String searchKey = "\"" + key + "\":";
+            int startIndex = json.indexOf(searchKey);
+            if (startIndex == -1) return "";
+            
+            startIndex += searchKey.length();
+            while (startIndex < json.length() && (json.charAt(startIndex) == ' ' || json.charAt(startIndex) == '\"')) {
+                startIndex++;
+            }
+            
+            int endIndex = startIndex;
+            while (endIndex < json.length() && json.charAt(endIndex) != '\"' && json.charAt(endIndex) != ',') {
+                endIndex++;
+            }
+            
+            return json.substring(startIndex, endIndex);
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private void navigateToUnblockedScreen(String deviceName, String adminName, String deviceId) {
         SharedPreferences prefs = getSharedPreferences("DeviceGuardPrefs", Context.MODE_PRIVATE);
         prefs.edit()
              .putBoolean("isLinked", true)
@@ -218,15 +288,59 @@ public class DeviceGuardFirebaseService extends FirebaseMessagingService {
              .putBoolean("isFullLockdownActive", false)
              .apply();
 
-        Log.i(TAG, "Device unblocked - Navigating to linking-success...");
+        Log.i(TAG, "Navigating to linking-success with device data");
         
-        Intent intent = new Intent(Intent.ACTION_VIEW,
-            Uri.parse("deviceguardapp://linking-success"));
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (pm != null) {
+            @SuppressWarnings("deprecation")
+            PowerManager.WakeLock wl = pm.newWakeLock(
+                PowerManager.FULL_WAKE_LOCK |
+                PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                "DeviceGuard::UnblockWakeLock"
+            );
+            wl.acquire(3000);
+        }
+
+        try {
+            String encodedDeviceName = java.net.URLEncoder.encode(deviceName, "UTF-8");
+            String encodedAdminName = java.net.URLEncoder.encode(adminName, "UTF-8");
+            String encodedDeviceId = java.net.URLEncoder.encode(deviceId, "UTF-8");
+            
+            String deepLink = String.format(
+                "deviceguardapp://linking-success?unlocked=true&deviceName=%s&adminName=%s&deviceId=%s",
+                encodedDeviceName,
+                encodedAdminName,
+                encodedDeviceId
+            );
+            
+            Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(deepLink));
+            intent.addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK |
+                Intent.FLAG_ACTIVITY_CLEAR_TASK
+            );
+            startActivity(intent);
+        } catch (Exception e) {
+            Log.e(TAG, "Error encoding URL parameters: " + e.getMessage());
+            navigateToUnblockedScreenFallback();
+        }
+    }
+
+    private void navigateToUnblockedScreenFallback() {
+        Log.w(TAG, "Using fallback navigation without device data");
+        
+        SharedPreferences prefs = getSharedPreferences("DeviceGuardPrefs", Context.MODE_PRIVATE);
+        prefs.edit()
+             .putBoolean("isLinked", true)
+             .putBoolean("isLocked", false)
+             .putBoolean("isFullLockdownActive", false)
+             .apply();
+
+        Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(
             Intent.FLAG_ACTIVITY_NEW_TASK |
-            Intent.FLAG_ACTIVITY_CLEAR_TOP |
-            Intent.FLAG_ACTIVITY_SINGLE_TOP
+            Intent.FLAG_ACTIVITY_CLEAR_TASK
         );
+        intent.putExtra("unlocked", true);
         startActivity(intent);
     }
 
