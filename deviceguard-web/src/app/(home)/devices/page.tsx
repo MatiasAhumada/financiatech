@@ -165,7 +165,7 @@ export default function DevicesPage() {
 
     try {
       const willBlock = deviceToBlock.status !== DeviceStatus.BLOCKED;
-      
+
       // Usar FCM para bloqueo/desbloqueo en dispositivos sincronizados
       if (deviceToBlock.sync) {
         if (willBlock) {
@@ -181,7 +181,9 @@ export default function DevicesPage() {
         }
       } else {
         // Para dispositivos no sincronizados, solo actualizar estado localmente
-        const newStatus = willBlock ? DeviceStatus.BLOCKED : DeviceStatus.ACTIVE;
+        const newStatus = willBlock
+          ? DeviceStatus.BLOCKED
+          : DeviceStatus.ACTIVE;
         await deviceService.update(deviceToBlock.id, {
           name: deviceToBlock.name,
           type: deviceToBlock.type,
@@ -193,7 +195,7 @@ export default function DevicesPage() {
           `Dispositivo ${willBlock ? "bloqueado" : "desbloqueado"} exitosamente`
         );
       }
-      
+
       await loadDevices();
       setIsBlockModalOpen(false);
       setDeviceToBlock(null);
@@ -305,7 +307,7 @@ export default function DevicesPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-4 sm:p-6 lg:p-8 bg-onyx min-h-screen space-y-6">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
         <DataTable
           title="GESTIÓN DE DISPOSITIVOS"
           subtitle="Administración de dispositivos y su estado"
@@ -327,12 +329,14 @@ export default function DevicesPage() {
 
                 return (
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 border rounded-lg flex items-center justify-center font-semibold bg-onyx-600 border-mahogany_red text-mahogany_red">
+                    <div className="w-10 h-10 border rounded-lg flex items-center justify-center font-semibold bg-onyx border-mahogany_red text-mahogany_red">
                       {initials.toUpperCase().slice(0, 2)}
                     </div>
                     <div>
-                      <p className="font-medium text-white">{device.name}</p>
-                      <p className="text-sm text-silver-400">
+                      <p className="font-semibold text-base text-onyx">
+                        {device.name}
+                      </p>
+                      <p className="text-sm font-medium text-onyx">
                         {DEVICE_TYPE_LABELS[device.type]}
                       </p>
                     </div>
@@ -344,7 +348,7 @@ export default function DevicesPage() {
               key: "model",
               label: "MODELO",
               render: (device: IDevice) => (
-                <p className="text-sm text-white">
+                <p className="text-base font-medium text-onyx">
                   {device.model || "Sin modelo"}
                 </p>
               ),
@@ -353,7 +357,7 @@ export default function DevicesPage() {
               key: "serialNumber",
               label: "SERIAL",
               render: (device: IDevice) => (
-                <p className="text-sm text-silver-400">
+                <p className="text-sm font-medium text-silver-500">
                   {device.serialNumber || "Sin serial"}
                 </p>
               ),
@@ -362,7 +366,7 @@ export default function DevicesPage() {
               key: "client",
               label: "CLIENTE",
               render: (device: IDevice) => (
-                <p className="text-sm text-white">
+                <p className="text-base font-medium text-onyx">
                   {device.client?.name || "Sin asignar"}
                 </p>
               ),
@@ -384,19 +388,19 @@ export default function DevicesPage() {
                     label: "Vendido (Pendiente)",
                   },
                   [DeviceStatus.SOLD_SYNCED]: {
-                    color: "text-green-500",
+                    color: "text-success",
                     label: "Vendido (Sincronizado)",
                   },
                   [DeviceStatus.INACTIVE]: {
-                    color: "text-silver-400",
+                    color: "text-onyx",
                     label: "Inactivo",
                   },
                   [DeviceStatus.MAINTENANCE]: {
-                    color: "text-yellow-500",
+                    color: "text-warning font-medium",
                     label: "Mantenimiento",
                   },
                   [DeviceStatus.BLOCKED]: {
-                    color: "text-strawberry_red",
+                    color: "text-destructive font-medium",
                     label: "Bloqueado",
                   },
                 };
@@ -436,7 +440,7 @@ export default function DevicesPage() {
                           onClick={() => setOpenMenuId(null)}
                         />
                         <div
-                          className="fixed w-48 bg-carbon_black border border-carbon_black-600 rounded-lg shadow-2xl z-50"
+                          className="fixed w-48 bg-white_smoke border border-carbon_black-200 rounded-lg shadow-2xl z-50"
                           style={{
                             top: `${menuPosition.top}px`,
                             left: `${menuPosition.left}px`,
@@ -444,24 +448,24 @@ export default function DevicesPage() {
                         >
                           <button
                             onClick={() => handleViewDevice(device)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx-600 rounded-t-lg flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-onyx hover:bg-carbon_black-100 rounded-t-lg flex items-center gap-3 transition-colors"
                           >
-                            <ViewIcon size={16} className="text-silver-400" />
+                            <ViewIcon size={16} className="text-silver-500" />
                             Ver
                           </button>
                           <button
                             onClick={() => handleEditDevice(device)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx-600 flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-onyx hover:bg-carbon_black-100 flex items-center gap-3 transition-colors"
                           >
                             <PencilEdit02Icon
                               size={16}
-                              className="text-silver-400"
+                              className="text-silver-500"
                             />
                             Editar
                           </button>
                           <button
                             onClick={() => handleToggleBlock(device)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx-600 flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-onyx hover:bg-carbon_black-100 flex items-center gap-3 transition-colors"
                           >
                             {device.status === DeviceStatus.BLOCKED ? (
                               <span>Desbloquear</span>
@@ -473,22 +477,22 @@ export default function DevicesPage() {
                             device.sync && (
                               <button
                                 onClick={() => handleSendNotification(device)}
-                                className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx-600 flex items-center gap-3 transition-colors"
+                                className="w-full text-left px-4 py-2.5 text-sm text-onyx hover:bg-carbon_black-100 flex items-center gap-3 transition-colors"
                               >
                                 <Notification03Icon
                                   size={16}
-                                  className="text-silver-400"
+                                  className="text-silver-500"
                                 />
                                 Notificaciones
                               </button>
                             )}
                           <button
                             onClick={() => handleDeleteDevice(device)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-strawberry_red hover:bg-onyx-600 rounded-b-lg flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-carbon_black-100 rounded-b-lg flex items-center gap-3 transition-colors"
                           >
                             <Delete02Icon
                               size={16}
-                              className="text-strawberry_red"
+                              className="text-destructive"
                             />
                             Eliminar
                           </button>
@@ -517,8 +521,8 @@ export default function DevicesPage() {
                 <span className="hidden sm:inline">Exportar</span>
               </Button>
               <Button
-                className="gap-2 bg-mahogany_red hover:bg-mahogany_red-600 flex-1 sm:flex-none text-sm"
                 onClick={handleOpenModal}
+                className="gap-2 bg-mahogany_red hover:bg-mahogany_red-600 flex-1 sm:flex-none text-sm"
               >
                 <span className="text-lg text-white">+</span>
                 <span className="text-white">Nuevo Dispositivo</span>
@@ -575,12 +579,12 @@ export default function DevicesPage() {
                 disabled={isViewMode}
                 className={
                   errors.name
-                    ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                    ? "border-destructive focus:border-destructive focus:ring-destructive"
                     : ""
                 }
               />
               {errors.name && (
-                <p className="text-xs text-mahogany_red">{errors.name}</p>
+                <p className="text-xs text-destructive">{errors.name}</p>
               )}
             </div>
 
@@ -599,7 +603,7 @@ export default function DevicesPage() {
                 disabled={isViewMode}
                 className={`w-full px-3 py-2 rounded-md border bg-background text-sm ${
                   errors.type
-                    ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                    ? "border-destructive focus:border-destructive focus:ring-destructive"
                     : ""
                 }`}
               >
@@ -610,7 +614,7 @@ export default function DevicesPage() {
                 ))}
               </select>
               {errors.type && (
-                <p className="text-xs text-mahogany_red">{errors.type}</p>
+                <p className="text-xs text-destructive">{errors.type}</p>
               )}
             </div>
 
@@ -677,7 +681,7 @@ export default function DevicesPage() {
                 Cancelar
               </Button>
               <Button
-                className="bg-strawberry_red hover:bg-strawberry_red/90 text-white"
+                className="bg-destructive hover:bg-destructive/90 text-white"
                 onClick={confirmDelete}
               >
                 Eliminar
@@ -714,8 +718,8 @@ export default function DevicesPage() {
               <Button
                 className={
                   deviceToBlock?.status === DeviceStatus.BLOCKED
-                    ? "bg-green-600 hover:bg-green-700 text-white"
-                    : "bg-strawberry_red hover:bg-strawberry_red/90 text-white"
+                    ? "bg-success hover:bg-success-dark text-white"
+                    : "bg-destructive hover:bg-destructive/90 text-white"
                 }
                 onClick={confirmToggleBlock}
               >

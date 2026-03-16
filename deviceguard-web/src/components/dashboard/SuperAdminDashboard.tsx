@@ -158,7 +158,7 @@ export function SuperAdminDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="p-4 sm:p-6 lg:p-8 bg-onyx min-h-screen space-y-6">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <StatCard
             title="TOTAL DISPOSITIVOS"
@@ -173,6 +173,7 @@ export function SuperAdminDashboard() {
             }
             icon={SmartPhone01Icon}
             iconColor="bg-mahogany_red"
+            animationDelay={0.05}
           />
           <StatCard
             title="ADMINS ACTIVOS"
@@ -183,6 +184,7 @@ export function SuperAdminDashboard() {
             }}
             icon={Building03Icon}
             iconColor="bg-mahogany_red"
+            animationDelay={0.1}
           />
           <StatCard
             title="CLIENTES TOTALES"
@@ -197,6 +199,7 @@ export function SuperAdminDashboard() {
             }
             icon={UserMultiple02Icon}
             iconColor="bg-mahogany_red"
+            animationDelay={0.15}
           />
         </div>
 
@@ -318,11 +321,11 @@ export function SuperAdminDashboard() {
                           </button>
                           <button
                             onClick={() => handleDeleteAdmin(admin.id)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-strawberry_red hover:bg-onyx-600 rounded-b-lg flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-onyx-600 rounded-b-lg flex items-center gap-3 transition-colors"
                           >
                             <Delete02Icon
                               size={16}
-                              className="text-strawberry_red"
+                              className="text-destructive"
                             />
                             Eliminar
                           </button>
@@ -409,12 +412,12 @@ export function SuperAdminDashboard() {
                 disabled={isViewMode}
                 className={
                   errors.name
-                    ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                    ? "border-destructive focus:border-destructive focus:ring-destructive"
                     : ""
                 }
               />
               {errors.name && (
-                <p className="text-xs text-mahogany_red">{errors.name}</p>
+                <p className="text-xs text-destructive">{errors.name}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -431,12 +434,12 @@ export function SuperAdminDashboard() {
                 disabled={isViewMode}
                 className={
                   errors.email
-                    ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                    ? "border-destructive focus:border-destructive focus:ring-destructive"
                     : ""
                 }
               />
               {errors.email && (
-                <p className="text-xs text-mahogany_red">{errors.email}</p>
+                <p className="text-xs text-destructive">{errors.email}</p>
               )}
             </div>
             <div className="space-y-2">

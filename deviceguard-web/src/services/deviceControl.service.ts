@@ -22,16 +22,22 @@ export interface DeviceStatusResponse {
 
 export const deviceControlService = {
   async lockDevice(deviceId: string): Promise<DeviceControlResponse> {
-    const { data } = await clientAxios.patch(`/api/devices/${deviceId}/status`, {
-      status: "BLOCKED",
-    });
+    const { data } = await clientAxios.patch(
+      `/api/devices/${deviceId}/status`,
+      {
+        status: "BLOCKED",
+      }
+    );
     return data;
   },
 
   async unlockDevice(deviceId: string): Promise<DeviceControlResponse> {
-    const { data } = await clientAxios.patch(`/api/devices/${deviceId}/status`, {
-      status: "SOLD_SYNCED",
-    });
+    const { data } = await clientAxios.patch(
+      `/api/devices/${deviceId}/status`,
+      {
+        status: "SOLD_SYNCED",
+      }
+    );
     return data;
   },
 

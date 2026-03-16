@@ -40,7 +40,7 @@ export function PasswordInput({
           placeholder="Contraseña temporal"
           className={
             error
-              ? "pr-10 border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+              ? "pr-10 border-destructive focus:border-destructive focus:ring-destructive"
               : "pr-10"
           }
         />
@@ -58,7 +58,7 @@ export function PasswordInput({
           )}
         </Button>
       </div>
-      {error && <p className="text-xs text-mahogany_red">{error}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
       {showRequirements && value && (
         <div className="space-y-1 mt-2">
           {PASSWORD_REQUIREMENTS.map((req, index) => {
@@ -67,14 +67,14 @@ export function PasswordInput({
               <div key={index} className="flex items-center gap-2">
                 <div
                   className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                    isValid ? "bg-success" : "bg-mahogany_red"
+                    isValid ? "bg-success" : "bg-destructive"
                   }`}
                 >
                   {isValid && <Tick02Icon size={12} className="text-white" />}
                 </div>
                 <span
                   className={`text-xs ${
-                    isValid ? "text-success" : "text-mahogany_red"
+                    isValid ? "text-success" : "text-destructive"
                   }`}
                 >
                   {req.label}

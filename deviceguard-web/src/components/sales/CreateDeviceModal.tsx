@@ -106,12 +106,12 @@ export function CreateDeviceModal({
             placeholder="Ingrese el nombre del dispositivo"
             className={
               errors.name
-                ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                ? "border-destructive focus:border-destructive focus:ring-destructive"
                 : ""
             }
           />
           {errors.name && (
-            <p className="text-xs text-mahogany_red">{errors.name}</p>
+            <p className="text-xs text-destructive">{errors.name}</p>
           )}
         </div>
 
@@ -126,7 +126,7 @@ export function CreateDeviceModal({
             }}
             className={`w-full px-3 py-2 rounded-md border bg-background text-sm ${
               errors.type
-                ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                ? "border-destructive focus:border-destructive focus:ring-destructive"
                 : ""
             }`}
           >
@@ -137,7 +137,7 @@ export function CreateDeviceModal({
             ))}
           </select>
           {errors.type && (
-            <p className="text-xs text-mahogany_red">{errors.type}</p>
+            <p className="text-xs text-destructive">{errors.type}</p>
           )}
         </div>
 

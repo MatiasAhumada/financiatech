@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ROUTES } from "@/constants/routes";
+import { PageTransition } from "@/components/layout/PageTransition";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -32,7 +33,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-onyx">
       <Sidebar />
-      <main className="flex-1 overflow-auto">{children}</main>
+      <main className="flex-1 overflow-auto lg:ml-64">
+        <PageTransition>{children}</PageTransition>
+      </main>
     </div>
   );
 }

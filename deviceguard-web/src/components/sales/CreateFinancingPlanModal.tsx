@@ -109,12 +109,12 @@ export function CreateFinancingPlanModal({
             placeholder="Ej: Plan 12 Meses"
             className={
               errors.name
-                ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                ? "border-destructive focus:border-destructive focus:ring-destructive"
                 : ""
             }
           />
           {errors.name && (
-            <p className="text-xs text-mahogany_red">{errors.name}</p>
+            <p className="text-xs text-destructive">{errors.name}</p>
           )}
         </div>
 
@@ -150,12 +150,12 @@ export function CreateFinancingPlanModal({
             placeholder="Ej: 12"
             className={
               errors.installments
-                ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                ? "border-destructive focus:border-destructive focus:ring-destructive"
                 : ""
             }
           />
           {errors.installments && (
-            <p className="text-xs text-mahogany_red">{errors.installments}</p>
+            <p className="text-xs text-destructive">{errors.installments}</p>
           )}
         </div>
 
@@ -174,12 +174,12 @@ export function CreateFinancingPlanModal({
             placeholder="Ej: 2.5"
             className={
               errors.interestRate
-                ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                ? "border-destructive focus:border-destructive focus:ring-destructive"
                 : ""
             }
           />
           {errors.interestRate && (
-            <p className="text-xs text-mahogany_red">{errors.interestRate}</p>
+            <p className="text-xs text-destructive">{errors.interestRate}</p>
           )}
         </div>
       </div>

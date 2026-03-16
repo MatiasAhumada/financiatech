@@ -14,7 +14,7 @@ import {
 export function AdminDashboard() {
   return (
     <DashboardLayout>
-      <div className="p-4 sm:p-6 lg:p-8 bg-onyx min-h-screen space-y-6">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <StatCard
             title="DISPOSITIVOS"
@@ -22,6 +22,7 @@ export function AdminDashboard() {
             trend={{ value: "0 activos", isPositive: true }}
             icon={SmartPhone01Icon}
             iconColor="bg-mahogany_red"
+            animationDelay={0.05}
           />
           <StatCard
             title="CLIENTES"
@@ -29,6 +30,7 @@ export function AdminDashboard() {
             trend={{ value: "0 activos", isPositive: true }}
             icon={UserMultiple02Icon}
             iconColor="bg-mahogany_red"
+            animationDelay={0.1}
           />
           <StatCard
             title="PAGOS PENDIENTES"
@@ -36,6 +38,7 @@ export function AdminDashboard() {
             trend={{ value: "0 cuotas", isPositive: false }}
             icon={DollarCircleIcon}
             iconColor="bg-warning"
+            animationDelay={0.15}
           />
           <StatCard
             title="PAGOS AL DÍA"
@@ -43,6 +46,7 @@ export function AdminDashboard() {
             trend={{ value: "0 cuotas", isPositive: true }}
             icon={DollarCircleIcon}
             iconColor="bg-success"
+            animationDelay={0.2}
           />
         </div>
 

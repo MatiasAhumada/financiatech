@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Cancel01Icon } from "hugeicons-react";
+import { useReducedMotion } from "framer-motion";
 
 interface GenericModalProps {
   open: boolean;
@@ -35,23 +36,67 @@ export function GenericModal({
   variant = "default",
 }: GenericModalProps) {
   const isDark = variant === "dark";
+  const shouldReduceMotion = useReducedMotion();
+
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: "spring" as const,
+        stiffness: 300,
+        damping: 30,
+      },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.95,
+      y: 20,
+      transition: {
+        type: "spring" as const,
+        stiffness: 300,
+        damping: 30,
+      },
+    },
+  };
+
+  const backdropVariants = {
+    hidden: { opacity: 0, backdropBlur: 0 },
+    visible: {
+      opacity: 1,
+      backdropBlur: 4,
+      transition: {
+        duration: 0.2,
+      },
+    },
+    exit: {
+      opacity: 0,
+      backdropBlur: 0,
+      transition: {
+        duration: 0.2,
+      },
+    },
+  };
 
   return (
     <AnimatePresence>
       {open && (
         <>
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            variants={shouldReduceMotion ? undefined : backdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             onClick={() => onOpenChange(false)}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/60"
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.2 }}
+            variants={shouldReduceMotion ? undefined : modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
           >
             <div

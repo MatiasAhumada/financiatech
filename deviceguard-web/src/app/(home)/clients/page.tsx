@@ -240,7 +240,7 @@ export default function ClientsPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-4 sm:p-6 lg:p-8 bg-onyx min-h-screen space-y-6">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
         <DataTable
           title="GESTIÓN DE CLIENTES"
           subtitle="Administración de clientes y sus datos de contacto"
@@ -275,11 +275,11 @@ export default function ClientsPage() {
                     </div>
                     <div>
                       <p
-                        className={`font-medium ${client.deletedAt ? "text-silver-400" : "text-white"}`}
+                        className={`font-semibold text-base ${client.deletedAt ? "text-silver-400" : "text-onyx"}`}
                       >
                         {client.name}
                       </p>
-                      <p className="text-sm text-silver-400">
+                      <p className="text-sm font-medium text-silver-500">
                         {client.email || "Sin email"}
                       </p>
                     </div>
@@ -294,8 +294,12 @@ export default function ClientsPage() {
                 const phoneCount = client.phones?.length || 0;
                 return (
                   <div>
-                    <p className="font-medium text-white">{phoneCount}</p>
-                    <p className="text-sm text-silver-400">teléfonos</p>
+                    <p className="font-semibold text-base text-onyx">
+                      {phoneCount}
+                    </p>
+                    <p className="text-sm font-medium text-silver-500">
+                      teléfonos
+                    </p>
                   </div>
                 );
               },
@@ -307,8 +311,12 @@ export default function ClientsPage() {
                 const deviceCount = client.devices?.length || 0;
                 return (
                   <div>
-                    <p className="font-medium text-white">{deviceCount}</p>
-                    <p className="text-sm text-silver-400">dispositivos</p>
+                    <p className="font-semibold text-base text-onyx">
+                      {deviceCount}
+                    </p>
+                    <p className="text-sm font-medium text-silver-500">
+                      dispositivos
+                    </p>
                   </div>
                 );
               },
@@ -317,7 +325,7 @@ export default function ClientsPage() {
               key: "createdAt",
               label: "CREACIÓN",
               render: (client: IClient) => (
-                <p className="text-sm text-silver-400">
+                <p className="text-sm font-medium text-silver-500">
                   {new Date(client.createdAt).toLocaleDateString()}
                 </p>
               ),
@@ -350,7 +358,7 @@ export default function ClientsPage() {
                           onClick={() => setOpenMenuId(null)}
                         />
                         <div
-                          className="fixed w-48 bg-carbon_black border border-carbon_black-600 rounded-lg shadow-2xl z-50"
+                          className="fixed w-48 bg-white_smoke border border-carbon_black-200 rounded-lg shadow-2xl z-50"
                           style={{
                             top: `${menuPosition.top}px`,
                             left: `${menuPosition.left}px`,
@@ -358,30 +366,30 @@ export default function ClientsPage() {
                         >
                           <button
                             onClick={() => handleViewClient(client)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx-600 rounded-t-lg flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-onyx hover:bg-carbon_black-100 rounded-t-lg flex items-center gap-3 transition-colors"
                           >
-                            <ViewIcon size={16} className="text-silver-400" />
+                            <ViewIcon size={16} className="text-silver-500" />
                             Ver
                           </button>
                           {!client.deletedAt && (
                             <>
                               <button
                                 onClick={() => handleEditClient(client)}
-                                className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx-600 flex items-center gap-3 transition-colors"
+                                className="w-full text-left px-4 py-2.5 text-sm text-onyx hover:bg-carbon_black-100 flex items-center gap-3 transition-colors"
                               >
                                 <PencilEdit02Icon
                                   size={16}
-                                  className="text-silver-400"
+                                  className="text-silver-500"
                                 />
                                 Editar
                               </button>
                               <button
                                 onClick={() => handleDeleteClient(client)}
-                                className="w-full text-left px-4 py-2.5 text-sm text-strawberry_red hover:bg-onyx-600 rounded-b-lg flex items-center gap-3 transition-colors"
+                                className="w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-carbon_black-100 rounded-b-lg flex items-center gap-3 transition-colors"
                               >
                                 <Delete02Icon
                                   size={16}
-                                  className="text-strawberry_red"
+                                  className="text-destructive"
                                 />
                                 Eliminar
                               </button>
@@ -390,11 +398,11 @@ export default function ClientsPage() {
                           {client.deletedAt && (
                             <button
                               onClick={() => handleRestoreClient(client)}
-                              className="w-full text-left px-4 py-2.5 text-sm text-green-500 hover:bg-onyx-600 rounded-b-lg flex items-center gap-3 transition-colors"
+                              className="w-full text-left px-4 py-2.5 text-sm text-success hover:bg-carbon_black-100 rounded-b-lg flex items-center gap-3 transition-colors"
                             >
                               <CheckmarkCircle02Icon
                                 size={16}
-                                className="text-green-500"
+                                className="text-success"
                               />
                               Activar
                             </button>
@@ -423,10 +431,7 @@ export default function ClientsPage() {
                 <Download01Icon size={16} />
                 <span className="hidden sm:inline">Exportar</span>
               </Button>
-              <Button
-                className="gap-2 bg-mahogany_red hover:bg-mahogany_red-600 flex-1 sm:flex-none text-sm"
-                onClick={handleOpenModal}
-              >
+              <Button className="gap-2 bg-mahogany_red hover:bg-mahogany_red-600 flex-1 sm:flex-none text-sm">
                 <span className="text-lg text-white">+</span>
                 <span className="text-white">Nuevo Cliente</span>
               </Button>
@@ -482,12 +487,12 @@ export default function ClientsPage() {
                 disabled={isViewMode}
                 className={
                   errors.name
-                    ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                    ? "border-destructive focus:border-destructive focus:ring-destructive"
                     : ""
                 }
               />
               {errors.name && (
-                <p className="text-xs text-mahogany_red">{errors.name}</p>
+                <p className="text-xs text-destructive">{errors.name}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -504,12 +509,12 @@ export default function ClientsPage() {
                 disabled={isViewMode}
                 className={
                   errors.email
-                    ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                    ? "border-destructive focus:border-destructive focus:ring-destructive"
                     : ""
                 }
               />
               {errors.email && (
-                <p className="text-xs text-mahogany_red">{errors.email}</p>
+                <p className="text-xs text-destructive">{errors.email}</p>
               )}
             </div>
 
@@ -546,7 +551,7 @@ export default function ClientsPage() {
                           }}
                           placeholder="Número *"
                           disabled={isViewMode}
-                          className={`flex-1 ${errors[`phones.${index}.number`] ? "border-mahogany_red" : ""}`}
+                          className={`flex-1 ${errors[`phones.${index}.number`] ? "border-destructive" : ""}`}
                         />
                         <select
                           value={phone.type}
@@ -640,7 +645,7 @@ export default function ClientsPage() {
                             }}
                             placeholder="Calle *"
                             disabled={isViewMode}
-                            className={`flex-1 ${errors[`addresses.${index}.street`] ? "border-mahogany_red" : ""}`}
+                            className={`flex-1 ${errors[`addresses.${index}.street`] ? "border-destructive" : ""}`}
                           />
                           {!isViewMode && (
                             <Button
@@ -681,12 +686,12 @@ export default function ClientsPage() {
                           disabled={isViewMode}
                           className={
                             errors[`addresses.${index}.city`]
-                              ? "border-mahogany_red"
+                              ? "border-destructive"
                               : ""
                           }
                         />
                         {errors[`addresses.${index}.city`] && (
-                          <p className="text-xs text-mahogany_red">
+                          <p className="text-xs text-destructive">
                             {errors[`addresses.${index}.city`]}
                           </p>
                         )}

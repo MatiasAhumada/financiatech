@@ -2,6 +2,8 @@ import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search01Icon } from "hugeicons-react";
+import { motion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 
 interface Column<T> {
   key: string;
@@ -41,6 +43,8 @@ export function DataTable<T>({
   onRowClick,
   expandedContent,
 }: DataTableProps<T>) {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -59,18 +63,18 @@ export function DataTable<T>({
         )}
       </div>
 
-      <div className="border border-carbon_black-600 rounded-lg shadow-sm bg-carbon_black">
+      <div className="border border-white_smoke/20 rounded-lg shadow-sm bg-white_smoke">
         {onSearch && (
-          <div className="p-6 border-b border-carbon_black-700">
+          <div className="p-6 border-b border-carbon_black-200">
             <div className="relative flex-1 w-full sm:max-w-md">
               <Search01Icon
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-silver-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-silver-500"
               />
               <Input
                 placeholder={searchPlaceholder}
                 onChange={(e) => onSearch(e.target.value)}
-                className="pl-10 bg-onyx-600 border-carbon_black-700 text-white placeholder:text-silver-400 focus:border-mahogany_red focus:ring-mahogany_red text-sm"
+                className="pl-10 bg-white_smoke border-carbon_black-200 text-onyx placeholder:text-silver-400 focus:border-mahogany_red focus:ring-mahogany_red text-sm"
               />
             </div>
           </div>
@@ -80,11 +84,11 @@ export function DataTable<T>({
           <div className="w-full overflow-x-auto overflow-y-visible">
             <table className="w-full min-w-[800px]">
               <thead>
-                <tr className="border-b border-carbon_black-700 text-left text-xs text-silver-400 uppercase tracking-wide">
+                <tr className="border-b border-carbon_black-200 text-left text-sm font-semibold text-onyx uppercase tracking-wide">
                   {columns.map((column) => (
                     <th
                       key={column.key}
-                      className={`pb-3 font-medium ${column.className || ""}`}
+                      className={`pb-3 font-semibold ${column.className || ""}`}
                     >
                       {column.label}
                     </th>
@@ -96,7 +100,7 @@ export function DataTable<T>({
                   <tr>
                     <td
                       colSpan={columns.length}
-                      className="py-8 text-center text-silver-400"
+                      className="py-8 text-center text-onyx font-medium"
                     >
                       Cargando...
                     </td>
@@ -105,29 +109,38 @@ export function DataTable<T>({
                   <tr>
                     <td
                       colSpan={columns.length}
-                      className="py-8 text-center text-silver-400"
+                      className="py-8 text-center text-onyx font-medium"
                     >
                       {emptyMessage}
                     </td>
                   </tr>
                 ) : (
-                  data.map((item) => (
+                  data.map((item, index) => (
                     <>
-                      <tr
+                      <motion.tr
                         key={keyExtractor(item)}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          duration: 0.2,
+                          delay: shouldReduceMotion ? 0 : index * 0.03,
+                        }}
                         onClick={() => onRowClick?.(item)}
-                        className={`border-b border-carbon_black-700 hover:bg-onyx-600 transition-colors ${
+                        className={`border-b border-carbon_black-200 hover:bg-carbon_black-100 transition-colors ${
                           onRowClick ? "cursor-pointer sm:cursor-default" : ""
                         }`}
                       >
                         {columns.map((column) => (
-                          <td key={column.key} className="py-4">
+                          <td
+                            key={column.key}
+                            className="py-4 text-base font-medium text-onyx"
+                          >
                             {column.render
                               ? column.render(item)
                               : (item as any)[column.key]}
                           </td>
                         ))}
-                      </tr>
+                      </motion.tr>
                       {expandedContent?.(item)}
                     </>
                   ))
@@ -137,8 +150,8 @@ export function DataTable<T>({
           </div>
 
           {totalLabel && (
-            <div className="mt-4 pt-4 border-t border-carbon_black-700">
-              <p className="text-sm text-silver-400 uppercase tracking-wide">
+            <div className="mt-4 pt-4 border-t border-carbon_black-200">
+              <p className="text-sm font-medium text-onyx uppercase tracking-wide">
                 {totalLabel}
               </p>
             </div>

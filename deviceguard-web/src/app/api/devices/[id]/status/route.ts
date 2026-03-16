@@ -37,19 +37,19 @@ export async function PATCH(
     const imei = deviceSync.imei;
 
     if (status === DeviceStatus.BLOCKED) {
-      console.log('[BLOCK] Attempting to lock device:', { deviceId, imei });
+      console.log("[BLOCK] Attempting to lock device:", { deviceId, imei });
       const result = await deviceControlService.lockDevice({ deviceId });
-      console.log('[BLOCK] Lock result:', result);
+      console.log("[BLOCK] Lock result:", result);
 
       if (result.success) {
-        console.log('[FCM] Sending FCM notification...');
+        console.log("[FCM] Sending FCM notification...");
         const fcmSent = await fcmService.sendToDevice(imei, {
           type: "DEVICE_BLOCKED",
           deviceId,
           imei,
           timestamp: new Date().toISOString(),
         });
-        console.log('[FCM] FCM sent:', fcmSent);
+        console.log("[FCM] FCM sent:", fcmSent);
 
         return NextResponse.json({
           ...result,
@@ -60,19 +60,19 @@ export async function PATCH(
     }
 
     if (status === DeviceStatus.SOLD_SYNCED) {
-      console.log('[UNBLOCK] Attempting to unlock device:', { deviceId, imei });
+      console.log("[UNBLOCK] Attempting to unlock device:", { deviceId, imei });
       const result = await deviceControlService.unlockDevice({ deviceId });
-      console.log('[UNBLOCK] Unlock result:', result);
+      console.log("[UNBLOCK] Unlock result:", result);
 
       if (result.success) {
-        console.log('[FCM] Sending FCM notification...');
+        console.log("[FCM] Sending FCM notification...");
         const fcmSent = await fcmService.sendToDevice(imei, {
           type: "DEVICE_UNBLOCKED",
           deviceId,
           imei,
           timestamp: new Date().toISOString(),
         });
-        console.log('[FCM] FCM sent:', fcmSent);
+        console.log("[FCM] FCM sent:", fcmSent);
 
         return NextResponse.json({
           ...result,

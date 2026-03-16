@@ -1,98 +1,109 @@
 @import "tailwindcss";
 
 @theme {
-  --color-onyx: #0b090a;
-  --color-onyx-100: #020202;
-  --color-onyx-200: #040404;
-  --color-onyx-300: #070606;
-  --color-onyx-400: #090708;
-  --color-onyx-500: #0b090a;
-  --color-onyx-600: #41353b;
-  --color-onyx-700: #77616c;
-  --color-onyx-800: #a7939d;
-  --color-onyx-900: #d3c9ce;
+  /* Deep Teal - Fondo base */
+  --color-onyx: #032831;
+  --color-onyx-100: #010d10;
+  --color-onyx-200: #021a20;
+  --color-onyx-300: #032831;
+  --color-onyx-400: #053a47;
+  --color-onyx-500: #074d5e;
+  --color-onyx-600: #0a6176;
+  --color-onyx-700: #0d7a91;
+  --color-onyx-800: #1094ad;
+  --color-onyx-900: #13afc9;
 
-  --color-carbon_black: #161a1d;
-  --color-carbon_black-100: #040506;
-  --color-carbon_black-200: #090a0c;
-  --color-carbon_black-300: #0d1011;
-  --color-carbon_black-400: #121517;
-  --color-carbon_black-500: #161a1d;
-  --color-carbon_black-600: #3d4951;
-  --color-carbon_black-700: #657786;
-  --color-carbon_black-800: #96a5b0;
-  --color-carbon_black-900: #cbd2d8;
+  /* Variantes del Deep Teal para fondos secundarios */
+  --color-carbon_black: #05242c;
+  --color-carbon_black-100: #01090c;
+  --color-carbon_black-200: #021318;
+  --color-carbon_black-300: #031d24;
+  --color-carbon_black-400: #042730;
+  --color-carbon_black-500: #05242c;
+  --color-carbon_black-600: #0a3d4a;
+  --color-carbon_black-700: #0f5768;
+  --color-carbon_black-800: #147186;
+  --color-carbon_black-900: #198ba4;
 
-  --color-dark_garnet: #660708;
-  --color-dark_garnet-100: #140102;
-  --color-dark_garnet-200: #280303;
-  --color-dark_garnet-300: #3c0405;
-  --color-dark_garnet-400: #500607;
-  --color-dark_garnet-500: #660708;
-  --color-dark_garnet-600: #af0c0f;
-  --color-dark_garnet-700: #ef1d20;
-  --color-dark_garnet-800: #f5686b;
-  --color-dark_garnet-900: #fab4b5;
+  /* Blue Primary - Color principal */
+  --color-mahogany_red: #4583fa;
+  --color-mahogany_red-100: #0d1a33;
+  --color-mahogany_red-200: #1a3466;
+  --color-mahogany_red-300: #274f99;
+  --color-mahogany_red-400: #3469cc;
+  --color-mahogany_red-500: #4583fa;
+  --color-mahogany_red-600: #6a9dfb;
+  --color-mahogany_red-700: #8fb7fc;
+  --color-mahogany_red-800: #b4d1fd;
+  --color-mahogany_red-900: #d9ebfe;
 
-  --color-mahogany_red: #ba181b;
-  --color-mahogany_red-100: #250505;
-  --color-mahogany_red-200: #4a0a0b;
-  --color-mahogany_red-300: #6f0e10;
-  --color-mahogany_red-400: #941315;
-  --color-mahogany_red-500: #ba181b;
-  --color-mahogany_red-600: #e32a2d;
-  --color-mahogany_red-700: #ea5f62;
-  --color-mahogany_red-800: #f19496;
-  --color-mahogany_red-900: #f8cacb;
+  /* Variante oscura del Blue Primary */
+  --color-dark_garnet: #1a5fd4;
+  --color-dark_garnet-100: #05142b;
+  --color-dark_garnet-200: #0a2955;
+  --color-dark_garnet-300: #0f3d80;
+  --color-dark_garnet-400: #1452aa;
+  --color-dark_garnet-500: #1a5fd4;
+  --color-dark_garnet-600: #4580dc;
+  --color-dark_garnet-700: #70a1e4;
+  --color-dark_garnet-800: #9bc2ec;
+  --color-dark_garnet-900: #c6e3f4;
 
-  --color-strawberry_red: #e5383b;
-  --color-strawberry_red-100: #330707;
-  --color-strawberry_red-200: #650d0f;
-  --color-strawberry_red-300: #981416;
-  --color-strawberry_red-400: #ca1a1d;
-  --color-strawberry_red-500: #e5383b;
-  --color-strawberry_red-600: #ea6062;
-  --color-strawberry_red-700: #f0888a;
-  --color-strawberry_red-800: #f5b0b1;
-  --color-strawberry_red-900: #fad7d8;
+  /* Variante clara del Blue Primary */
+  --color-strawberry_red: #7aaafb;
+  --color-strawberry_red-100: #0f1a33;
+  --color-strawberry_red-200: #1e3466;
+  --color-strawberry_red-300: #2d4f99;
+  --color-strawberry_red-400: #3c69cc;
+  --color-strawberry_red-500: #7aaafb;
+  --color-strawberry_red-600: #95bcfc;
+  --color-strawberry_red-700: #b0cefd;
+  --color-strawberry_red-800: #cbe0fe;
+  --color-strawberry_red-900: #e6f2ff;
 
-  --color-silver: #b1a7a6;
-  --color-silver-100: #252020;
-  --color-silver-200: #494040;
-  --color-silver-300: #6e615f;
-  --color-silver-400: #918280;
-  --color-silver-500: #b1a7a6;
-  --color-silver-600: #c0b8b7;
-  --color-silver-700: #d0cac9;
-  --color-silver-800: #e0dbdb;
-  --color-silver-900: #efeded;
+  /* Texto muted con leve ajuste frío */
+  --color-silver: #a8b5c0;
+  --color-silver-100: #1f2428;
+  --color-silver-200: #3f4951;
+  --color-silver-300: #5e6d79;
+  --color-silver-400: #7e92a2;
+  --color-silver-500: #a8b5c0;
+  --color-silver-600: #b9c4cd;
+  --color-silver-700: #cad3da;
+  --color-silver-800: #dbe2e7;
+  --color-silver-900: #ecf1f4;
 
-  --color-dust_grey: #d3d3d3;
-  --color-dust_grey-100: #2a2a2a;
-  --color-dust_grey-200: #555555;
-  --color-dust_grey-300: #7f7f7f;
-  --color-dust_grey-400: #a9a9a9;
-  --color-dust_grey-500: #d3d3d3;
-  --color-dust_grey-600: #dcdcdc;
-  --color-dust_grey-700: #e5e5e5;
-  --color-dust_grey-800: #eeeeee;
-  --color-dust_grey-900: #f6f6f6;
+  --color-dust_grey: #c5d0d8;
+  --color-dust_grey-100: #1f2a30;
+  --color-dust_grey-200: #3f5460;
+  --color-dust_grey-300: #5e7e8f;
+  --color-dust_grey-400: #7ea9bf;
+  --color-dust_grey-500: #c5d0d8;
+  --color-dust_grey-600: #d4dbe0;
+  --color-dust_grey-700: #e2e6e9;
+  --color-dust_grey-800: #f0f2f4;
+  --color-dust_grey-900: #fbfcfd;
 
-  --color-white_smoke: #f5f3f4;
-  --color-white_smoke-100: #352d31;
-  --color-white_smoke-200: #6b5962;
-  --color-white_smoke-300: #9d8993;
-  --color-white_smoke-400: #c9bfc4;
-  --color-white_smoke-500: #f5f3f4;
-  --color-white_smoke-600: #f8f6f7;
-  --color-white_smoke-700: #f9f8f9;
-  --color-white_smoke-800: #fbfbfb;
-  --color-white_smoke-900: #fdfdfd;
+  /* Blanco puro para fondos claros */
+  --color-white_smoke: #ffffff;
+  --color-white_smoke-100: #2a3035;
+  --color-white_smoke-200: #55606a;
+  --color-white_smoke-300: #80909f;
+  --color-white_smoke-400: #aac0d4;
+  --color-white_smoke-500: #ffffff;
+  --color-white_smoke-600: #ffffff;
+  --color-white_smoke-700: #ffffff;
+  --color-white_smoke-800: #ffffff;
+  --color-white_smoke-900: #ffffff;
 
-  --color-success: #10b981;
-  --color-success-dark: #059669;
+  /* Mint Green - Success */
+  --color-success: #3de3b1;
+  --color-success-dark: #1fb88a;
   --color-warning: #f59e0b;
   --color-warning-dark: #d97706;
+  /* Coral Red - Destructive actions */
+  --color-destructive: #ff6b6b;
+  --color-destructive-dark: #ee5a5a;
 }
 
 @layer base {
@@ -120,25 +131,25 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 195 83% 9%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 195 83% 9%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 195 83% 9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 213 94% 63%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 195 70% 15%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --muted: 195 70% 15%;
+    --muted-foreground: 210 20% 70%;
+    --accent: 213 94% 63%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 195 70% 15%;
+    --input: 195 70% 15%;
+    --ring: 213 94% 63%;
   }
 }
 

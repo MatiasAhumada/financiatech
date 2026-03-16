@@ -139,40 +139,44 @@ export default function SalesPage() {
   const avgTicket = sales.length > 0 ? todayTotal / sales.length : 0;
   return (
     <DashboardLayout>
-      <div className="p-4 sm:p-6 lg:p-8 bg-onyx min-h-screen space-y-6">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-carbon_black border border-carbon_black-600 rounded-lg p-6">
-            <p className="text-xs text-silver-400 uppercase tracking-wide mb-2">
+          <div className="bg-white_smoke border border-white_smoke/20 rounded-lg shadow-sm p-6">
+            <p className="text-sm font-semibold text-onyx uppercase tracking-wide mb-2">
               VENTAS HOY
             </p>
-            <p className="text-3xl font-bold text-white">
+            <p className="text-4xl font-bold text-onyx">
               ${todayTotal.toFixed(2)}
             </p>
           </div>
-          <div className="bg-carbon_black border border-carbon_black-600 rounded-lg p-6">
-            <p className="text-xs text-silver-400 uppercase tracking-wide mb-2">
+          <div className="bg-white_smoke border border-white_smoke/20 rounded-lg shadow-sm p-6">
+            <p className="text-sm font-semibold text-onyx uppercase tracking-wide mb-2">
               DISPOSITIVOS NUEVOS
             </p>
-            <p className="text-3xl font-bold text-white">{newDevicesCount}</p>
-            <p className="text-xs text-silver-400 mt-1">+12% vs ayer</p>
+            <p className="text-4xl font-bold text-onyx">{newDevicesCount}</p>
+            <p className="text-sm font-medium text-success mt-1">
+              +12% vs ayer
+            </p>
           </div>
-          <div className="bg-carbon_black border border-carbon_black-600 rounded-lg p-6">
-            <p className="text-xs text-silver-400 uppercase tracking-wide mb-2">
+          <div className="bg-white_smoke border border-white_smoke/20 rounded-lg shadow-sm p-6">
+            <p className="text-sm font-semibold text-onyx uppercase tracking-wide mb-2">
               PENDIENTES DE PAGO
             </p>
-            <p className="text-3xl font-bold text-mahogany_red">
+            <p className="text-4xl font-bold text-destructive">
               {pendingPayments}
             </p>
-            <p className="text-xs text-silver-400 mt-1">Requieren atención</p>
+            <p className="text-sm font-medium  text-destructive mt-1">
+              Requieren atención
+            </p>
           </div>
-          <div className="bg-carbon_black border border-carbon_black-600 rounded-lg p-6">
-            <p className="text-xs text-silver-400 uppercase tracking-wide mb-2">
+          <div className="bg-white_smoke border border-white_smoke/20 rounded-lg shadow-sm p-6">
+            <p className="text-sm font-semibold text-onyx uppercase tracking-wide mb-2">
               TICKET PROMEDIO
             </p>
-            <p className="text-3xl font-bold text-white">
+            <p className="text-4xl font-bold text-onyx">
               ${avgTicket.toFixed(2)}
             </p>
-            <p className="text-xs text-silver-400 mt-1">Últimos 30 días</p>
+            <p className="text-sm font-mediummt-1">Últimos 30 días</p>
           </div>
         </div>
 
@@ -207,14 +211,14 @@ export default function SalesPage() {
 
                 return (
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 border rounded-lg flex items-center justify-center font-semibold bg-onyx-600 border-mahogany_red text-mahogany_red">
+                    <div className="w-10 h-10 border rounded-lg flex items-center justify-center font-semibold bg-onyx border-mahogany_red text-mahogany_red">
                       {initials}
                     </div>
                     <div>
-                      <p className="font-medium text-white">
+                      <p className="font-semibold text-base text-onyx">
                         {sale.client.name}
                       </p>
-                      <p className="text-sm text-silver-400">
+                      <p className="text-sm font-medium text-silver-500">
                         SN: {sale.device.serialNumber || "N/A"}
                       </p>
                     </div>
@@ -227,10 +231,10 @@ export default function SalesPage() {
               label: "MONTO TOTAL",
               render: (sale: ISale) => (
                 <div>
-                  <p className="font-medium text-white">
+                  <p className="font-semibold text-base text-onyx">
                     ${Number(sale.totalAmount).toFixed(2)}
                   </p>
-                  <p className="text-sm text-silver-400">
+                  <p className="text-sm font-medium text-silver-500">
                     {sale.installments} cuotas
                   </p>
                 </div>
@@ -240,7 +244,7 @@ export default function SalesPage() {
               key: "monthly",
               label: "CUOTA",
               render: (sale: ISale) => (
-                <p className="font-medium text-white">
+                <p className="font-semibold text-base text-onyx">
                   ${Number(sale.installmentAmount).toFixed(2)}
                 </p>
               ),
@@ -249,7 +253,7 @@ export default function SalesPage() {
               key: "date",
               label: "FECHA VENTA",
               render: (sale: ISale) => (
-                <p className="text-sm text-white">
+                <p className="text-sm font-medium text-silver-500">
                   {new Date(sale.createdAt).toLocaleDateString("es-ES", {
                     day: "2-digit",
                     month: "short",
@@ -302,7 +306,7 @@ export default function SalesPage() {
                           onClick={() => setOpenMenuId(null)}
                         />
                         <div
-                          className="fixed w-48 bg-carbon_black border border-carbon_black-600 rounded-lg shadow-2xl z-50"
+                          className="fixed w-48 bg-white_smoke border border-carbon_black-200 rounded-lg shadow-2xl z-50"
                           style={{
                             top: `${menuPosition.top}px`,
                             left: `${menuPosition.left}px`,
@@ -310,21 +314,21 @@ export default function SalesPage() {
                         >
                           <button
                             onClick={() => handleEditSale(sale)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx-600 rounded-t-lg flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-onyx hover:bg-carbon_black-100 rounded-t-lg flex items-center gap-3 transition-colors"
                           >
                             <PencilEdit02Icon
                               size={16}
-                              className="text-silver-400"
+                              className="text-silver-500"
                             />
                             Editar
                           </button>
                           <button
                             onClick={() => handleDeleteSale(sale)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-strawberry_red hover:bg-onyx-600 rounded-b-lg flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-carbon_black-100 rounded-b-lg flex items-center gap-3 transition-colors"
                           >
                             <Delete02Icon
                               size={16}
-                              className="text-strawberry_red"
+                              className="text-destructive"
                             />
                             Eliminar
                           </button>
@@ -359,7 +363,7 @@ export default function SalesPage() {
                             installment.status === "PAID"
                               ? "border-success bg-success/5"
                               : installment.status === "OVERDUE"
-                                ? "border-strawberry_red bg-strawberry_red/5"
+                                ? "border-destructive bg-destructive/5"
                                 : "border-warning bg-warning/5"
                           }`}
                         >
@@ -372,7 +376,7 @@ export default function SalesPage() {
                                 installment.status === "PAID"
                                   ? "text-success"
                                   : installment.status === "OVERDUE"
-                                    ? "text-strawberry_red"
+                                    ? "text-destructive"
                                     : "text-warning"
                               }`}
                             >
@@ -408,8 +412,8 @@ export default function SalesPage() {
                 <span className="hidden sm:inline">Exportar CSV</span>
               </Button>
               <Button
-                className="gap-2 bg-mahogany_red hover:bg-mahogany_red-600 flex-1 sm:flex-none text-sm"
                 onClick={() => setIsModalOpen(true)}
+                className="gap-2 bg-mahogany_red hover:bg-mahogany_red-600 flex-1 sm:flex-none text-sm"
               >
                 <span className="text-lg text-white">+</span>
                 <span className="text-white">Nueva Venta</span>

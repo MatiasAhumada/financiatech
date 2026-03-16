@@ -108,12 +108,12 @@ export function CreateClientModal({
             placeholder="Ingrese el nombre completo"
             className={
               errors.name
-                ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                ? "border-destructive focus:border-destructive focus:ring-destructive"
                 : ""
             }
           />
           {errors.name && (
-            <p className="text-xs text-mahogany_red">{errors.name}</p>
+            <p className="text-xs text-destructive">{errors.name}</p>
           )}
         </div>
         <div className="space-y-2">
@@ -129,12 +129,12 @@ export function CreateClientModal({
             placeholder="cliente@ejemplo.com"
             className={
               errors.email
-                ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                ? "border-destructive focus:border-destructive focus:ring-destructive"
                 : ""
             }
           />
           {errors.email && (
-            <p className="text-xs text-mahogany_red">{errors.email}</p>
+            <p className="text-xs text-destructive">{errors.email}</p>
           )}
         </div>
 
@@ -156,7 +156,7 @@ export function CreateClientModal({
               placeholder="Número"
               className={
                 errors["phones.0.number"]
-                  ? "flex-1 border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                  ? "flex-1 border-destructive focus:border-destructive focus:ring-destructive"
                   : "flex-1"
               }
             />
@@ -175,7 +175,7 @@ export function CreateClientModal({
             </select>
           </div>
           {errors["phones.0.number"] && (
-            <p className="text-xs text-mahogany_red">
+            <p className="text-xs text-destructive">
               {errors["phones.0.number"]}
             </p>
           )}
@@ -198,12 +198,12 @@ export function CreateClientModal({
             placeholder="Calle"
             className={
               errors["addresses.0.street"]
-                ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                ? "border-destructive focus:border-destructive focus:ring-destructive"
                 : ""
             }
           />
           {errors["addresses.0.street"] && (
-            <p className="text-xs text-mahogany_red">
+            <p className="text-xs text-destructive">
               {errors["addresses.0.street"]}
             </p>
           )}
@@ -222,12 +222,12 @@ export function CreateClientModal({
             placeholder="Ciudad"
             className={
               errors["addresses.0.city"]
-                ? "border-mahogany_red focus:border-mahogany_red focus:ring-mahogany_red"
+                ? "border-destructive focus:border-destructive focus:ring-destructive"
                 : ""
             }
           />
           {errors["addresses.0.city"] && (
-            <p className="text-xs text-mahogany_red">
+            <p className="text-xs text-destructive">
               {errors["addresses.0.city"]}
             </p>
           )}

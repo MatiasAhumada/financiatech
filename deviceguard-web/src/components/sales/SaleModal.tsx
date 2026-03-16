@@ -23,6 +23,7 @@ import { FinancingPlanCard } from "@/components/sales/FinancingPlanCard";
 import { BlockRulesInput } from "@/components/sales/BlockRulesInput";
 import { ActivationCodeDisplay } from "@/components/sales/ActivationCodeDisplay";
 import { useSaleForm } from "@/hooks/useSaleForm";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface SaleModalProps {
   open: boolean;
@@ -50,6 +51,9 @@ export function SaleModal({
   const [isCreateClientModalOpen, setIsCreateClientModalOpen] = useState(false);
   const [localDevices, setLocalDevices] = useState<IDevice[]>(devices);
   const [localClients, setLocalClients] = useState<IClient[]>(clients);
+  const [slideDirection, setSlideDirection] = useState<"left" | "right">(
+    "right"
+  );
 
   useEffect(() => {
     setLocalDevices(devices);
@@ -100,6 +104,17 @@ export function SaleModal({
     onClose: () => onOpenChange(false),
   });
 
+  // Track direction for slide animation
+  const handleNextWithDirection = () => {
+    setSlideDirection("right");
+    handleNext();
+  };
+
+  const handleBackWithDirection = () => {
+    setSlideDirection("left");
+    handleBack();
+  };
+
   const amountValue = parseFloat(amount || "0");
   const initialPaymentValue = parseFloat(initialPayment || "0");
   const financedAmount = financingUtils.calculateFinancedAmount(
@@ -118,6 +133,21 @@ export function SaleModal({
       )
     : 0;
 
+  const slideVariants = {
+    enter: (direction: "left" | "right") => ({
+      x: direction === "right" ? 300 : -300,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: "left" | "right") => ({
+      x: direction === "right" ? -300 : 300,
+      opacity: 0,
+    }),
+  };
+
   const renderFooter = () => {
     if (step === 1) {
       return (
@@ -131,7 +161,7 @@ export function SaleModal({
           </Button>
           <Button
             className="bg-mahogany_red hover:bg-mahogany_red-600 text-white"
-            onClick={handleNext}
+            onClick={handleNextWithDirection}
             disabled={!canProceedStep1}
           >
             {SALES_MESSAGES.BUTTONS.NEXT}
@@ -145,7 +175,7 @@ export function SaleModal({
         <>
           <Button
             variant="outline"
-            onClick={handleBack}
+            onClick={handleBackWithDirection}
             className="border-carbon_black-600 text-white hover:bg-carbon_black-700"
           >
             {SALES_MESSAGES.BUTTONS.BACK}
@@ -200,140 +230,177 @@ export function SaleModal({
         ]}
       />
 
-      {step === 1 && (
-        <DeviceSelectionStep
-          devices={localDevices}
-          clients={localClients}
-          selectedDevice={selectedDevice}
-          selectedClient={selectedClient}
-          amount={amount}
-          onDeviceChange={setSelectedDevice}
-          onClientChange={setSelectedClient}
-          onAmountChange={setAmount}
-          onCreateDevice={() => setIsCreateDeviceModalOpen(true)}
-          onCreateClient={() => setIsCreateClientModalOpen(true)}
-        />
-      )}
-
-      {step === 2 && (
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="border border-mahogany_red rounded-lg p-6">
-              <Label className="text-silver-400 text-xs uppercase">
-                {SALES_MESSAGES.LABELS.DEVICE_PRICE}
-              </Label>
-              <p className="text-5xl font-bold text-white mt-2">
-                {salesUtils.formatCurrency(amountValue)}
-              </p>
-              <p className="text-xs text-silver-400 italic mt-2">
-                {localDevices.find((d) => d.id === selectedDevice)?.name || ""}
-              </p>
-            </div>
-
-            <div className="border border-carbon_black-600 rounded-lg p-6 bg-carbon_black">
-              <Label className="text-silver-400 text-xs uppercase">
-                {SALES_MESSAGES.LABELS.INITIAL_PAYMENT}
-              </Label>
-              <div className="relative mt-2">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-mahogany_red text-2xl">
-                  $
-                </span>
-                <Input
-                  type="number"
-                  value={initialPayment}
-                  onChange={(e) => setInitialPayment(e.target.value)}
-                  placeholder={SALES_MESSAGES.PLACEHOLDERS.AMOUNT}
-                  className="pl-10 text-3xl font-bold bg-onyx-600 border-carbon_black-700 text-white h-16"
-                />
-              </div>
-            </div>
-
-            <div className="border border-carbon_black-600 rounded-lg p-6 bg-carbon_black">
-              <Label className="text-silver-400 text-xs uppercase">
-                {SALES_MESSAGES.LABELS.FINANCED_AMOUNT}
-              </Label>
-              <p className="text-5xl font-bold text-white mt-2">
-                {salesUtils.formatCurrency(financedAmount)}
-              </p>
-              <p className="text-xs text-silver-400 mt-2">
-                Precio - Entrega inicial
-              </p>
-            </div>
-
-            <div className="border border-carbon_black-600 rounded-lg p-4 bg-carbon_black">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <ShoppingCart01Icon size={20} className="text-mahogany_red" />
-                  <Label className="text-white uppercase">
-                    {SALES_MESSAGES.LABELS.FINANCING_PLAN}
-                  </Label>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsCreatePlanModalOpen(true)}
-                  className="text-xs border-mahogany_red text-mahogany_red hover:bg-mahogany_red/10"
-                >
-                  {SALES_MESSAGES.BUTTONS.CREATE_PLAN}
-                </Button>
-              </div>
-
-              {financingPlans.map((plan) => (
-                <FinancingPlanCard
-                  key={plan.id}
-                  plan={plan}
-                  financedAmount={financedAmount}
-                  isSelected={selectedPlan?.id === plan.id}
-                  onSelect={() => setSelectedPlan(plan)}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="border border-carbon_black-600 rounded-lg p-6 bg-carbon_black">
-              <Label className="text-silver-400 text-xs uppercase">
-                {SALES_MESSAGES.LABELS.TOTAL_TO_PAY}
-              </Label>
-              <p className="text-5xl font-bold text-white mt-2">
-                {salesUtils.formatCurrency(
-                  totalWithInterest + initialPaymentValue
-                )}
-              </p>
-              <p className="text-sm text-mahogany_red mt-1">
-                +{interestRate}% INTERÉS
-              </p>
-            </div>
-
-            <div className="border border-carbon_black-600 rounded-lg p-6 bg-carbon_black">
-              <Label className="text-silver-400 text-xs uppercase">
-                {SALES_MESSAGES.LABELS.INSTALLMENT_PAYMENT}
-              </Label>
-              <p className="text-3xl font-bold text-white mt-2">
-                {salesUtils.formatCurrency(monthlyPayment)}
-              </p>
-              <p className="text-xs text-silver-400 mt-1">
-                {selectedPlan?.installments || 0} cuotas{" "}
-                {selectedPlan &&
-                  PAYMENT_FREQUENCY_LABELS[
-                    selectedPlan.paymentFrequency
-                  ].toLowerCase()}
-              </p>
-            </div>
-
-            <BlockRulesInput
-              firstWarningDay={firstWarningDay}
-              secondWarningDay={secondWarningDay}
-              blockDay={blockDay}
-              onFirstWarningChange={setFirstWarningDay}
-              onSecondWarningChange={setSecondWarningDay}
-              onBlockDayChange={setBlockDay}
+      <AnimatePresence mode="wait" custom={slideDirection}>
+        {step === 1 && (
+          <motion.div
+            key="step1"
+            custom={slideDirection}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <DeviceSelectionStep
+              devices={localDevices}
+              clients={localClients}
+              selectedDevice={selectedDevice}
+              selectedClient={selectedClient}
+              amount={amount}
+              onDeviceChange={setSelectedDevice}
+              onClientChange={setSelectedClient}
+              onAmountChange={setAmount}
+              onCreateDevice={() => setIsCreateDeviceModalOpen(true)}
+              onCreateClient={() => setIsCreateClientModalOpen(true)}
             />
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
 
-      {step === 3 && <ActivationCodeDisplay activationCode={activationCode} />}
+        {step === 2 && (
+          <motion.div
+            key="step2"
+            custom={slideDirection}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="grid grid-cols-2 gap-6"
+          >
+            <div className="space-y-4">
+              <div className="border border-mahogany_red rounded-lg p-6">
+                <Label className="text-silver-400 text-xs uppercase">
+                  {SALES_MESSAGES.LABELS.DEVICE_PRICE}
+                </Label>
+                <p className="text-5xl font-bold text-white mt-2">
+                  {salesUtils.formatCurrency(amountValue)}
+                </p>
+                <p className="text-xs text-silver-400 italic mt-2">
+                  {localDevices.find((d) => d.id === selectedDevice)?.name ||
+                    ""}
+                </p>
+              </div>
+
+              <div className="border border-carbon_black-600 rounded-lg p-6 bg-carbon_black">
+                <Label className="text-silver-400 text-xs uppercase">
+                  {SALES_MESSAGES.LABELS.INITIAL_PAYMENT}
+                </Label>
+                <div className="relative mt-2">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-mahogany_red text-2xl">
+                    $
+                  </span>
+                  <Input
+                    type="number"
+                    value={initialPayment}
+                    onChange={(e) => setInitialPayment(e.target.value)}
+                    placeholder={SALES_MESSAGES.PLACEHOLDERS.AMOUNT}
+                    className="pl-10 text-3xl font-bold bg-onyx-600 border-carbon_black-700 text-white h-16"
+                  />
+                </div>
+              </div>
+
+              <div className="border border-carbon_black-600 rounded-lg p-6 bg-carbon_black">
+                <Label className="text-silver-400 text-xs uppercase">
+                  {SALES_MESSAGES.LABELS.FINANCED_AMOUNT}
+                </Label>
+                <p className="text-5xl font-bold text-white mt-2">
+                  {salesUtils.formatCurrency(financedAmount)}
+                </p>
+                <p className="text-xs text-silver-400 mt-2">
+                  Precio - Entrega inicial
+                </p>
+              </div>
+
+              <div className="border border-carbon_black-600 rounded-lg p-4 bg-carbon_black">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <ShoppingCart01Icon
+                      size={20}
+                      className="text-mahogany_red"
+                    />
+                    <Label className="text-white uppercase">
+                      {SALES_MESSAGES.LABELS.FINANCING_PLAN}
+                    </Label>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsCreatePlanModalOpen(true)}
+                    className="text-xs border-mahogany_red text-mahogany_red hover:bg-mahogany_red/10"
+                  >
+                    {SALES_MESSAGES.BUTTONS.CREATE_PLAN}
+                  </Button>
+                </div>
+
+                {financingPlans.map((plan) => (
+                  <FinancingPlanCard
+                    key={plan.id}
+                    plan={plan}
+                    financedAmount={financedAmount}
+                    isSelected={selectedPlan?.id === plan.id}
+                    onSelect={() => setSelectedPlan(plan)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="border border-carbon_black-600 rounded-lg p-6 bg-carbon_black">
+                <Label className="text-silver-400 text-xs uppercase">
+                  {SALES_MESSAGES.LABELS.TOTAL_TO_PAY}
+                </Label>
+                <p className="text-5xl font-bold text-white mt-2">
+                  {salesUtils.formatCurrency(
+                    totalWithInterest + initialPaymentValue
+                  )}
+                </p>
+                <p className="text-sm text-mahogany_red mt-1">
+                  +{interestRate}% INTERÉS
+                </p>
+              </div>
+
+              <div className="border border-carbon_black-600 rounded-lg p-6 bg-carbon_black">
+                <Label className="text-silver-400 text-xs uppercase">
+                  {SALES_MESSAGES.LABELS.INSTALLMENT_PAYMENT}
+                </Label>
+                <p className="text-3xl font-bold text-white mt-2">
+                  {salesUtils.formatCurrency(monthlyPayment)}
+                </p>
+                <p className="text-xs text-silver-400 mt-1">
+                  {selectedPlan?.installments || 0} cuotas{" "}
+                  {selectedPlan &&
+                    PAYMENT_FREQUENCY_LABELS[
+                      selectedPlan.paymentFrequency
+                    ].toLowerCase()}
+                </p>
+              </div>
+
+              <BlockRulesInput
+                firstWarningDay={firstWarningDay}
+                secondWarningDay={secondWarningDay}
+                blockDay={blockDay}
+                onFirstWarningChange={setFirstWarningDay}
+                onSecondWarningChange={setSecondWarningDay}
+                onBlockDayChange={setBlockDay}
+              />
+            </div>
+          </motion.div>
+        )}
+
+        {step === 3 && (
+          <motion.div
+            key="step3"
+            custom={slideDirection}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <ActivationCodeDisplay activationCode={activationCode} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <CreateFinancingPlanModal
         open={isCreatePlanModalOpen}

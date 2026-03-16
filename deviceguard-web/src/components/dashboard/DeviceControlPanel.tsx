@@ -14,6 +14,7 @@ import {
   clientErrorHandler,
   clientSuccessHandler,
 } from "@/utils/handlers/clientError.handler";
+import { motion } from "framer-motion";
 
 interface DeviceControlPanelProps {
   deviceId: string;
@@ -34,6 +35,13 @@ export const DeviceControlPanel: React.FC<DeviceControlPanelProps> = ({
   const [currentStatus, setCurrentStatus] = useState(isBlocked);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [action, setAction] = useState<"lock" | "unlock" | null>(null);
+  const [prevStatus, setPrevStatus] = useState(isBlocked);
+
+  useEffect(() => {
+    if (currentStatus !== prevStatus) {
+      setPrevStatus(currentStatus);
+    }
+  }, [currentStatus, prevStatus]);
 
   const handleLockDevice = async () => {
     try {
@@ -95,11 +103,16 @@ export const DeviceControlPanel: React.FC<DeviceControlPanelProps> = ({
   };
 
   const getStatusIcon = () => {
-    if (currentStatus) {
-      return <Lock className="w-5 h-5 text-white" />;
-    } else {
-      return <LockOpen className="w-5 h-5 text-white" />;
-    }
+    const IconComponent = currentStatus ? Lock : LockOpen;
+    return (
+      <motion.div
+        initial={{ rotate: 0 }}
+        animate={{ rotate: prevStatus !== currentStatus ? 360 : 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <IconComponent className="w-5 h-5 text-white" />
+      </motion.div>
+    );
   };
 
   const getStatusColor = () => {
@@ -115,8 +128,15 @@ export const DeviceControlPanel: React.FC<DeviceControlPanelProps> = ({
   return (
     <div className="space-y-4">
       {/* Estado actual */}
-      <div
-        className={`${getStatusColor()} border rounded-lg px-4 py-3 flex items-center gap-3 transition-all`}
+      <motion.div
+        animate={{
+          backgroundColor: currentStatus
+            ? "rgb(186, 24, 27)"
+            : "rgb(21, 128, 61)",
+          borderColor: currentStatus ? "rgb(186, 24, 27)" : "rgb(21, 128, 61)",
+        }}
+        transition={{ duration: 0.3 }}
+        className={`${getStatusColor()} border rounded-lg px-4 py-3 flex items-center gap-3`}
       >
         {getStatusIcon()}
         <div className="flex-1">
@@ -128,11 +148,16 @@ export const DeviceControlPanel: React.FC<DeviceControlPanelProps> = ({
             {getStatusText()}
           </span>
           {currentStatus && (
-            <AlertCircle className="w-5 h-5 text-white animate-pulse" />
+            <motion.div
+              animate={{ opacity: [1, 0.5, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              <AlertCircle className="w-5 h-5 text-white" />
+            </motion.div>
           )}
           {!currentStatus && <CheckCircle className="w-5 h-5 text-white" />}
         </div>
-      </div>
+      </motion.div>
 
       {/* Botones de control */}
       <div className="grid grid-cols-2 gap-2">
