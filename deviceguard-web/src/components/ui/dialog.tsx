@@ -47,12 +47,12 @@ const DialogContent = React.forwardRef<
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ duration: 0.2 }}
         className={cn(
-          "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg sm:rounded-lg",
+          "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-carbon_black-600 bg-carbon_black p-6 shadow-lg sm:rounded-xl",
           className
         )}
       >
         {children}
-        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-slate-100 data-[state=open]:text-slate-500">
+        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-carbon_black transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-mahogany_red focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-carbon_black-600 data-[state=open]:text-silver-400">
           <Cancel01Icon size={16} />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>
@@ -111,7 +111,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-slate-500", className)}
+    className={cn("text-sm text-silver-400", className)}
     {...props}
   />
 ));

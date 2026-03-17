@@ -42,17 +42,17 @@ export function Modal({
             className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 pointer-events-none"
           >
             <div
-              className={`bg-white border border-carbon_black-600 rounded-2xl shadow-2xl ${sizeClasses[size]} w-full max-h-[90vh] overflow-y-auto pointer-events-auto`}
+              className={`bg-carbon_black border border-carbon_black-600 rounded-xl shadow-2xl ${sizeClasses[size]} w-full max-h-[90vh] overflow-y-auto pointer-events-auto`}
             >
               <div className="flex items-center justify-between p-4 sm:p-6 border-b border-carbon_black-600">
-                <h2 className="text-lg sm:text-2xl font-bold text-carbon_black">
+                <h2 className="text-lg sm:text-2xl font-bold text-white">
                   {title}
                 </h2>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={onClose}
-                  className="text-silver-400 hover:text-carbon_black hover:bg-silver-100"
+                  className="text-silver-400 hover:text-white hover:bg-carbon_black-600"
                 >
                   <Cancel01Icon size={20} />
                 </Button>

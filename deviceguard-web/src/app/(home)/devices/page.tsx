@@ -223,8 +223,8 @@ export default function DevicesPage() {
                       {initials.toUpperCase().slice(0, 2)}
                     </div>
                     <div>
-                      <p className="font-semibold text-base text-onyx">{device.name}</p>
-                      <p className="text-sm font-medium text-silver-500">
+                      <p className="font-semibold text-sm text-white">{device.name}</p>
+                      <p className="text-xs font-medium text-silver-400">
                         {device.type}
                       </p>
                     </div>
@@ -236,7 +236,7 @@ export default function DevicesPage() {
               key: "model",
               label: "MODELO",
               render: (device: IDevice) => (
-                <p className="text-base font-medium text-onyx">
+                <p className="text-sm font-medium text-white">
                   {device.model || "Sin modelo"}
                 </p>
               ),
@@ -245,7 +245,7 @@ export default function DevicesPage() {
               key: "serialNumber",
               label: "SERIAL",
               render: (device: IDevice) => (
-                <p className="text-sm font-medium text-silver-500">
+                <p className="text-xs font-medium text-silver-400">
                   {device.serialNumber || "Sin serial"}
                 </p>
               ),
@@ -254,7 +254,7 @@ export default function DevicesPage() {
               key: "client",
               label: "CLIENTE",
               render: (device: IDevice) => (
-                <p className="text-base font-medium text-onyx">
+                <p className="text-sm font-medium text-white">
                   {device.client?.name || "Sin asignar"}
                 </p>
               ),
@@ -280,7 +280,7 @@ export default function DevicesPage() {
                     label: "Vendido (Sincronizado)",
                   },
                   [DeviceStatus.INACTIVE]: {
-                    color: "text-onyx",
+                    color: "text-silver-400",
                     label: "Inactivo",
                   },
                   [DeviceStatus.MAINTENANCE]: {
@@ -328,7 +328,7 @@ export default function DevicesPage() {
                           onClick={() => setOpenMenuId(null)}
                         />
                         <div
-                          className="fixed w-48 bg-white_smoke border border-carbon_black-200 rounded-lg shadow-2xl z-50"
+                          className="fixed w-48 bg-carbon_black border border-carbon_black-600 rounded-lg shadow-2xl z-50"
                           style={{
                             top: `${menuPosition.top}px`,
                             left: `${menuPosition.left}px`,
@@ -336,24 +336,24 @@ export default function DevicesPage() {
                         >
                           <button
                             onClick={() => handleViewDevice(device)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-onyx hover:bg-carbon_black-100 rounded-t-lg flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx/50 rounded-t-lg flex items-center gap-3 transition-colors"
                           >
-                            <ViewIcon size={16} className="text-silver-500" />
+                            <ViewIcon size={16} className="text-silver-400" />
                             Ver
                           </button>
                           <button
                             onClick={() => handleEditDevice(device)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-onyx hover:bg-carbon_black-100 flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx/50 flex items-center gap-3 transition-colors"
                           >
                             <PencilEdit02Icon
                               size={16}
-                              className="text-silver-500"
+                              className="text-silver-400"
                             />
                             Editar
                           </button>
                           <button
                             onClick={() => handleToggleBlock(device)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-onyx hover:bg-carbon_black-100 flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx/50 flex items-center gap-3 transition-colors"
                           >
                             {device.status === DeviceStatus.BLOCKED ? (
                               <span>Desbloquear</span>
@@ -365,18 +365,18 @@ export default function DevicesPage() {
                             device.sync && (
                               <button
                                 onClick={() => handleSendNotification(device)}
-                                className="w-full text-left px-4 py-2.5 text-sm text-onyx hover:bg-carbon_black-100 flex items-center gap-3 transition-colors"
+                                className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx/50 flex items-center gap-3 transition-colors"
                               >
                                 <Notification03Icon
                                   size={16}
-                                  className="text-silver-500"
+                                  className="text-silver-400"
                                 />
                                 Notificaciones
                               </button>
                             )}
                           <button
                             onClick={() => handleDeleteDevice(device)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-carbon_black-100 rounded-b-lg flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-onyx/50 rounded-b-lg flex items-center gap-3 transition-colors"
                           >
                             <Delete02Icon
                               size={16}
@@ -443,7 +443,7 @@ export default function DevicesPage() {
                 Cancelar
               </Button>
               <Button
-                className="bg-destructive hover:bg-destructive/90 text-white"
+                variant="destructive"
                 onClick={confirmDelete}
               >
                 Eliminar

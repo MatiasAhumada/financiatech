@@ -32,22 +32,22 @@ export function StatCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: animationDelay }}
     >
-      <Card className="border border-white_smoke/20 shadow-sm bg-white_smoke">
+      <Card className="border border-carbon_black-600 shadow-lg bg-carbon_black">
         <CardContent className="p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-sm font-semibold text-onyx uppercase tracking-wide mb-2">
+              <p className="text-xs font-semibold text-silver-400 uppercase tracking-wider mb-2">
                 {title}
               </p>
-              <p className="text-4xl font-bold text-onyx mb-1">{value}</p>
+              <p className="text-4xl font-bold text-white mb-1">{value}</p>
               {subtitle && (
-                <p className="text-sm font-semibold text-onyx uppercase tracking-wide">
+                <p className="text-sm font-semibold text-silver-400 uppercase tracking-wide">
                   {subtitle}
                 </p>
               )}
               {trend && (
                 <p
-                  className={`text-base mt-2 font-semibold ${
+                  className={`text-sm mt-2 font-semibold ${
                     isZero
                       ? "text-warning"
                       : trend.isPositive
@@ -60,9 +60,9 @@ export function StatCard({
               )}
             </div>
             <div
-              className={`w-12 h-12 rounded-lg flex items-center justify-center ${iconColor}`}
+              className={`w-11 h-11 rounded-lg flex items-center justify-center ${iconColor}`}
             >
-              <Icon size={24} color="currentColor" className="text-white" />
+              <Icon size={22} color="currentColor" className="text-white" />
             </div>
           </div>
         </CardContent>

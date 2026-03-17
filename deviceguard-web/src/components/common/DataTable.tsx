@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search01Icon } from "hugeicons-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useReducedMotion } from "framer-motion";
 
 interface Column<T> {
@@ -48,7 +48,7 @@ export function DataTable<T>({
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className=" lg:ml-0">
+        <div className="lg:ml-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-white uppercase tracking-wide">
             {title}
           </h1>
@@ -63,28 +63,28 @@ export function DataTable<T>({
         )}
       </div>
 
-      <div className="border border-white_smoke/20 rounded-lg shadow-sm bg-white_smoke">
+      <div className="border border-carbon_black-600 rounded-xl shadow-lg bg-carbon_black">
         {onSearch && (
-          <div className="p-6 border-b border-carbon_black-200">
+          <div className="p-5 border-b border-carbon_black-600">
             <div className="relative flex-1 w-full sm:max-w-md">
               <Search01Icon
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-silver-500"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-silver-400"
               />
               <Input
                 placeholder={searchPlaceholder}
                 onChange={(e) => onSearch(e.target.value)}
-                className="pl-10 bg-white_smoke border-carbon_black-200 text-onyx placeholder:text-silver-400 focus:border-mahogany_red focus:ring-mahogany_red text-sm"
+                className="pl-10 bg-onyx border-carbon_black-600 text-white placeholder:text-silver-400 focus:border-mahogany_red focus:ring-mahogany_red text-sm"
               />
             </div>
           </div>
         )}
 
-        <div className="p-6 overflow-visible">
+        <div className="p-5 overflow-visible">
           <div className="w-full overflow-x-auto overflow-y-visible">
             <table className="w-full min-w-[800px]">
               <thead>
-                <tr className="border-b border-carbon_black-200 text-left text-sm font-semibold text-onyx uppercase tracking-wide">
+                <tr className="border-b border-carbon_black-600 text-left text-xs font-semibold text-silver-400 uppercase tracking-wider">
                   {columns.map((column) => (
                     <th
                       key={column.key}
@@ -100,16 +100,19 @@ export function DataTable<T>({
                   <tr>
                     <td
                       colSpan={columns.length}
-                      className="py-8 text-center text-onyx font-medium"
+                      className="py-8 text-center text-silver-400 font-medium"
                     >
-                      Cargando...
+                      <div className="flex items-center justify-center gap-3">
+                        <div className="w-5 h-5 border-2 border-mahogany_red border-t-transparent rounded-full animate-spin" />
+                        Cargando...
+                      </div>
                     </td>
                   </tr>
                 ) : data.length === 0 ? (
                   <tr>
                     <td
                       colSpan={columns.length}
-                      className="py-8 text-center text-onyx font-medium"
+                      className="py-8 text-center text-silver-400 font-medium"
                     >
                       {emptyMessage}
                     </td>
@@ -126,14 +129,14 @@ export function DataTable<T>({
                           delay: shouldReduceMotion ? 0 : index * 0.03,
                         }}
                         onClick={() => onRowClick?.(item)}
-                        className={`border-b border-carbon_black-200 hover:bg-carbon_black-100 transition-colors ${
-                          onRowClick ? "cursor-pointer sm:cursor-default" : ""
+                        className={`border-b border-carbon_black-600 hover:bg-onyx/50 transition-colors ${
+                          onRowClick ? "cursor-pointer" : ""
                         }`}
                       >
                         {columns.map((column) => (
                           <td
                             key={column.key}
-                            className="py-4 text-base font-medium text-onyx"
+                            className="py-4 text-sm font-medium text-white"
                           >
                             {column.render
                               ? column.render(item)
@@ -150,8 +153,8 @@ export function DataTable<T>({
           </div>
 
           {totalLabel && (
-            <div className="mt-4 pt-4 border-t border-carbon_black-200">
-              <p className="text-sm font-medium text-onyx uppercase tracking-wide">
+            <div className="mt-4 pt-4 border-t border-carbon_black-600">
+              <p className="text-xs font-medium text-silver-400 uppercase tracking-wider">
                 {totalLabel}
               </p>
             </div>
