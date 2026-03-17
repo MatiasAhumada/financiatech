@@ -131,10 +131,7 @@ export function DeviceModal({
             {isViewMode ? "Cerrar" : "Cancelar"}
           </Button>
           {!isViewMode && (
-            <Button
-              className="bg-mahogany_red hover:bg-mahogany_red/90 text-white font-medium"
-              onClick={handleSubmit}
-            >
+            <Button onClick={handleSubmit}>
               {device ? "Actualizar" : "Crear Dispositivo"}
             </Button>
           )}
@@ -174,7 +171,7 @@ export function DeviceModal({
               if (errors.type) setErrors({ ...errors, type: "" });
             }}
             disabled={isViewMode}
-            className={`w-full px-3 py-2 rounded-md border bg-background text-sm ${
+            className={`w-full px-3 py-2 rounded-md border border-carbon_black-600 bg-carbon_black text-white text-sm ${
               errors.type
                 ? "border-destructive focus:border-destructive focus:ring-destructive"
                 : ""
@@ -229,7 +226,7 @@ export function DeviceModal({
               });
             }}
             disabled={isViewMode}
-            className="w-full px-3 py-2 rounded-md border bg-background text-sm"
+            className="w-full px-3 py-2 rounded-md border border-carbon_black-600 bg-carbon_black text-white text-sm"
           >
             {Object.entries(DEVICE_STATUS_LABELS).map(([value, label]) => (
               <option key={value} value={value}>

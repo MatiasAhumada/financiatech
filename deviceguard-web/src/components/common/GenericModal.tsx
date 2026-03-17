@@ -38,6 +38,11 @@ export function GenericModal({
   const isDark = variant === "dark";
   const shouldReduceMotion = useReducedMotion();
 
+  const bgClass = isDark ? "bg-onyx" : "bg-carbon_black";
+  const headerBgClass = isDark ? "bg-carbon_black" : "bg-onyx";
+  const footerBgClass = isDark ? "bg-carbon_black" : "bg-onyx";
+  const contentBgClass = isDark ? "bg-onyx" : "bg-carbon_black";
+
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.95, y: 20 },
     visible: {
@@ -90,7 +95,7 @@ export function GenericModal({
             animate="visible"
             exit="exit"
             onClick={() => onOpenChange(false)}
-            className="fixed inset-0 z-50 bg-black/60"
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
           />
           <motion.div
             variants={shouldReduceMotion ? undefined : modalVariants}
@@ -100,15 +105,13 @@ export function GenericModal({
             className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
           >
             <div
-              className={`${isDark ? "bg-onyx border-carbon_black-600" : "bg-white border-carbon_black-600"} rounded-lg shadow-2xl ${SIZE_CLASSES[size]} w-full max-h-[90vh] overflow-y-auto pointer-events-auto`}
+              className={`${bgClass} border border-carbon_black-600 rounded-xl shadow-2xl ${SIZE_CLASSES[size]} w-full max-h-[90vh] overflow-y-auto pointer-events-auto`}
             >
               <div
-                className={`flex items-center justify-between p-6 border-b ${isDark ? "border-carbon_black-700 bg-carbon_black" : "border-carbon_black-600"}`}
+                className={`flex items-center justify-between p-6 border-b border-carbon_black-600 ${headerBgClass}`}
               >
                 <div>
-                  <h2
-                    className={`text-lg font-semibold ${isDark ? "text-white" : "text-carbon_black"}`}
-                  >
+                  <h2 className="text-lg font-semibold text-white">
                     {title}
                   </h2>
                   {description && (
@@ -121,15 +124,15 @@ export function GenericModal({
                   variant="ghost"
                   size="icon"
                   onClick={() => onOpenChange(false)}
-                  className={`${isDark ? "text-silver-400 hover:text-white hover:bg-carbon_black-700" : "text-silver-400 hover:text-carbon_black hover:bg-silver-100"}`}
+                  className="text-silver-400 hover:text-white hover:bg-carbon_black-600"
                 >
                   <Cancel01Icon size={20} />
                 </Button>
               </div>
-              <div className={`p-6 ${isDark ? "bg-onyx" : ""}`}>{children}</div>
+              <div className={`p-6 ${contentBgClass}`}>{children}</div>
               {footer && (
                 <div
-                  className={`flex justify-end gap-2 p-6 border-t ${isDark ? "border-carbon_black-700 bg-carbon_black" : "border-carbon_black-600"}`}
+                  className={`flex justify-end gap-2 p-6 border-t border-carbon_black-600 ${footerBgClass}`}
                 >
                   {footer}
                 </div>
@@ -194,7 +197,7 @@ export function ConfirmModal({
         </>
       }
     >
-      <p className="text-sm text-slate-600">{description}</p>
+      <p className="text-sm text-silver-400">{description}</p>
     </GenericModal>
   );
 }

@@ -177,10 +177,7 @@ export function ClientModal({
             {isViewMode ? "Cerrar" : "Cancelar"}
           </Button>
           {!isViewMode && (
-            <Button
-              className="bg-mahogany_red hover:bg-mahogany_red/90 text-white font-medium"
-              onClick={handleSubmit}
-            >
+            <Button onClick={handleSubmit}>
               {client ? "Actualizar" : "Crear Cliente"}
             </Button>
           )}
@@ -275,7 +272,7 @@ export function ClientModal({
                         setFormData({ ...formData, phones: newPhones });
                       }}
                       disabled={isViewMode}
-                      className="px-3 py-2 rounded-md border bg-background text-sm"
+                      className="px-3 py-2 rounded-md border border-carbon_black-600 bg-carbon_black text-white text-sm"
                     >
                       <option value={PhoneType.MOBILE}>Móvil</option>
                       <option value={PhoneType.HOME}>Casa</option>

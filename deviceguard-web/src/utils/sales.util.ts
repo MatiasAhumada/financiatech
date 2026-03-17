@@ -9,7 +9,20 @@ export const salesUtils = {
   },
 
   formatCurrency(amount: number): string {
-    return `$${amount.toFixed(2)}`;
+    return new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency: "ARS",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+      .format(amount)
+      .replace("ARS", "$")
+      .replace(/\s+/g, " ")
+      .trim();
+  },
+
+  formatNumber(value: number): string {
+    return new Intl.NumberFormat("es-AR").format(value);
   },
 
   formatDate(date: Date | string): string {

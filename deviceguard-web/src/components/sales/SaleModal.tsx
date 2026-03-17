@@ -160,7 +160,6 @@ export function SaleModal({
             {SALES_MESSAGES.BUTTONS.CANCEL}
           </Button>
           <Button
-            className="bg-mahogany_red hover:bg-mahogany_red-600 text-white"
             onClick={handleNextWithDirection}
             disabled={!canProceedStep1}
           >
@@ -188,7 +187,6 @@ export function SaleModal({
             {SALES_MESSAGES.BUTTONS.CANCEL}
           </Button>
           <Button
-            className="bg-mahogany_red hover:bg-mahogany_red-600 text-white"
             onClick={handleSubmit}
             disabled={!canProceedStep2}
           >

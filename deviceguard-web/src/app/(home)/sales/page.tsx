@@ -1,5 +1,7 @@
 "use client";
 
+import { motion, AnimatePresence } from "framer-motion";
+
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { DataTable } from "@/components/common/DataTable";
@@ -13,11 +15,13 @@ import {
   clientErrorHandler,
   clientSuccessHandler,
 } from "@/utils/handlers/clientError.handler";
+import { salesUtils } from "@/utils/sales.util";
 import {
   Download01Icon,
   MoreVerticalIcon,
   PencilEdit02Icon,
   Delete02Icon,
+  ArrowRight01Icon,
 } from "hugeicons-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { SaleModal } from "@/components/sales/SaleModal";
@@ -141,42 +145,42 @@ export default function SalesPage() {
     <DashboardLayout>
       <div className="p-4 sm:p-6 lg:p-8 space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white_smoke border border-white_smoke/20 rounded-lg shadow-sm p-6">
-            <p className="text-sm font-semibold text-onyx uppercase tracking-wide mb-2">
+          <div className="bg-carbon_black border border-carbon_black-600 rounded-xl shadow-lg p-6">
+            <p className="text-xs font-semibold text-silver-400 uppercase tracking-wider mb-2">
               VENTAS HOY
             </p>
-            <p className="text-4xl font-bold text-onyx">
-              ${todayTotal.toFixed(2)}
+            <p className="text-4xl font-bold text-white">
+              {salesUtils.formatCurrency(todayTotal)}
             </p>
           </div>
-          <div className="bg-white_smoke border border-white_smoke/20 rounded-lg shadow-sm p-6">
-            <p className="text-sm font-semibold text-onyx uppercase tracking-wide mb-2">
+          <div className="bg-carbon_black border border-carbon_black-600 rounded-xl shadow-lg p-6">
+            <p className="text-xs font-semibold text-silver-400 uppercase tracking-wider mb-2">
               DISPOSITIVOS NUEVOS
             </p>
-            <p className="text-4xl font-bold text-onyx">{newDevicesCount}</p>
+            <p className="text-4xl font-bold text-white">{salesUtils.formatNumber(newDevicesCount)}</p>
             <p className="text-sm font-medium text-success mt-1">
               +12% vs ayer
             </p>
           </div>
-          <div className="bg-white_smoke border border-white_smoke/20 rounded-lg shadow-sm p-6">
-            <p className="text-sm font-semibold text-onyx uppercase tracking-wide mb-2">
+          <div className="bg-carbon_black border border-carbon_black-600 rounded-xl shadow-lg p-6">
+            <p className="text-xs font-semibold text-silver-400 uppercase tracking-wider mb-2">
               PENDIENTES DE PAGO
             </p>
             <p className="text-4xl font-bold text-destructive">
               {pendingPayments}
             </p>
-            <p className="text-sm font-medium  text-destructive mt-1">
+            <p className="text-sm font-medium text-destructive mt-1">
               Requieren atención
             </p>
           </div>
-          <div className="bg-white_smoke border border-white_smoke/20 rounded-lg shadow-sm p-6">
-            <p className="text-sm font-semibold text-onyx uppercase tracking-wide mb-2">
+          <div className="bg-carbon_black border border-carbon_black-600 rounded-xl shadow-lg p-6">
+            <p className="text-xs font-semibold text-silver-400 uppercase tracking-wider mb-2">
               TICKET PROMEDIO
             </p>
-            <p className="text-4xl font-bold text-onyx">
-              ${avgTicket.toFixed(2)}
+            <p className="text-4xl font-bold text-white">
+              {salesUtils.formatCurrency(avgTicket)}
             </p>
-            <p className="text-sm font-mediummt-1">Últimos 30 días</p>
+            <p className="text-xs font-medium text-silver-400 mt-1">Últimos 30 días</p>
           </div>
         </div>
 
@@ -189,11 +193,16 @@ export default function SalesPage() {
               label: "",
               render: (sale: ISale) => (
                 <button
-                  onClick={() => toggleRow(sale.id)}
-                  className="p-2 hover:bg-mahogany_red/20 rounded transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleRow(sale.id);
+                  }}
+                  className="p-1.5 hover:bg-mahogany_red/20 rounded transition-all"
                 >
-                  <span className="text-white text-lg">
-                    {expandedRows.has(sale.id) ? "▼" : "▶"}
+                  <span
+                    className={`text-silver-400 inline-block transition-transform duration-200 ${expandedRows.has(sale.id) ? "rotate-90" : ""}`}
+                  >
+                    <ArrowRight01Icon size={18} />
                   </span>
                 </button>
               ),
@@ -215,10 +224,10 @@ export default function SalesPage() {
                       {initials}
                     </div>
                     <div>
-                      <p className="font-semibold text-base text-onyx">
+                      <p className="font-semibold text-sm text-white">
                         {sale.client.name}
                       </p>
-                      <p className="text-sm font-medium text-silver-500">
+                      <p className="text-xs font-medium text-silver-400">
                         SN: {sale.device.serialNumber || "N/A"}
                       </p>
                     </div>
@@ -231,10 +240,10 @@ export default function SalesPage() {
               label: "MONTO TOTAL",
               render: (sale: ISale) => (
                 <div>
-                  <p className="font-semibold text-base text-onyx">
-                    ${Number(sale.totalAmount).toFixed(2)}
+                  <p className="font-semibold text-sm text-white">
+                    {salesUtils.formatCurrency(Number(sale.totalAmount))}
                   </p>
-                  <p className="text-sm font-medium text-silver-500">
+                  <p className="text-xs font-medium text-silver-400">
                     {sale.installments} cuotas
                   </p>
                 </div>
@@ -244,8 +253,8 @@ export default function SalesPage() {
               key: "monthly",
               label: "CUOTA",
               render: (sale: ISale) => (
-                <p className="font-semibold text-base text-onyx">
-                  ${Number(sale.installmentAmount).toFixed(2)}
+                <p className="font-semibold text-sm text-white">
+                  {salesUtils.formatCurrency(Number(sale.installmentAmount))}
                 </p>
               ),
             },
@@ -253,12 +262,8 @@ export default function SalesPage() {
               key: "date",
               label: "FECHA VENTA",
               render: (sale: ISale) => (
-                <p className="text-sm font-medium text-silver-500">
-                  {new Date(sale.createdAt).toLocaleDateString("es-ES", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })}
+                <p className="text-xs font-medium text-silver-400">
+                  {salesUtils.formatDate(sale.createdAt)}
                 </p>
               ),
             },
@@ -287,6 +292,7 @@ export default function SalesPage() {
                 <div className="relative">
                   <button
                     onClick={(e) => {
+                      e.stopPropagation();
                       const rect = e.currentTarget.getBoundingClientRect();
                       setMenuPosition({
                         top: rect.bottom + 4,
@@ -306,7 +312,7 @@ export default function SalesPage() {
                           onClick={() => setOpenMenuId(null)}
                         />
                         <div
-                          className="fixed w-48 bg-white_smoke border border-carbon_black-200 rounded-lg shadow-2xl z-50"
+                          className="fixed w-48 bg-carbon_black border border-carbon_black-600 rounded-lg shadow-2xl z-50"
                           style={{
                             top: `${menuPosition.top}px`,
                             left: `${menuPosition.left}px`,
@@ -314,17 +320,17 @@ export default function SalesPage() {
                         >
                           <button
                             onClick={() => handleEditSale(sale)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-onyx hover:bg-carbon_black-100 rounded-t-lg flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx/50 rounded-t-lg flex items-center gap-3 transition-colors"
                           >
                             <PencilEdit02Icon
                               size={16}
-                              className="text-silver-500"
+                              className="text-silver-400"
                             />
                             Editar
                           </button>
                           <button
                             onClick={() => handleDeleteSale(sale)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-carbon_black-100 rounded-b-lg flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-onyx/50 rounded-b-lg flex items-center gap-3 transition-colors"
                           >
                             <Delete02Icon
                               size={16}
@@ -342,66 +348,78 @@ export default function SalesPage() {
           ]}
           data={sales}
           keyExtractor={(sale: ISale) => sale.id}
+          onRowClick={(sale: ISale) => toggleRow(sale.id)}
           emptyMessage="No hay ventas registradas"
           loading={loading}
           searchPlaceholder="Buscar venta por cliente o ID de dispositivo..."
           onSearch={handleSearch}
           totalLabel={`REGISTROS: ${sales.length} | PÁGINA 1 DE ${Math.ceil(sales.length / 10)}`}
-          expandedContent={(sale: ISale) =>
-            expandedRows.has(sale.id) ? (
-              <tr>
-                <td colSpan={8} className="bg-onyx-600 p-6">
-                  <div className="space-y-4">
-                    <h4 className="text-white font-medium uppercase text-sm">
-                      Cuotas del Plan de Financiamiento
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {sale.device.installments?.map((installment) => (
-                        <div
-                          key={installment.id}
-                          className={`border rounded-lg p-4 ${
-                            installment.status === "PAID"
-                              ? "border-success bg-success/5"
-                              : installment.status === "OVERDUE"
-                                ? "border-destructive bg-destructive/5"
-                                : "border-warning bg-warning/5"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-silver-400 text-xs uppercase">
-                              Cuota {installment.number}
-                            </span>
-                            <span
-                              className={`text-xs font-medium ${
-                                installment.status === "PAID"
-                                  ? "text-success"
-                                  : installment.status === "OVERDUE"
-                                    ? "text-destructive"
-                                    : "text-warning"
-                              }`}
-                            >
-                              {installment.status === "PAID"
-                                ? "PAGADO"
-                                : installment.status === "OVERDUE"
-                                  ? "VENCIDO"
-                                  : "PENDIENTE"}
-                            </span>
+          expandedContent={(sale: ISale) => (
+            <AnimatePresence>
+              {expandedRows.has(sale.id) && (
+                <tr key={`${sale.id}-expanded`}>
+                  <td colSpan={8} className="p-0 border-0">
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-4 pb-4">
+                        <div className="bg-onyx rounded-lg border border-carbon_black-600 p-4 shadow-inner">
+                          <h4 className="text-white font-medium uppercase text-xs tracking-wider mb-3">
+                            Cuotas del Plan de Financiamiento
+                          </h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
+                            {sale.device.installments?.map((installment) => (
+                              <div
+                                key={installment.id}
+                                className={`border rounded-lg p-3 ${
+                                  installment.status === "PAID"
+                                    ? "border-success/30 bg-success/5"
+                                    : installment.status === "OVERDUE"
+                                      ? "border-destructive/30 bg-destructive/5"
+                                      : "border-warning/30 bg-warning/5"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-silver-400 text-xs">
+                                    #{installment.number}
+                                  </span>
+                                  <span
+                                    className={`text-xs font-medium ${
+                                      installment.status === "PAID"
+                                        ? "text-success"
+                                        : installment.status === "OVERDUE"
+                                          ? "text-destructive"
+                                          : "text-warning"
+                                    }`}
+                                  >
+                                    {installment.status === "PAID"
+                                      ? "✓"
+                                      : installment.status === "OVERDUE"
+                                        ? "✗"
+                                        : "●"}
+                                  </span>
+                                </div>
+                                <p className="text-white font-bold text-sm">
+                                  {salesUtils.formatCurrency(Number(installment.amount))}
+                                </p>
+                                <p className="text-silver-400 text-xs mt-1">
+                                  {salesUtils.formatDate(installment.dueDate)}
+                                </p>
+                              </div>
+                            ))}
                           </div>
-                          <p className="text-white font-bold text-lg">
-                            ${Number(installment.amount).toFixed(2)}
-                          </p>
-                          <p className="text-silver-400 text-xs mt-1">
-                            Vence:{" "}
-                            {new Date(installment.dueDate).toLocaleDateString()}
-                          </p>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            ) : null
-          }
+                      </div>
+                    </motion.div>
+                  </td>
+                </tr>
+              )}
+            </AnimatePresence>
+          )}
           actions={
             <>
               <Button
@@ -450,7 +468,7 @@ export default function SalesPage() {
                 Cancelar
               </Button>
               <Button
-                className="bg-strawberry_red hover:bg-strawberry_red/90 text-white"
+                variant="destructive"
                 onClick={confirmDelete}
               >
                 Eliminar

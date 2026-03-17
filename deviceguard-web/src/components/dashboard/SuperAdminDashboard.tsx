@@ -27,6 +27,7 @@ import {
 } from "hugeicons-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { createPortal } from "react-dom";
+import { salesUtils } from "@/utils/sales.util";
 
 export function SuperAdminDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -162,7 +163,7 @@ export function SuperAdminDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <StatCard
             title="TOTAL DISPOSITIVOS"
-            value={totalStats.devices.toLocaleString()}
+            value={salesUtils.formatNumber(totalStats.devices)}
             trend={
               totalStats.devices === 0
                 ? { value: "Sin dispositivos", isPositive: false }
@@ -177,7 +178,7 @@ export function SuperAdminDashboard() {
           />
           <StatCard
             title="ADMINS ACTIVOS"
-            value={totalStats.admins.toString()}
+            value={salesUtils.formatNumber(totalStats.admins)}
             trend={{
               value: `${totalStats.admins} organizaciones`,
               isPositive: true,
@@ -188,7 +189,7 @@ export function SuperAdminDashboard() {
           />
           <StatCard
             title="CLIENTES TOTALES"
-            value={totalStats.clients.toLocaleString()}
+            value={salesUtils.formatNumber(totalStats.clients)}
             trend={
               totalStats.clients === 0
                 ? { value: "Sin clientes", isPositive: false }
@@ -224,10 +225,10 @@ export function SuperAdminDashboard() {
                       {initials}
                     </div>
                     <div>
-                      <p className="font-medium text-white">
+                      <p className="font-medium text-sm text-white">
                         {admin.user.name}
                       </p>
-                      <p className="text-sm text-silver-400">
+                      <p className="text-xs text-silver-400">
                         {admin.user.email}
                       </p>
                     </div>
@@ -242,8 +243,8 @@ export function SuperAdminDashboard() {
                 const deviceCount = admin.devices?.length || 0;
                 return (
                   <div>
-                    <p className="font-medium text-white">{deviceCount}</p>
-                    <p className="text-sm text-silver-400">dispositivos</p>
+                    <p className="font-medium text-white">{salesUtils.formatNumber(deviceCount)}</p>
+                    <p className="text-xs text-silver-400">dispositivos</p>
                   </div>
                 );
               },
@@ -255,8 +256,8 @@ export function SuperAdminDashboard() {
                 const clientCount = admin.clients?.length || 0;
                 return (
                   <div>
-                    <p className="font-medium text-white">{clientCount}</p>
-                    <p className="text-sm text-silver-400">clientes</p>
+                    <p className="font-medium text-white">{salesUtils.formatNumber(clientCount)}</p>
+                    <p className="text-xs text-silver-400">clientes</p>
                   </div>
                 );
               },
@@ -265,8 +266,8 @@ export function SuperAdminDashboard() {
               key: "createdAt",
               label: "CREACIÓN",
               render: (admin: any) => (
-                <p className="text-sm text-silver-400">
-                  {new Date(admin.createdAt).toLocaleDateString()}
+                <p className="text-xs text-silver-400">
+                  {salesUtils.formatDate(admin.createdAt)}
                 </p>
               ),
             },
@@ -304,14 +305,14 @@ export function SuperAdminDashboard() {
                         >
                           <button
                             onClick={() => handleViewAdmin(admin)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx-600 rounded-t-lg flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx/50 rounded-t-lg flex items-center gap-3 transition-colors"
                           >
                             <ViewIcon size={16} className="text-silver-400" />
                             Ver
                           </button>
                           <button
                             onClick={() => handleEditAdmin(admin)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx-600 flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx/50 flex items-center gap-3 transition-colors"
                           >
                             <PencilEdit02Icon
                               size={16}
@@ -321,7 +322,7 @@ export function SuperAdminDashboard() {
                           </button>
                           <button
                             onClick={() => handleDeleteAdmin(admin.id)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-onyx-600 rounded-b-lg flex items-center gap-3 transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-onyx/50 rounded-b-lg flex items-center gap-3 transition-colors"
                           >
                             <Delete02Icon
                               size={16}

@@ -87,7 +87,6 @@ export function CreateFinancingPlanModal({
             Cancelar
           </Button>
           <Button
-            className="bg-mahogany_red hover:bg-mahogany_red-600 text-white"
             onClick={handleSubmit}
             disabled={loading}
           >
@@ -126,7 +125,7 @@ export function CreateFinancingPlanModal({
             onChange={(e) =>
               setPaymentFrequency(e.target.value as PaymentFrequency)
             }
-            className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+            className="w-full px-3 py-2 rounded-md border border-carbon_black-600 bg-carbon_black text-white text-sm"
           >
             {Object.entries(PAYMENT_FREQUENCY_LABELS).map(([key, label]) => (
               <option key={key} value={key}>
