@@ -31,7 +31,7 @@ export function ActivationSuccessView({
             ¡Dispositivo Vinculado!
           </h3>
           <p className="text-silver-400 text-sm">
-            El dispositivo ya está bajo monitoreo de DeviceGuard
+            El dispositivo ya está bajo monitoreo de FinanceTech
           </p>
         </div>
       </div>

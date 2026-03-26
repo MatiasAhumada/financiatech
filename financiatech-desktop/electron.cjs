@@ -17,7 +17,7 @@ function createWindow() {
       webSecurity: false,
     },
     autoHideMenuBar: true,
-    title: 'DeviceGuard Provisioner',
+    title: 'FinanceTech Provisioner',
     backgroundColor: '#032831',
     show: false,
   });

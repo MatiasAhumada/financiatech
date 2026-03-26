@@ -204,7 +204,7 @@ function App() {
       }
 
       if (!fs.existsSync(apkPath)) {
-          apkPath = "E:\\DeviceGuard\\deviceguard-app\\android\\app\\build\\outputs\\apk\\release\\app-release.apk";
+          apkPath = "E:\\DeviceGuard\\financiatech-app\\android\\app\\build\\outputs\\apk\\release\\app-release.apk";
       }
 
       appendLog(`Buscando aplicación en: ${apkPath}`);
@@ -229,7 +229,7 @@ function App() {
       let isAlreadyOwner = false;
       try {
         const policyOut = await runCommand('adb shell dumpsys device_policy');
-        if (policyOut.includes('com.deviceguard.kiosk/.DeviceAdmin') && (policyOut.includes('Device Owner:') || policyOut.includes('owner'))) {
+        if (policyOut.includes('com.financiatech.kiosk/.DeviceAdmin') && (policyOut.includes('Device Owner:') || policyOut.includes('owner'))) {
           isAlreadyOwner = true;
         }
       } catch (e) {
@@ -240,7 +240,7 @@ function App() {
         appendLog('✅ El dispositivo ya estaba configurado como modo kiosco');
       } else {
         appendLog("Activando modo de control total (Device Owner)...");
-        const ownerCmd = 'adb shell dpm set-device-owner com.deviceguard.kiosk/.DeviceAdmin';
+        const ownerCmd = 'adb shell dpm set-device-owner com.financiatech.kiosk/.DeviceAdmin';
         try {
           const ownerOut = await runCommand(ownerCmd);
           appendLog(`Respuesta: ${ownerOut}`);
@@ -265,7 +265,7 @@ function App() {
 
       appendLog("Aplicando restricciones de seguridad...");
       try {
-        await runCommand("adb shell am broadcast -a com.deviceguard.kiosk.FORCE_RESTRICTIONS -n com.deviceguard.kiosk/.DeviceAdmin");
+        await runCommand("adb shell am broadcast -a com.financiatech.kiosk.FORCE_RESTRICTIONS -n com.financiatech.kiosk/.DeviceAdmin");
       } catch (e) {
         // lo ignoramos, no es crítico para el final state
       }
@@ -309,7 +309,7 @@ function App() {
 
     const adbPath = fs.existsSync(getAdbPath()) ? getAdbPath() : 'adb';
 
-    const logcatCommand = `"${adbPath}" -s ${connectedDevice} logcat -s DGPollingService DeviceGuard DeviceGuardJS FCM NOTIFICATION firebase.messaging CONFIG PROVISIONING AppGuardian MainActivity BootReceiver PersistentService DeviceAdmin DeviceModule`;
+    const logcatCommand = `"${adbPath}" -s ${connectedDevice} logcat -s FGPollingService FinanceTech FinanceTechJS FCM NOTIFICATION firebase.messaging CONFIG PROVISIONING AppGuardian MainActivity BootReceiver PersistentService DeviceAdmin DeviceModule`;
 
     appendLog("📱 Iniciando monitor de actividad del dispositivo...");
     appendLog(`Dispositivo: ${connectedDevice}`);
@@ -470,7 +470,7 @@ function App() {
         <div className="header-content">
           <div className="header-logo">DG</div>
           <div>
-            <h1>DeviceGuard <span>Provisioner</span></h1>
+            <h1>FinanceTech <span>Provisioner</span></h1>
             <p>Herramienta de Configuración de Dispositivos</p>
           </div>
         </div>
@@ -594,7 +594,7 @@ function App() {
               <div className="log-info">
                 <span>Mostrando últimos {mobileLogs.length} eventos</span>
                 <span className="log-filters">
-                  DeviceGuard | Configuración | Notificaciones | Sistema
+                  FinanceTech | Configuración | Notificaciones | Sistema
                 </span>
               </div>
             </div>

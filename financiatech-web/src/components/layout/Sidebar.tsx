@@ -79,7 +79,7 @@ export function Sidebar() {
                   DG
                 </div>
                 <div>
-                  <h1 className="font-bold text-white">DeviceGuard</h1>
+                  <h1 className="font-bold text-white">FinanceTech</h1>
                   <p className="text-xs text-silver-400 uppercase">
                     {user.role.replace("_", " ")}
                   </p>
@@ -167,7 +167,7 @@ export function Sidebar() {
               DG
             </div>
             <div>
-              <h1 className="font-bold text-white">DeviceGuard</h1>
+              <h1 className="font-bold text-white">FinanceTech</h1>
               <p className="text-xs text-silver-400 uppercase">
                 {user.role.replace("_", " ")}
               </p>

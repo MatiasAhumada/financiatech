@@ -39,7 +39,7 @@ export default function LoginPage() {
             </div>
           </div>
           <CardTitle className="text-2xl text-center text-white">
-            DeviceGuard
+            FinanceTech
           </CardTitle>
           <p className="text-center text-silver-400 text-sm mt-2">
             Iniciar Sesión

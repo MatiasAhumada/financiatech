@@ -39,21 +39,21 @@ export const SALES_MESSAGES = {
   },
   INFO: {
     AUTO_BLOCK_WARNING:
-      "El dispositivo quedará bloqueado automáticamente vía DeviceGuard MDM según las reglas configuradas.",
+      "El dispositivo quedará bloqueado automáticamente vía FinanceTech MDM según las reglas configuradas.",
     BLOCK_RULES_EXAMPLE:
       "Las reglas se calculan automáticamente según la frecuencia de pago. Semanal: días 5-6-7 | Quincenal: días 13-14-15 | Mensual: días 28-29-30 desde la fecha de venta.",
     SUCCESS_TITLE: "¡Venta Registrada Exitosamente!",
     SUCCESS_SUBTITLE:
       "Ahora debe vincular el dispositivo con la aplicación móvil",
     ACTIVATION_INSTRUCTIONS:
-      "El cliente debe ingresar este código en la aplicación móvil DeviceGuard para vincular el dispositivo",
+      "El cliente debe ingresar este código en la aplicación móvil FinanceTech para vincular el dispositivo",
     CLIENT_INSTRUCTIONS_TITLE: "Instrucciones para el cliente:",
     IMPORTANT_TITLE: "Importante:",
     IMPORTANT_MESSAGE:
       "La venta se completará automáticamente cuando el cliente vincule el dispositivo. El sistema comenzará a monitorear los pagos según el plan configurado.",
   },
   CLIENT_INSTRUCTIONS: [
-    "Descargar la app DeviceGuard desde Play Store o App Store",
+    "Descargar la app FinanceTech desde Play Store o App Store",
     "Abrir la aplicación e ingresar el código de activación",
     "Seguir las instrucciones en pantalla para completar la vinculación",
     "Una vez vinculado, el dispositivo quedará bajo monitoreo",

@@ -1,9 +1,9 @@
 {
-  "name": "deviceguard-desktop",
+  "name": "financiatech-desktop",
   "private": true,
   "version": "0.0.0",
-  "description": "DeviceGuard Provisioner Desktop Application",
-  "author": "DeviceGuard Team",
+  "description": "FinanceTech Provisioner Desktop Application",
+  "author": "FinanceTech Team",
   "main": "electron.cjs",
   "type": "module",
   "scripts": {
@@ -15,8 +15,8 @@
     "preview": "vite preview"
   },
   "build": {
-    "appId": "com.deviceguard.provisioner",
-    "productName": "DeviceGuard Provisioner",
+    "appId": "com.financiatech.provisioner",
+    "productName": "FinanceTech Provisioner",
     "win": {
       "target": "portable",
       "signAndEditExecutable": false

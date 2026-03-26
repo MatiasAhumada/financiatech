@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DeviceGuard",
+  title: "FinanceTech",
   description: "Sistema de gestión de dispositivos",
 };
 
