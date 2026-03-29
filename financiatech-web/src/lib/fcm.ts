@@ -1,4 +1,4 @@
-import admin from "firebase-admin";
+import { getMessaging } from "@/lib/firebase";
 import { DeviceSyncRepository } from "@/server/repository/deviceSync.repository";
 
 export interface FcmPayload {
@@ -40,7 +40,8 @@ export const fcmService = {
         token: deviceSync.fcmToken.slice(0, 50) + "...",
       });
 
-      const response = await admin.messaging().send({
+      const messaging = getMessaging();
+      const response = await messaging.send({
         token: deviceSync.fcmToken,
         data,
         android: {

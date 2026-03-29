@@ -1,39 +1,4 @@
-/**
- * Servicio para enviar notificaciones push a través de Firebase Cloud Messaging
- */
-
-import * as admin from "firebase-admin";
-
-// Flag para trackear si Firebase está inicializado
-let isFirebaseInitialized = false;
-
-// Inicializar Firebase Admin SDK
-function initializeFirebase() {
-  if (isFirebaseInitialized) {
-    return admin;
-  }
-
-  // Inicializar solo si no está ya inicializado
-  if (admin.apps.length === 0) {
-    // Usar variables de entorno para las credenciales de Firebase
-    const firebaseConfig = {
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    };
-
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: firebaseConfig.projectId,
-        clientEmail: firebaseConfig.clientEmail,
-        privateKey: firebaseConfig.privateKey,
-      }),
-    });
-  }
-
-  isFirebaseInitialized = true;
-  return admin;
-}
+import { getMessaging } from "@/lib/firebase";
 
 /**
  * Envía una notificación push a un dispositivo
@@ -46,7 +11,7 @@ export async function sendPushNotification(
     data?: Record<string, string>;
   }
 ): Promise<boolean> {
-  initializeFirebase();
+  const messaging = getMessaging();
 
   console.log("[FCM-SEND] Attempting to send notification");
   console.log("[FCM-SEND] Token:", token);
@@ -83,7 +48,7 @@ export async function sendPushNotification(
       },
     };
 
-    await admin.messaging().send(message);
+    await messaging.send(message);
     console.log("[FCM-SEND] Notification sent successfully");
     return true;
   } catch (error) {
@@ -103,7 +68,7 @@ export async function sendTopicNotification(
     data?: Record<string, string>;
   }
 ): Promise<boolean> {
-  initializeFirebase();
+  const messaging = getMessaging();
 
   try {
     const message = {
@@ -115,7 +80,7 @@ export async function sendTopicNotification(
       topic,
     };
 
-    await admin.messaging().send(message);
+    await messaging.send(message);
     return true;
   } catch (error) {
     console.error("[FCM] Error al enviar notificación a topic:", error);
