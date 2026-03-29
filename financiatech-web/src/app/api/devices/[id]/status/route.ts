@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deviceControlService } from "@/server/services/deviceControl.service";
 import { fcmService } from "@/lib/fcm";
-import "@/lib/firebase"; // Inicializar Firebase Admin
 import apiErrorHandler, { ApiError } from "@/utils/handlers/apiError.handler";
 import httpStatus from "http-status";
 import { z } from "zod";
