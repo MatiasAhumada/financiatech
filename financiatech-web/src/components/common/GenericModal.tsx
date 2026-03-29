@@ -111,9 +111,7 @@ export function GenericModal({
                 className={`flex items-center justify-between p-6 border-b border-carbon_black-600 ${headerBgClass}`}
               >
                 <div>
-                  <h2 className="text-lg font-semibold text-white">
-                    {title}
-                  </h2>
+                  <h2 className="text-lg font-semibold text-white">{title}</h2>
                   {description && (
                     <p className="text-sm text-silver-400 mt-1">
                       {description}

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { ISale } from "@/types";
+import { ISale, IInstallment, SalesStats } from "@/types";
 import { DeviceStatus, PaymentFrequency } from "@prisma/client";
 
 export class SaleRepository {
@@ -7,7 +7,11 @@ export class SaleRepository {
     return prisma.sale.findUnique({
       where: { activationCode },
       include: {
-        device: true,
+        device: {
+          include: {
+            installments: { orderBy: { number: "asc" } },
+          },
+        },
         client: true,
       },
     });
@@ -23,8 +27,8 @@ export class SaleRepository {
     });
   }
 
-  async findByAdminId(adminId: string, search?: string) {
-    return prisma.sale.findMany({
+  async findByAdminId(adminId: string, search?: string): Promise<ISale[]> {
+    const sales = await prisma.sale.findMany({
       where: {
         device: { adminId },
         deletedAt: null,
@@ -49,6 +53,85 @@ export class SaleRepository {
       },
       orderBy: { createdAt: "desc" },
     });
+
+    return sales as ISale[];
+  }
+
+  async getStats(adminId: string): Promise<SalesStats> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [todaySalesCount, statusCounts, avgTicketResult] = await Promise.all([
+      prisma.sale.count({
+        where: {
+          device: { adminId },
+          createdAt: { gte: today },
+          deletedAt: null,
+        },
+      }),
+      prisma.sale.groupBy({
+        by: ["deviceId"],
+        where: {
+          device: { adminId },
+          deletedAt: null,
+        },
+        _count: true,
+      }),
+      prisma.sale.aggregate({
+        where: {
+          device: { adminId },
+          deletedAt: null,
+        },
+        _avg: { totalAmount: true },
+      }),
+    ]);
+
+    const deviceIds = statusCounts.map((s) => s.deviceId);
+    const devices = await prisma.device.findMany({
+      where: { id: { in: deviceIds } },
+      select: { id: true, status: true },
+    });
+
+    const deviceStatusMap = new Map(devices.map((d) => [d.id, d.status]));
+
+    let newDevices = 0;
+    let pendingPayments = 0;
+
+    statusCounts.forEach((item) => {
+      const status = deviceStatusMap.get(item.deviceId);
+      if (status === DeviceStatus.ACTIVE) {
+        newDevices += item._count;
+      }
+      if (status === DeviceStatus.SOLD_PENDING) {
+        pendingPayments += item._count;
+      }
+    });
+
+    return {
+      todaySales: todaySalesCount,
+      newDevices,
+      pendingPayments,
+      avgTicket: Number(avgTicketResult._avg.totalAmount) || 0,
+    };
+  }
+
+  async getInstallmentsBySaleId(saleId: string): Promise<IInstallment[]> {
+    const sale = await prisma.sale.findUnique({
+      where: { id: saleId },
+      include: {
+        device: {
+          include: {
+            installments: { orderBy: { number: "asc" } },
+          },
+        },
+      },
+    });
+
+    if (!sale) {
+      return [];
+    }
+
+    return sale.device.installments as IInstallment[];
   }
 
   async createWithTransaction(data: {

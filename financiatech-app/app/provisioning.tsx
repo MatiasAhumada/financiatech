@@ -142,7 +142,16 @@ export default function ProvisioningScreen() {
     }
 
   };
-
+  const prueba = () => {
+    router.push({
+      pathname: "/linking",
+      params: {
+        deviceName: "Dispositivo de Prueba",
+        deviceId: "1234567890",
+        adminName: "Admin de Prueba",
+      },
+    });
+  };
   return (
     <YStack flex={1} backgroundColor={COLORS.background.base}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
@@ -166,7 +175,7 @@ export default function ProvisioningScreen() {
             width="100%"
 
             alignSelf="center"
-            onPress={handleVerify}
+            onPress={prueba}
             disabled={!canVerify}
             opacity={!canVerify ? 0.5 : 1}
             pressStyle={{ opacity: 0.8 }}

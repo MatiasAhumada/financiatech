@@ -161,7 +161,9 @@ export const DeviceControlPanel: React.FC<DeviceControlPanelProps> = ({
               <AlertDiamondIcon size={20} className="text-white" />
             </motion.div>
           )}
-          {!currentStatus && <CheckmarkCircle02Icon size={20} className="text-white" />}
+          {!currentStatus && (
+            <CheckmarkCircle02Icon size={20} className="text-white" />
+          )}
         </div>
       </motion.div>
 

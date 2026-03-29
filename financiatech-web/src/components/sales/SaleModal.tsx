@@ -159,10 +159,7 @@ export function SaleModal({
           >
             {SALES_MESSAGES.BUTTONS.CANCEL}
           </Button>
-          <Button
-            onClick={handleNextWithDirection}
-            disabled={!canProceedStep1}
-          >
+          <Button onClick={handleNextWithDirection} disabled={!canProceedStep1}>
             {SALES_MESSAGES.BUTTONS.NEXT}
           </Button>
         </>
@@ -186,10 +183,7 @@ export function SaleModal({
           >
             {SALES_MESSAGES.BUTTONS.CANCEL}
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!canProceedStep2}
-          >
+          <Button onClick={handleSubmit} disabled={!canProceedStep2}>
             {loading
               ? SALES_MESSAGES.BUTTONS.PROCESSING
               : SALES_MESSAGES.BUTTONS.REGISTER}

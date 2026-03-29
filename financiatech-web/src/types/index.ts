@@ -81,6 +81,8 @@ export interface INotification extends PrismaNotification {
 
 export interface IFinancingPlan extends PrismaFinancingPlan {}
 
+export interface IInstallment extends PrismaInstallment {}
+
 export interface DeviceStatusCheckResult {
   blocked: boolean;
   status: DeviceStatus;
@@ -88,4 +90,11 @@ export interface DeviceStatusCheckResult {
   pendingAmount: number;
   deviceName: string;
   adminName: string;
+}
+
+export interface SalesStats {
+  todaySales: number;
+  newDevices: number;
+  pendingPayments: number;
+  avgTicket: number;
 }

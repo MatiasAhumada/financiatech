@@ -51,12 +51,16 @@ export default function DevicesPage() {
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [deviceToSendNotification, setDeviceToSendNotification] =
     useState<IDevice | null>(null);
-  const [notificationData, setNotificationData] = useState<SendNotificationDto>({
-    title: "",
-    message: "",
-    type: NotificationType.WARNING_1,
-  });
-  const [notificationErrors, setNotificationErrors] = useState<Record<string, string>>({});
+  const [notificationData, setNotificationData] = useState<SendNotificationDto>(
+    {
+      title: "",
+      message: "",
+      type: NotificationType.WARNING_1,
+    }
+  );
+  const [notificationErrors, setNotificationErrors] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     loadDevices();
@@ -75,7 +79,12 @@ export default function DevicesPage() {
     ) {
       setOpenMenuId(null);
     }
-  }, [isModalOpen, isDeleteModalOpen, isBlockModalOpen, isNotificationModalOpen]);
+  }, [
+    isModalOpen,
+    isDeleteModalOpen,
+    isBlockModalOpen,
+    isNotificationModalOpen,
+  ]);
 
   const loadDevices = async (search?: string) => {
     try {
@@ -223,7 +232,9 @@ export default function DevicesPage() {
                       {initials.toUpperCase().slice(0, 2)}
                     </div>
                     <div>
-                      <p className="font-semibold text-sm text-white">{device.name}</p>
+                      <p className="font-semibold text-sm text-white">
+                        {device.name}
+                      </p>
                       <p className="text-xs font-medium text-silver-400">
                         {device.type}
                       </p>
@@ -442,10 +453,7 @@ export default function DevicesPage() {
               >
                 Cancelar
               </Button>
-              <Button
-                variant="destructive"
-                onClick={confirmDelete}
-              >
+              <Button variant="destructive" onClick={confirmDelete}>
                 Eliminar
               </Button>
             </>

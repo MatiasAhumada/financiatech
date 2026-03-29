@@ -2,7 +2,7 @@ import { SaleRepository } from "../repository/sale.repository";
 import { DevicesRepository } from "../repository/devices.repository";
 import { FinancingPlanRepository } from "../repository/financingPlan.repository";
 import { ApiError } from "@/utils/handlers/apiError.handler";
-import { ISale } from "@/types";
+import { ISale, IInstallment, SalesStats } from "@/types";
 import { PAYMENT_FREQUENCY_DAYS } from "@/constants/paymentFrequency.constant";
 import { BLOCK_RULES_BY_FREQUENCY } from "@/constants/blockRules.constant";
 import httpStatus from "http-status";
@@ -81,6 +81,14 @@ export class SaleService {
 
   async findByAdminId(adminId: string, search?: string) {
     return this.saleRepository.findByAdminId(adminId, search);
+  }
+
+  async getStats(adminId: string): Promise<SalesStats> {
+    return this.saleRepository.getStats(adminId);
+  }
+
+  async getInstallments(saleId: string): Promise<IInstallment[]> {
+    return this.saleRepository.getInstallmentsBySaleId(saleId);
   }
 
   async delete(id: string) {

@@ -10,6 +10,12 @@ export async function GET(request: NextRequest) {
   try {
     const payload = verifyAuth(request);
     const search = request.nextUrl.searchParams.get("search") || undefined;
+    const isStats = request.nextUrl.searchParams.get("stats") === "true";
+
+    if (isStats) {
+      const stats = await saleService.getStats(payload.adminId!);
+      return NextResponse.json(stats, { status: httpStatus.OK });
+    }
 
     const sales = await saleService.findByAdminId(payload.adminId!, search);
 

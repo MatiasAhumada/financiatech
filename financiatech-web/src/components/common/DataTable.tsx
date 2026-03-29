@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, Fragment } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search01Icon } from "hugeicons-react";
@@ -119,9 +119,8 @@ export function DataTable<T>({
                   </tr>
                 ) : (
                   data.map((item, index) => (
-                    <>
+                    <Fragment key={keyExtractor(item)}>
                       <motion.tr
-                        key={keyExtractor(item)}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{
@@ -145,7 +144,7 @@ export function DataTable<T>({
                         ))}
                       </motion.tr>
                       {expandedContent?.(item)}
-                    </>
+                    </Fragment>
                   ))
                 )}
               </tbody>

@@ -243,7 +243,9 @@ export function SuperAdminDashboard() {
                 const deviceCount = admin.devices?.length || 0;
                 return (
                   <div>
-                    <p className="font-medium text-white">{salesUtils.formatNumber(deviceCount)}</p>
+                    <p className="font-medium text-white">
+                      {salesUtils.formatNumber(deviceCount)}
+                    </p>
                     <p className="text-xs text-silver-400">dispositivos</p>
                   </div>
                 );
@@ -256,7 +258,9 @@ export function SuperAdminDashboard() {
                 const clientCount = admin.clients?.length || 0;
                 return (
                   <div>
-                    <p className="font-medium text-white">{salesUtils.formatNumber(clientCount)}</p>
+                    <p className="font-medium text-white">
+                      {salesUtils.formatNumber(clientCount)}
+                    </p>
                     <p className="text-xs text-silver-400">clientes</p>
                   </div>
                 );

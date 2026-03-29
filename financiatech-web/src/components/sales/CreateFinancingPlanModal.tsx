@@ -86,10 +86,7 @@ export function CreateFinancingPlanModal({
           <Button variant="outline" onClick={handleClose} disabled={loading}>
             Cancelar
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={loading}
-          >
+          <Button onClick={handleSubmit} disabled={loading}>
             {loading ? "Creando..." : "Crear Plan"}
           </Button>
         </>

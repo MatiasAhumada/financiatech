@@ -7,7 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { clientService } from "@/services/client.service";
 import { createClientSchema } from "@/schemas/client.schema";
-import { IClient, IClientFormValues, PrismaPhone, PrismaAddress } from "@/types";
+import {
+  IClient,
+  IClientFormValues,
+  PrismaPhone,
+  PrismaAddress,
+} from "@/types";
 import { PhoneType } from "@prisma/client";
 import {
   clientErrorHandler,
@@ -70,7 +75,14 @@ export function ClientModal({
           { number: "", type: PhoneType.MOBILE as PhoneType, referencia: "" },
         ],
         addresses: [
-          { street: "", city: "", state: "", zipCode: "", country: "", nota: "" },
+          {
+            street: "",
+            city: "",
+            state: "",
+            zipCode: "",
+            country: "",
+            nota: "",
+          },
         ],
       });
       setIsViewMode(false);
@@ -331,18 +343,13 @@ export function ClientModal({
           </div>
           {formData.addresses && formData.addresses.length > 0
             ? formData.addresses.map((address, index) => (
-                <div
-                  key={index}
-                  className="space-y-2 p-3 border rounded-lg"
-                >
+                <div key={index} className="space-y-2 p-3 border rounded-lg">
                   <div className="space-y-1">
                     <div className="flex gap-2">
                       <Input
                         value={address.street}
                         onChange={(e) => {
-                          const newAddresses = [
-                            ...(formData.addresses || []),
-                          ];
+                          const newAddresses = [...(formData.addresses || [])];
                           newAddresses[index].street = e.target.value;
                           setFormData({
                             ...formData,
@@ -361,9 +368,7 @@ export function ClientModal({
                       <Input
                         value={address.city}
                         onChange={(e) => {
-                          const newAddresses = [
-                            ...(formData.addresses || []),
-                          ];
+                          const newAddresses = [...(formData.addresses || [])];
                           newAddresses[index].city = e.target.value;
                           setFormData({
                             ...formData,
@@ -394,9 +399,7 @@ export function ClientModal({
                       <Input
                         value={address.state || ""}
                         onChange={(e) => {
-                          const newAddresses = [
-                            ...(formData.addresses || []),
-                          ];
+                          const newAddresses = [...(formData.addresses || [])];
                           newAddresses[index].state = e.target.value;
                           setFormData({
                             ...formData,
@@ -410,9 +413,7 @@ export function ClientModal({
                       <Input
                         value={address.zipCode || ""}
                         onChange={(e) => {
-                          const newAddresses = [
-                            ...(formData.addresses || []),
-                          ];
+                          const newAddresses = [...(formData.addresses || [])];
                           newAddresses[index].zipCode = e.target.value;
                           setFormData({
                             ...formData,
@@ -428,9 +429,7 @@ export function ClientModal({
                       <Input
                         value={address.country || ""}
                         onChange={(e) => {
-                          const newAddresses = [
-                            ...(formData.addresses || []),
-                          ];
+                          const newAddresses = [...(formData.addresses || [])];
                           newAddresses[index].country = e.target.value;
                           setFormData({
                             ...formData,
@@ -444,9 +443,7 @@ export function ClientModal({
                       <Input
                         value={address.nota || ""}
                         onChange={(e) => {
-                          const newAddresses = [
-                            ...(formData.addresses || []),
-                          ];
+                          const newAddresses = [...(formData.addresses || [])];
                           newAddresses[index].nota = e.target.value;
                           setFormData({
                             ...formData,

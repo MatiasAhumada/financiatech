@@ -10,12 +10,10 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-mahogany_red text-white hover:bg-mahogany_red/90",
-        destructive:
-          "bg-destructive text-white hover:bg-destructive-dark",
+        destructive: "bg-destructive text-white hover:bg-destructive-dark",
         outline:
           "border border-carbon_black-600 bg-transparent text-silver-400 hover:text-white hover:bg-carbon_black-600",
-        secondary:
-          "bg-carbon_black-600 text-white hover:bg-onyx",
+        secondary: "bg-carbon_black-600 text-white hover:bg-onyx",
         ghost: "hover:bg-carbon_black-600 text-silver-400 hover:text-white",
         link: "text-mahogany_red underline-offset-4 hover:underline",
       },

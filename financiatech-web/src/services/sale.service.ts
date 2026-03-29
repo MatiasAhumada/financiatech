@@ -1,6 +1,7 @@
 import clientAxios from "@/utils/clientAxios.util";
 import { CreateSaleDto } from "@/schemas/sale.schema";
 import { API_ROUTES } from "@/constants/routes";
+import { SalesStats, IInstallment } from "@/types";
 
 export const saleService = {
   async create(dto: CreateSaleDto) {
@@ -12,6 +13,19 @@ export const saleService = {
     const params = search ? { search } : {};
     const { data } = await clientAxios.get(API_ROUTES.SALES, { params });
     return data;
+  },
+
+  async getStats() {
+    const params = { stats: "true" };
+    const { data } = await clientAxios.get(API_ROUTES.SALES, { params });
+    return data as SalesStats;
+  },
+
+  async getInstallments(saleId: string) {
+    const { data } = await clientAxios.get(
+      `${API_ROUTES.SALES}/${saleId}/installments`
+    );
+    return data as IInstallment[];
   },
 
   async delete(id: string) {

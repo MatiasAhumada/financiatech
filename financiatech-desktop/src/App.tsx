@@ -204,7 +204,7 @@ function App() {
       }
 
       if (!fs.existsSync(apkPath)) {
-          apkPath = "E:\\DeviceGuard\\financiatech-app\\android\\app\\build\\outputs\\apk\\release\\app-release.apk";
+          apkPath = "E:\\FinanciaTech\\financiatech-app\\android\\app\\build\\outputs\\apk\\release\\app-release.apk";
       }
 
       appendLog(`Buscando aplicación en: ${apkPath}`);
