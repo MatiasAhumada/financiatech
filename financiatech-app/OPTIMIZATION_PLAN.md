@@ -258,7 +258,7 @@ export async function PATCH(
 
 #### 1C. Android Nativo - Firebase Service
 
-**Archivo**: `android/app/src/main/java/.../DeviceGuardFirebaseService.java`
+**Archivo**: `android/app/src/main/java/.../FinanciaTechFirebaseService.java`
 
 ```java
 package com.financiatech.kiosk;
@@ -268,7 +268,7 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import java.util.Map;
 
-public class DeviceGuardFirebaseService extends FirebaseMessagingService {
+public class FinanciaTechFirebaseService extends FirebaseMessagingService {
     
     private static final String TAG = "DGFirebaseService";
     private static final String KEY_TYPE = "type";
@@ -307,16 +307,16 @@ public class DeviceGuardFirebaseService extends FirebaseMessagingService {
         Log.i(TAG, "FCM: Device blocked signal received for IMEI: " + imei);
         
         SharedPreferences prefs = getSharedPreferences(
-            DeviceGuardPollingService.PREFS_NAME, 
+            FinanciaTechPollingService.PREFS_NAME, 
             Context.MODE_PRIVATE
         );
         
-        String myImei = prefs.getString(DeviceGuardPollingService.KEY_DEVICE_ID, null);
+        String myImei = prefs.getString(FinanciaTechPollingService.KEY_DEVICE_ID, null);
         
         if (imei != null && imei.equals(myImei)) {
             prefs.edit()
-                 .putBoolean(DeviceGuardPollingService.KEY_IS_LOCKED, true)
-                 .putBoolean(DeviceGuardPollingService.KEY_LOCKDOWN_ACTIVE, true)
+                 .putBoolean(FinanciaTechPollingService.KEY_IS_LOCKED, true)
+                 .putBoolean(FinanciaTechPollingService.KEY_LOCKDOWN_ACTIVE, true)
                  .apply();
             
             DeviceModule.emitDeviceStateChanged(
@@ -333,16 +333,16 @@ public class DeviceGuardFirebaseService extends FirebaseMessagingService {
         Log.i(TAG, "FCM: Device unblocked signal received for IMEI: " + imei);
         
         SharedPreferences prefs = getSharedPreferences(
-            DeviceGuardPollingService.PREFS_NAME, 
+            FinanciaTechPollingService.PREFS_NAME, 
             Context.MODE_PRIVATE
         );
         
-        String myImei = prefs.getString(DeviceGuardPollingService.KEY_DEVICE_ID, null);
+        String myImei = prefs.getString(FinanciaTechPollingService.KEY_DEVICE_ID, null);
         
         if (imei != null && imei.equals(myImei)) {
             prefs.edit()
-                 .putBoolean(DeviceGuardPollingService.KEY_IS_LOCKED, false)
-                 .putBoolean(DeviceGuardPollingService.KEY_LOCKDOWN_ACTIVE, false)
+                 .putBoolean(FinanciaTechPollingService.KEY_IS_LOCKED, false)
+                 .putBoolean(FinanciaTechPollingService.KEY_LOCKDOWN_ACTIVE, false)
                  .apply();
             
             DeviceModule.emitDeviceStateChanged(
@@ -357,9 +357,9 @@ public class DeviceGuardFirebaseService extends FirebaseMessagingService {
     
     private void sendAckToBackend(String deviceId, String type, String timestamp) {
         String apiUrl = getSharedPreferences(
-            DeviceGuardPollingService.PREFS_NAME, 
+            FinanciaTechPollingService.PREFS_NAME, 
             Context.MODE_PRIVATE
-        ).getString(DeviceGuardPollingService.KEY_API_URL, null);
+        ).getString(FinanciaTechPollingService.KEY_API_URL, null);
         
         if (apiUrl == null || deviceId == null) {
             return;
@@ -418,7 +418,7 @@ public class DeviceGuardFirebaseService extends FirebaseMessagingService {
                 PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
                 PowerManager.FULL_WAKE_LOCK |
                 PowerManager.ACQUIRE_CAUSES_WAKEUP,
-                "DeviceGuard::BlockWakeLock"
+                "FinanciaTech::BlockWakeLock"
             );
             wl.acquire(10000);
         }
@@ -446,7 +446,7 @@ public class DeviceGuardFirebaseService extends FirebaseMessagingService {
     
     private void navigateToBlockedScreen() {
         Intent intent = new Intent(Intent.ACTION_VIEW,
-            Uri.parse("deviceguardapp://device-blocked"));
+            Uri.parse("FinanciaTechapp://device-blocked"));
         intent.addFlags(
             Intent.FLAG_ACTIVITY_NEW_TASK |
             Intent.FLAG_ACTIVITY_CLEAR_TOP |
@@ -494,7 +494,7 @@ public class DeviceGuardFirebaseService extends FirebaseMessagingService {
     }
     
     private void sendTokenToBackend(String token) {
-        String imei = getSharedPreferences("DeviceGuardPrefs", MODE_PRIVATE)
+        String imei = getSharedPreferences("FinanciaTechPrefs", MODE_PRIVATE)
             .getString("deviceId", null);
         
         if (imei == null) {
@@ -502,7 +502,7 @@ public class DeviceGuardFirebaseService extends FirebaseMessagingService {
         }
         
         try {
-            String apiUrl = getSharedPreferences("DeviceGuardPrefs", MODE_PRIVATE)
+            String apiUrl = getSharedPreferences("FinanciaTechPrefs", MODE_PRIVATE)
                 .getString("apiUrl", null);
             
             if (apiUrl == null) {
@@ -542,7 +542,7 @@ public class DeviceGuardFirebaseService extends FirebaseMessagingService {
 ```xml
 <!-- Firebase Messaging Service -->
 <service
-    android:name=".DeviceGuardFirebaseService"
+    android:name=".FinanciaTechFirebaseService"
     android:enabled="true"
     android:exported="false">
     <intent-filter>
@@ -708,7 +708,7 @@ model PendingCommand {
 
 #### 3A. Polling Adaptativo
 
-**Archivo**: `DeviceGuardPollingService.java`
+**Archivo**: `FinanciaTechPollingService.java`
 
 ```java
 private static final long POLL_INTERVAL_ACTIVE_MS = 30000;
@@ -738,7 +738,7 @@ private long calculateBackoff() {
 
 #### 3B. Caché de Última Respuesta
 
-**Archivo**: `DeviceGuardPollingService.java`
+**Archivo**: `FinanciaTechPollingService.java`
 
 ```java
 private static final String KEY_LAST_KNOWN_STATE = "lastKnownState";
@@ -1044,7 +1044,7 @@ export default clientAxios;
 - [ ] Tests de envío FCM
 
 ### Semana 2: FCM Android Nativo
-- [ ] Crear `DeviceGuardFirebaseService.java`
+- [ ] Crear `FinanciaTechFirebaseService.java`
 - [ ] Registrar servicio en AndroidManifest.xml
 - [ ] Implementar manejo de `DEVICE_BLOCKED`
 - [ ] Implementar manejo de `DEVICE_UNBLOCKED`

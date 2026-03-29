@@ -30,7 +30,7 @@ adb shell dumpsys account
 Instala el APK generado (`app-release.apk`) en el dispositivo usando ADB:
 
 ```powershell
-adb install -r "E:\DeviceGuard\financiatech-app\android\app\build\outputs\apk\release\app-release.apk"
+adb install -r "E:\FinanciaTech\financiatech-app\android\app\build\outputs\apk\release\app-release.apk"
 ```
 
 ## Paso 5: Activar el Device Owner (Comando Crítico)
