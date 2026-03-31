@@ -1,12 +1,12 @@
 import { ExpoConfig, ConfigContext } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => {
-  const API_URL = process.env.EXPO_PUBLIC_API_URL;
+  const API_URL = process.env.EXPO_PUBLIC_API_URL 
+  // || 'https://financiatech.net';
 
-  if (!API_URL) {
-    throw new Error(
-      "EXPO_PUBLIC_API_URL no está definida en el archivo .env. " +
-        "Copiá .env.example a .env y configurá la URL del backend.",
+  if (!process.env.EXPO_PUBLIC_API_URL) {
+    console.warn(
+      "⚠️  EXPO_PUBLIC_API_URL no está definida, usando URL por defecto: " + API_URL
     );
   }
 
