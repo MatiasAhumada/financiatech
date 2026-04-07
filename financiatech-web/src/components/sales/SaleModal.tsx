@@ -115,8 +115,12 @@ export function SaleModal({
     handleBack();
   };
 
-  const amountValue = parseFloat(amount || "0");
-  const initialPaymentValue = parseFloat(initialPayment || "0");
+  const amountValue = parseFloat(
+    salesUtils.parseFormattedNumber(amount || "0")
+  );
+  const initialPaymentValue = parseFloat(
+    salesUtils.parseFormattedNumber(initialPayment || "0")
+  );
   const financedAmount = financingUtils.calculateFinancedAmount(
     amountValue,
     initialPaymentValue
@@ -257,14 +261,14 @@ export function SaleModal({
             animate="center"
             exit="exit"
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="grid grid-cols-2 gap-6"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"
           >
             <div className="space-y-4">
-              <div className="border border-mahogany_red rounded-lg p-6">
+              <div className="border border-mahogany_red rounded-lg p-4 sm:p-6">
                 <Label className="text-silver-400 text-xs uppercase">
                   {SALES_MESSAGES.LABELS.DEVICE_PRICE}
                 </Label>
-                <p className="text-5xl font-bold text-white mt-2">
+                <p className="text-3xl sm:text-5xl font-bold text-white mt-2">
                   {salesUtils.formatCurrency(amountValue)}
                 </p>
                 <p className="text-xs text-silver-400 italic mt-2">
@@ -273,29 +277,34 @@ export function SaleModal({
                 </p>
               </div>
 
-              <div className="border border-carbon_black-600 rounded-lg p-6 bg-carbon_black">
+              <div className="border border-carbon_black-600 rounded-lg p-4 sm:p-6 bg-carbon_black">
                 <Label className="text-silver-400 text-xs uppercase">
                   {SALES_MESSAGES.LABELS.INITIAL_PAYMENT}
                 </Label>
                 <div className="relative mt-2">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-mahogany_red text-2xl">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-mahogany_red text-xl sm:text-2xl">
                     $
                   </span>
                   <Input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     value={initialPayment}
-                    onChange={(e) => setInitialPayment(e.target.value)}
+                    onChange={(e) =>
+                      setInitialPayment(
+                        salesUtils.formatThousands(e.target.value)
+                      )
+                    }
                     placeholder={SALES_MESSAGES.PLACEHOLDERS.AMOUNT}
-                    className="pl-10 text-3xl font-bold bg-onyx-600 border-carbon_black-700 text-white h-16"
+                    className="pl-10 text-2xl sm:text-3xl font-bold bg-onyx-600 border-carbon_black-700 text-white h-14 sm:h-16"
                   />
                 </div>
               </div>
 
-              <div className="border border-carbon_black-600 rounded-lg p-6 bg-carbon_black">
+              <div className="border border-carbon_black-600 rounded-lg p-4 sm:p-6 bg-carbon_black">
                 <Label className="text-silver-400 text-xs uppercase">
                   {SALES_MESSAGES.LABELS.FINANCED_AMOUNT}
                 </Label>
-                <p className="text-5xl font-bold text-white mt-2">
+                <p className="text-3xl sm:text-5xl font-bold text-white mt-2">
                   {salesUtils.formatCurrency(financedAmount)}
                 </p>
                 <p className="text-xs text-silver-400 mt-2">
@@ -304,7 +313,7 @@ export function SaleModal({
               </div>
 
               <div className="border border-carbon_black-600 rounded-lg p-4 bg-carbon_black">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
                   <div className="flex items-center gap-2">
                     <ShoppingCart01Icon
                       size={20}
@@ -337,11 +346,11 @@ export function SaleModal({
             </div>
 
             <div className="space-y-4">
-              <div className="border border-carbon_black-600 rounded-lg p-6 bg-carbon_black">
+              <div className="border border-carbon_black-600 rounded-lg p-4 sm:p-6 bg-carbon_black">
                 <Label className="text-silver-400 text-xs uppercase">
                   {SALES_MESSAGES.LABELS.TOTAL_TO_PAY}
                 </Label>
-                <p className="text-5xl font-bold text-white mt-2">
+                <p className="text-3xl sm:text-5xl font-bold text-white mt-2">
                   {salesUtils.formatCurrency(
                     totalWithInterest + initialPaymentValue
                   )}
@@ -351,11 +360,11 @@ export function SaleModal({
                 </p>
               </div>
 
-              <div className="border border-carbon_black-600 rounded-lg p-6 bg-carbon_black">
+              <div className="border border-carbon_black-600 rounded-lg p-4 sm:p-6 bg-carbon_black">
                 <Label className="text-silver-400 text-xs uppercase">
                   {SALES_MESSAGES.LABELS.INSTALLMENT_PAYMENT}
                 </Label>
-                <p className="text-3xl font-bold text-white mt-2">
+                <p className="text-2xl sm:text-3xl font-bold text-white mt-2">
                   {salesUtils.formatCurrency(monthlyPayment)}
                 </p>
                 <p className="text-xs text-silver-400 mt-1">

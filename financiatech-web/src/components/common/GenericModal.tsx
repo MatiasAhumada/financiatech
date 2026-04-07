@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Cancel01Icon } from "hugeicons-react";
@@ -25,6 +26,15 @@ const SIZE_CLASSES = {
   "4xl": "max-w-4xl",
 };
 
+const RESPONSIVE_SIZE_CLASSES = {
+  sm: "max-w-[95vw] sm:max-w-sm",
+  md: "max-w-[95vw] sm:max-w-md",
+  lg: "max-w-[95vw] sm:max-w-lg",
+  xl: "max-w-[95vw] sm:max-w-xl",
+  "2xl": "max-w-[95vw] sm:max-w-2xl",
+  "4xl": "max-w-[95vw] sm:max-w-4xl",
+};
+
 export function GenericModal({
   open,
   onOpenChange,
@@ -37,6 +47,17 @@ export function GenericModal({
 }: GenericModalProps) {
   const isDark = variant === "dark";
   const shouldReduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
   const bgClass = isDark ? "bg-onyx" : "bg-carbon_black";
   const headerBgClass = isDark ? "bg-carbon_black" : "bg-onyx";
@@ -95,25 +116,27 @@ export function GenericModal({
             animate="visible"
             exit="exit"
             onClick={() => onOpenChange(false)}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-[60] min-h-screen w-full bg-black/70 backdrop-blur-sm"
           />
           <motion.div
             variants={shouldReduceMotion ? undefined : modalVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+            className="fixed inset-0 z-[70] flex items-center justify-center p-4 h-screen w-full pointer-events-none"
           >
             <div
-              className={`${bgClass} border border-carbon_black-600 rounded-xl shadow-2xl ${SIZE_CLASSES[size]} w-full max-h-[90vh] overflow-y-auto pointer-events-auto`}
+              className={`${bgClass} border border-carbon_black-600 rounded-xl shadow-2xl ${RESPONSIVE_SIZE_CLASSES[size]} w-full max-h-[90vh] overflow-y-auto pointer-events-auto`}
             >
               <div
-                className={`flex items-center justify-between p-6 border-b border-carbon_black-600 ${headerBgClass}`}
+                className={`flex items-center justify-between p-4 sm:p-6 border-b border-carbon_black-600 ${headerBgClass}`}
               >
-                <div>
-                  <h2 className="text-lg font-semibold text-white">{title}</h2>
+                <div className="flex-1 pr-2">
+                  <h2 className="text-base sm:text-lg font-semibold text-white">
+                    {title}
+                  </h2>
                   {description && (
-                    <p className="text-sm text-silver-400 mt-1">
+                    <p className="text-xs sm:text-sm text-silver-400 mt-1">
                       {description}
                     </p>
                   )}
@@ -127,10 +150,10 @@ export function GenericModal({
                   <Cancel01Icon size={20} />
                 </Button>
               </div>
-              <div className={`p-6 ${contentBgClass}`}>{children}</div>
+              <div className={`p-4 sm:p-6 ${contentBgClass}`}>{children}</div>
               {footer && (
                 <div
-                  className={`flex justify-end gap-2 p-6 border-t border-carbon_black-600 ${footerBgClass}`}
+                  className={`flex flex-col sm:flex-row justify-end gap-2 p-4 sm:p-6 border-t border-carbon_black-600 ${footerBgClass}`}
                 >
                   {footer}
                 </div>

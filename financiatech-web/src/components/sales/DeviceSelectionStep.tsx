@@ -4,6 +4,7 @@ import { IDevice, IClient } from "@/types";
 import { SALES_MESSAGES } from "@/constants/sales.constant";
 import { SearchableSelect } from "@/components/sales/SearchableSelect";
 import { DEVICE_TYPE_LABELS } from "@/schemas/device.schema";
+import { salesUtils } from "@/utils/sales.util";
 
 interface DeviceSelectionStepProps {
   devices: IDevice[];
@@ -41,6 +42,12 @@ export function DeviceSelectionStep({
     label: client.name,
     sublabel: client.email || "Sin email",
   }));
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const formattedValue = salesUtils.formatThousands(rawValue);
+    onAmountChange(formattedValue);
+  };
 
   return (
     <div className="space-y-6">
@@ -80,9 +87,10 @@ export function DeviceSelectionStep({
           </span>
           <Input
             id="amount"
-            type="number"
+            type="text"
+            inputMode="numeric"
             value={amount}
-            onChange={(e) => onAmountChange(e.target.value)}
+            onChange={handleAmountChange}
             placeholder={SALES_MESSAGES.PLACEHOLDERS.AMOUNT}
             className="pl-8 text-lg bg-carbon_black border-carbon_black-600 text-white"
           />

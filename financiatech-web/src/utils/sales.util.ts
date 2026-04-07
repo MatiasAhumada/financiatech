@@ -25,6 +25,16 @@ export const salesUtils = {
     return new Intl.NumberFormat("es-AR").format(value);
   },
 
+  formatThousands(value: string): string {
+    const numericValue = value.replace(/[^\d]/g, "");
+    if (!numericValue) return "";
+    return new Intl.NumberFormat("es-AR").format(Number(numericValue));
+  },
+
+  parseFormattedNumber(value: string): string {
+    return value.replace(/[^\d]/g, "");
+  },
+
   formatDate(date: Date | string): string {
     return new Date(date).toLocaleDateString("es-ES", {
       day: "2-digit",

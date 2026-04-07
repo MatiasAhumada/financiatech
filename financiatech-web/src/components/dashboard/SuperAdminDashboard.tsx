@@ -283,9 +283,18 @@ export function SuperAdminDashboard() {
                   <button
                     onClick={(e) => {
                       const rect = e.currentTarget.getBoundingClientRect();
+                      const menuWidth = 200;
+                      const viewportWidth = window.innerWidth;
+                      const leftPosition = Math.max(
+                        8,
+                        Math.min(
+                          rect.right - menuWidth,
+                          viewportWidth - menuWidth - 8
+                        )
+                      );
                       setMenuPosition({
                         top: rect.bottom + 4,
-                        left: rect.right - 200,
+                        left: leftPosition,
                       });
                       setOpenMenuId(openMenuId === admin.id ? null : admin.id);
                     }}

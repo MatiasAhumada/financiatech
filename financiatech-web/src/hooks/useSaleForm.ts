@@ -8,6 +8,7 @@ import {
   clientSuccessHandler,
 } from "@/utils/handlers/clientError.handler";
 import { SALES_MESSAGES } from "@/constants/sales.constant";
+import { salesUtils } from "@/utils/sales.util";
 
 interface UseSaleFormProps {
   open: boolean;
@@ -127,8 +128,10 @@ export function useSaleForm({
       const saleData = {
         deviceId: selectedDevice,
         clientId: selectedClient,
-        totalAmount: parseFloat(amount),
-        initialPayment: parseFloat(initialPayment),
+        totalAmount: parseFloat(salesUtils.parseFormattedNumber(amount)),
+        initialPayment: parseFloat(
+          salesUtils.parseFormattedNumber(initialPayment)
+        ),
         installments: selectedPlan.installments,
         paymentFrequency,
         financingPlanId: selectedPlan.id,

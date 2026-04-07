@@ -259,7 +259,7 @@ export function ClientModal({
           {formData.phones && formData.phones.length > 0
             ? formData.phones.map((phone, index) => (
                 <div key={index} className="space-y-1">
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Input
                       value={phone.number}
                       onChange={(e) => {
@@ -345,7 +345,7 @@ export function ClientModal({
             ? formData.addresses.map((address, index) => (
                 <div key={index} className="space-y-2 p-3 border rounded-lg">
                   <div className="space-y-1">
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Input
                         value={address.street}
                         onChange={(e) => {
@@ -395,7 +395,7 @@ export function ClientModal({
                         </Button>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <Input
                         value={address.state || ""}
                         onChange={(e) => {
@@ -425,7 +425,7 @@ export function ClientModal({
                         className="text-sm"
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <Input
                         value={address.country || ""}
                         onChange={(e) => {

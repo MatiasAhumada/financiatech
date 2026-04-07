@@ -65,7 +65,7 @@ export function DataTable<T>({
 
       <div className="border border-carbon_black-600 rounded-xl shadow-lg bg-carbon_black">
         {onSearch && (
-          <div className="p-5 border-b border-carbon_black-600">
+          <div className="p-3 sm:p-5 border-b border-carbon_black-600">
             <div className="relative flex-1 w-full sm:max-w-md">
               <Search01Icon
                 size={16}
@@ -80,9 +80,9 @@ export function DataTable<T>({
           </div>
         )}
 
-        <div className="p-5 overflow-visible">
+        <div className="p-3 sm:p-5 overflow-visible">
           <div className="w-full overflow-x-auto overflow-y-visible">
-            <table className="w-full min-w-[800px]">
+            <table className="w-full min-w-[600px] lg:min-w-[800px]">
               <thead>
                 <tr className="border-b border-carbon_black-600 text-left text-xs font-semibold text-silver-400 uppercase tracking-wider">
                   {columns.map((column) => (
