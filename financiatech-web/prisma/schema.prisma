@@ -49,6 +49,11 @@ enum NotificationType {
   BLOCKED
 }
 
+enum NotificationTrigger {
+  SCHEDULED
+  MANUAL
+}
+
 enum PhoneType {
   MOBILE
   HOME
@@ -347,15 +352,23 @@ model PendingCommand {
 }
 
 model Notification {
-  id            String           @id @default(cuid())
+  id            String               @id @default(cuid())
   deviceId      String
   installmentId String?
   type          NotificationType
+  trigger       NotificationTrigger  @default(SCHEDULED)
+  dayOfWeek     Int?
+  dayOfMonth    Int?
   message       String
-  sentAt        DateTime         @default(now())
+  success       Boolean              @default(true)
+  errorMessage  String?
+  executedBy    String?
+  sentAt        DateTime             @default(now())
 
   device      Device      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  installment Installment? @relation(fields: [installmentId], references: [id], onDelete: Cascade)
+  installment Installment? @relation(fields: [installmentId], references: [id], onDelete: SetNull)
 
+  @@index([deviceId, sentAt], name: "idx_notifications_device_sent")
+  @@index([type, trigger], name: "idx_notifications_type_trigger")
   @@map("notifications")
 }

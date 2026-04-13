@@ -21,18 +21,12 @@ import {
   clientErrorHandler,
   clientSuccessHandler,
 } from "@/utils/handlers/clientError.handler";
-import {
-  Download01Icon,
-  MoreVerticalIcon,
-  ViewIcon,
-  PencilEdit02Icon,
-  Delete02Icon,
-  Notification03Icon,
-} from "hugeicons-react";
+import { Download01Icon, MoreVerticalIcon, ViewIcon, PencilEdit02Icon, Delete02Icon, Notification03Icon } from "hugeicons-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { DeviceStatus, DeviceType, NotificationType } from "@prisma/client";
 import { createPortal } from "react-dom";
 import { getCenteredMenuPosition } from "@/utils/menu.util";
+import { ManualNotificationModal } from "@/components/sales/ManualNotificationModal";
 
 export default function DevicesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,6 +45,8 @@ export default function DevicesPage() {
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [deviceToSendNotification, setDeviceToSendNotification] =
     useState<IDevice | null>(null);
+  const [isManualNotifModalOpen, setIsManualNotifModalOpen] = useState(false);
+  const [deviceForManualNotif, setDeviceForManualNotif] = useState<IDevice | null>(null);
   const [notificationData, setNotificationData] = useState<SendNotificationDto>(
     {
       title: "",
@@ -173,6 +169,12 @@ export default function DevicesPage() {
     setNotificationErrors({});
     setOpenMenuId(null);
     setIsNotificationModalOpen(true);
+  };
+
+  const handleManualNotification = (device: IDevice) => {
+    setDeviceForManualNotif(device);
+    setOpenMenuId(null);
+    setIsManualNotifModalOpen(true);
   };
 
   const confirmSendNotification = async () => {
@@ -375,7 +377,7 @@ export default function DevicesPage() {
                           {device.status === DeviceStatus.SOLD_SYNCED &&
                             device.sync && (
                               <button
-                                onClick={() => handleSendNotification(device)}
+                                onClick={() => handleManualNotification(device)}
                                 className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-onyx/50 flex items-center gap-3 transition-colors"
                               >
                                 <Notification03Icon
@@ -598,6 +600,17 @@ export default function DevicesPage() {
             </div>
           </div>
         </GenericModal>
+
+        {deviceForManualNotif && (
+          <ManualNotificationModal
+            open={isManualNotifModalOpen}
+            onOpenChange={setIsManualNotifModalOpen}
+            device={deviceForManualNotif}
+            onSuccess={() => {
+              loadDevices();
+            }}
+          />
+        )}
       </div>
     </DashboardLayout>
   );

@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/utils/auth.middleware";
-import { UserRole, NotificationType } from "@prisma/client";
+import { UserRole } from "@prisma/client";
 import httpStatus from "http-status";
 import apiErrorHandler, { ApiError } from "@/utils/handlers/apiError.handler";
-import { prisma } from "@/lib/prisma";
-import { sendPushNotification } from "@/services/firebase.service";
-import {
-  sendNotificationSchema,
-  SendNotificationDto,
-} from "@/schemas/notification.schema";
+import { notificationSchedulerService } from "@/server/services/notificationScheduler.service";
 
 /**
  * POST /api/devices/:id/notifications
- * Envía una notificación push a un dispositivo sincronizado
+ * Dispara manualmente una notificación de una instancia específica
+ *
+ * Body:
+ * {
+ *   "instance": "warning1" | "warning2" | "block_warning" | "block"
+ * }
  */
 export async function POST(
   request: NextRequest,
@@ -23,86 +23,63 @@ export async function POST(
     const { id: deviceId } = await params;
     const body = await request.json();
 
-    // Validar body con schema
-    const validatedData = sendNotificationSchema.parse(body);
+    const { instance } = body;
 
-    // Verificar que el dispositivo existe y pertenece al admin
-    const device = await prisma.device.findUnique({
-      where: { id: deviceId },
-      include: {
-        sync: true,
-        admin: true,
-      },
-    });
-
-    if (!device) {
-      throw new ApiError({
-        status: httpStatus.NOT_FOUND,
-        message: "Dispositivo no encontrado",
-      });
-    }
-
-    if (device.adminId !== payload.adminId) {
-      throw new ApiError({
-        status: httpStatus.FORBIDDEN,
-        message:
-          "No tienes permiso para enviar notificaciones a este dispositivo",
-      });
-    }
-
-    // Verificar que el dispositivo está sincronizado
-    if (!device.sync) {
+    if (!instance || !["warning1", "warning2", "block_warning", "block"].includes(instance)) {
       throw new ApiError({
         status: httpStatus.BAD_REQUEST,
-        message:
-          "El dispositivo no está vinculado. El cliente debe vincular el dispositivo con la app móvil primero.",
+        message: "Instancia inválida. Debe ser: warning1, warning2, block_warning o block",
       });
     }
 
-    const fcmToken = device.sync.fcmToken;
+    const result = await notificationSchedulerService.triggerManualNotification(
+      deviceId,
+      instance,
+      payload.adminId || "system"
+    );
 
-    console.log("[NOTIFICATION] Device:", deviceId);
-    console.log("[NOTIFICATION] Device name:", device.name);
-    console.log("[NOTIFICATION] IMEI:", device.sync.imei);
-    console.log("[NOTIFICATION] FCM Token:", fcmToken);
-
-    if (!fcmToken) {
-      throw new ApiError({
-        status: httpStatus.BAD_REQUEST,
-        message:
-          "El dispositivo no tiene token FCM registrado. Asegurate de que la app móvil esté instalada y vinculada.",
-      });
-    }
-
-    // Si hay token FCM, enviar notificación push
-    await sendPushNotification(fcmToken, {
-      title: validatedData.title,
-      body: validatedData.message,
-      data: {
-        deviceId,
-        type: validatedData.type,
+    return NextResponse.json(
+      {
+        success: true,
+        result,
       },
-    });
+      { status: httpStatus.OK }
+    );
+  } catch (error) {
+    return apiErrorHandler({ error: error as ApiError, request });
+  }
+}
 
-    // Guardar notificación en la DB
-    const notification = await prisma.notification.create({
-      data: {
-        deviceId,
-        installmentId: null, // No asociado a una cuota
-        type: validatedData.type,
-        message: validatedData.message,
+/**
+ * GET /api/devices/:id/notifications
+ * Obtiene el historial de notificaciones de un dispositivo
+ *
+ * Query params opcionales:
+ * - limit: número de logs a retornar (default 50)
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    requireRole(request, [UserRole.ADMIN]);
+    const { id: deviceId } = await params;
+
+    const searchParams = request.nextUrl.searchParams;
+    const limit = parseInt(searchParams.get("limit") || "50");
+
+    const logs = await notificationSchedulerService.getDeviceNotificationLogs(
+      deviceId,
+      limit
+    );
+
+    return NextResponse.json(
+      {
+        success: true,
+        logs,
       },
-      include: {
-        device: true,
-      },
-    });
-
-    const response = {
-      success: true,
-      notification,
-    };
-
-    return NextResponse.json(response, { status: httpStatus.OK });
+      { status: httpStatus.OK }
+    );
   } catch (error) {
     return apiErrorHandler({ error: error as ApiError, request });
   }
