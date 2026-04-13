@@ -16,6 +16,8 @@
 
 import { notificationSchedulerService } from "../services/notificationScheduler.service";
 
+const SCHEDULER_INTERVAL = 60 * 60 * 1000;
+
 async function runScheduler() {
   try {
     console.log("[CRON] Iniciando notification scheduler...");
@@ -62,13 +64,10 @@ async function runScheduler() {
 
     console.log(`[CRON] Total procesado: ${totalProcessed} dispositivos`);
     console.log("[CRON] Scheduler finalizado exitosamente");
-
-    process.exit(0);
   } catch (error) {
     console.error("[CRON] Error ejecutando scheduler:", error);
-    process.exit(1);
   }
 }
 
-// Ejecutar inmediatamente
 runScheduler();
+setInterval(runScheduler, SCHEDULER_INTERVAL);
