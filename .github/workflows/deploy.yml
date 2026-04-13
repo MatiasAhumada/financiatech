@@ -30,6 +30,6 @@ jobs:
             pnpm migrate:deploy
             pnpm build || exit 1
             pm2 restart financiatech-web || pm2 start "pnpm start" --name financiatech-web
-            pm2 restart notification-scheduler || pm2 start "npx tsx src/server/cron/notificationScheduler.cron.ts" --name notification-scheduler --cron "0 9 * * *"
+            pm2 restart notification-scheduler || pm2 start "npx tsx src/server/cron/notificationScheduler.cron.ts" --name notification-scheduler --cron "0 * * * *"
             npm cache clean --force
             pnpm store prune
