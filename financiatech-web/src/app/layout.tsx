@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FinanceTech",
+  title: "FinanciaTech",
   description: "Sistema de gestión de dispositivos",
   icons: {
     icon: "/favicon.ico",

@@ -1,25 +1,19 @@
-import { YStack, Text } from 'tamagui';
-import { COLORS } from '@/src/constants/theme.constant';
+import { YStack } from 'tamagui';
+import { Image } from 'react-native';
 
-export function BrandLogo() {
+export function BrandLogo({ size = 80 }: { size?: number }) {
   return (
     <YStack
-      width={80}
-      height={80}
-      backgroundColor={COLORS.primary.main}
-      borderRadius={16}
+      width={size}
+      height={size}
       justifyContent="center"
       alignItems="center"
-      transform={[{ rotate: '45deg' }]}
     >
-      <Text
-        fontSize={36}
-        fontWeight="bold"
-        color="white"
-        transform={[{ rotate: '-45deg' }]}
-      >
-        FT
-      </Text>
+      <Image
+        source={require('../../assets/images/icon.png')}
+        style={{ width: size, height: size }}
+        resizeMode="contain"
+      />
     </YStack>
   );
 }

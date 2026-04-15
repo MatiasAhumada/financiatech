@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import './App.css'
+import logoImg from './assets/logo.png'
 
 declare global {
   interface Window {
@@ -309,7 +310,7 @@ function App() {
 
     const adbPath = fs.existsSync(getAdbPath()) ? getAdbPath() : 'adb';
 
-    const logcatCommand = `"${adbPath}" -s ${connectedDevice} logcat -s FGPollingService FinanceTech FinanceTechJS FCM NOTIFICATION firebase.messaging CONFIG PROVISIONING AppGuardian MainActivity BootReceiver PersistentService DeviceAdmin DeviceModule`;
+    const logcatCommand = `"${adbPath}" -s ${connectedDevice} logcat -s FGPollingService FinanciaTech FinanceTechJS FCM NOTIFICATION firebase.messaging CONFIG PROVISIONING AppGuardian MainActivity BootReceiver PersistentService DeviceAdmin DeviceModule`;
 
     appendLog("📱 Iniciando monitor de actividad del dispositivo...");
     appendLog(`Dispositivo: ${connectedDevice}`);
@@ -468,9 +469,9 @@ function App() {
     <div className="container">
       <header className="header">
         <div className="header-content">
-          <div className="header-logo">DG</div>
+          <img src={logoImg} alt="FinanciaTech" className="header-logo" />
           <div>
-            <h1>FinanceTech <span>Provisioner</span></h1>
+            <h1>FinanciaTech <span>Provisioner</span></h1>
             <p>Herramienta de Configuración de Dispositivos</p>
           </div>
         </div>
@@ -594,7 +595,7 @@ function App() {
               <div className="log-info">
                 <span>Mostrando últimos {mobileLogs.length} eventos</span>
                 <span className="log-filters">
-                  FinanceTech | Configuración | Notificaciones | Sistema
+                  FinanciaTech | Configuración | Notificaciones | Sistema
                 </span>
               </div>
             </div>

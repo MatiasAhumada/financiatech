@@ -1,23 +1,34 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, nativeImage } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
 
 let mainWindow;
 
+function getIconPath() {
+  const isDev = process.env.NODE_ENV === 'development';
+  if (isDev) {
+    return path.join(__dirname, 'src', 'assets', 'favicon.ico');
+  }
+  return path.join(__dirname, 'src', 'assets', 'favicon.ico');
+}
+
 function createWindow() {
+  const icon = nativeImage.createFromPath(getIconPath());
+
   mainWindow = new BrowserWindow({
     width: 900,
     height: 700,
     resizable: false,
     maximizable: false,
     fullscreenable: false,
+    icon: icon,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
       webSecurity: false,
     },
     autoHideMenuBar: true,
-    title: 'FinanceTech Provisioner',
+    title: 'FinanciaTech Provisioner',
     backgroundColor: '#032831',
     show: false,
   });

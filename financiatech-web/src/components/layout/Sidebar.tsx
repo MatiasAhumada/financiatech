@@ -79,13 +79,13 @@ export function Sidebar() {
                 <div className="relative w-10 h-10">
                   <Image
                     src="/logo.png"
-                    alt="FinanceTech"
+                    alt="FinanciaTech"
                     fill
                     className="object-contain"
                   />
                 </div>
                 <div>
-                  <h1 className="font-bold text-white">FinanceTech</h1>
+                  <h1 className="font-bold text-white">FinanciaTech</h1>
                   <p className="text-xs text-silver-400 uppercase">
                     {user.role.replace("_", " ")}
                   </p>
@@ -172,13 +172,13 @@ export function Sidebar() {
             <div className="relative w-10 h-10">
               <Image
                 src="/logo.png"
-                alt="FinanceTech"
+                alt="FinanciaTech"
                 fill
                 className="object-contain"
               />
             </div>
             <div>
-              <h1 className="font-bold text-white">FinanceTech</h1>
+              <h1 className="font-bold text-white">FinanciaTech</h1>
               <p className="text-xs text-silver-400 uppercase">
                 {user.role.replace("_", " ")}
               </p>

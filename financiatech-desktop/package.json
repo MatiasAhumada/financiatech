@@ -2,8 +2,8 @@
   "name": "financiatech-desktop",
   "private": true,
   "version": "0.0.0",
-  "description": "FinanceTech Provisioner Desktop Application",
-  "author": "FinanceTech Team",
+  "description": "FinanciaTech Provisioner Desktop Application",
+  "author": "FinanciaTech Team",
   "main": "electron.cjs",
   "type": "module",
   "scripts": {
@@ -16,10 +16,12 @@
   },
   "build": {
     "appId": "com.financiatech.provisioner",
-    "productName": "FinanceTech Provisioner",
+    "productName": "FinanciaTech Provisioner",
+    "icon": "src/assets/favicon.ico",
     "win": {
       "target": "portable",
-      "signAndEditExecutable": false
+      "signAndEditExecutable": false,
+      "icon": "src/assets/favicon.ico"
     },
     "directories": {
       "output": "release"
