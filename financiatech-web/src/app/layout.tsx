@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title: "FinanciaTech",
   description: "Sistema de gestión de dispositivos",
   icons: {
-    icon: "/favicon.ico",
+    icon: "../../public/favicon.ico",
   },
 };
 
