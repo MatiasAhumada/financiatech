@@ -8,12 +8,12 @@ import { notificationSchedulerService } from "@/server/services/notificationSche
 /**
  * POST /api/notification-scheduler/run
  * Ejecuta manualmente el scheduler de notificaciones y bloqueos automáticos
- * 
+ *
  * Body opcional:
  * {
  *   "instance": "warning1" | "warning2" | "block_warning" | "block" | "all"
  * }
- * 
+ *
  * Si no se especifica instance, ejecuta todas las instancias
  */
 export async function POST(request: NextRequest) {

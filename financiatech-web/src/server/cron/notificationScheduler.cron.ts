@@ -5,12 +5,12 @@
  * 2. node-cron package
  * 3. PM2 con schedule
  * 4. Ejecución manual vía API
- * 
+ *
  * Para usar con node-cron, instalar: pnpm add node-cron
- * 
+ *
  * Ejemplo de uso con cron del sistema:
  * 0 9 * * * cd /path/to/financiatech-web && node --loader tsx src/server/cron/notificationScheduler.cron.ts
- * 
+ *
  * Esto ejecutará el scheduler todos los días a las 9:00 AM
  */
 

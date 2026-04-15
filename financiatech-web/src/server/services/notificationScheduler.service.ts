@@ -1,7 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { sendPushNotification } from "@/services/firebase.service";
 import { fcmService } from "@/lib/fcm";
-import { NotificationType, DeviceStatus, InstallmentStatus, PaymentFrequency, NotificationTrigger } from "@prisma/client";
+import {
+  NotificationType,
+  DeviceStatus,
+  InstallmentStatus,
+  PaymentFrequency,
+  NotificationTrigger,
+} from "@prisma/client";
 
 interface DeviceWithRelations {
   id: string;
@@ -108,7 +114,10 @@ export const notificationSchedulerService = {
     for (const device of devices) {
       try {
         const currentInstallment = this.getCurrentInstallment(device);
-        const blockResult = await this.executeDeviceBlock(device, currentInstallment);
+        const blockResult = await this.executeDeviceBlock(
+          device,
+          currentInstallment
+        );
         results.push(blockResult);
       } catch (error) {
         results.push({
@@ -132,7 +141,10 @@ export const notificationSchedulerService = {
     for (const device of devices) {
       try {
         const currentInstallment = this.getCurrentInstallment(device);
-        const result = await this.sendBlockWarningNotification(device, currentInstallment);
+        const result = await this.sendBlockWarningNotification(
+          device,
+          currentInstallment
+        );
         results.push(result);
       } catch (error) {
         results.push({
@@ -153,9 +165,12 @@ export const notificationSchedulerService = {
     instance: "warning1" | "warning2"
   ): Promise<DeviceWithRelations[]> {
     const now = new Date();
-    const dayField = instance === "warning1" ? "firstWarningDay" : "secondWarningDay";
+    const dayField =
+      instance === "warning1" ? "firstWarningDay" : "secondWarningDay";
     const notificationType =
-      instance === "warning1" ? NotificationType.WARNING_1 : NotificationType.WARNING_2;
+      instance === "warning1"
+        ? NotificationType.WARNING_1
+        : NotificationType.WARNING_2;
 
     const devices = await prisma.device.findMany({
       where: {
@@ -184,7 +199,8 @@ export const notificationSchedulerService = {
     });
 
     const filteredDevices = devices.filter((device: DeviceWithRelations) => {
-      if (!device.blockRule || !device.sale || device.installments.length === 0) return false;
+      if (!device.blockRule || !device.sale || device.installments.length === 0)
+        return false;
 
       const currentDay = this.getCurrentDay(device.sale.paymentFrequency, now);
       const targetDay = device.blockRule[dayField];
@@ -234,7 +250,8 @@ export const notificationSchedulerService = {
     });
 
     const filteredDevices = devices.filter((device: DeviceWithRelations) => {
-      if (!device.blockRule || !device.sale || device.installments.length === 0) return false;
+      if (!device.blockRule || !device.sale || device.installments.length === 0)
+        return false;
 
       const now = new Date();
       const currentDay = this.getCurrentDay(device.sale.paymentFrequency, now);
@@ -286,7 +303,8 @@ export const notificationSchedulerService = {
     });
 
     const filteredDevices = devices.filter((device: DeviceWithRelations) => {
-      if (!device.blockRule || !device.sale || device.installments.length === 0) return false;
+      if (!device.blockRule || !device.sale || device.installments.length === 0)
+        return false;
 
       const now = new Date();
       const currentDay = this.getCurrentDay(device.sale.paymentFrequency, now);
@@ -382,7 +400,10 @@ export const notificationSchedulerService = {
     if (device.sync?.fcmToken) {
       try {
         await sendPushNotification(device.sync.fcmToken, {
-          title: instance === "warning1" ? "⚠️ Primer Aviso de Pago" : "⚠️ Segundo Aviso de Pago",
+          title:
+            instance === "warning1"
+              ? "⚠️ Primer Aviso de Pago"
+              : "⚠️ Segundo Aviso de Pago",
           body: message,
           data: {
             type: instance,
@@ -402,7 +423,8 @@ export const notificationSchedulerService = {
             dayOfMonth: now.getDate(),
             message,
             success: false,
-            errorMessage: error instanceof Error ? error.message : "Error enviando FCM",
+            errorMessage:
+              error instanceof Error ? error.message : "Error enviando FCM",
             sentAt: now,
           },
         });
@@ -457,7 +479,10 @@ export const notificationSchedulerService = {
           },
         });
       } catch (error) {
-        console.error(`Error sending block warning FCM to device ${device.id}:`, error);
+        console.error(
+          `Error sending block warning FCM to device ${device.id}:`,
+          error
+        );
       }
     }
 
@@ -470,7 +495,10 @@ export const notificationSchedulerService = {
           timestamp: new Date().toISOString(),
         });
       } catch (error) {
-        console.error(`Error sending block warning command to device ${device.id}:`, error);
+        console.error(
+          `Error sending block warning command to device ${device.id}:`,
+          error
+        );
       }
     }
 
@@ -504,7 +532,8 @@ export const notificationSchedulerService = {
         dayOfMonth: now.getDate(),
         message,
         success: true,
-        executedBy: trigger === NotificationTrigger.MANUAL ? "admin" : undefined,
+        executedBy:
+          trigger === NotificationTrigger.MANUAL ? "admin" : undefined,
         sentAt: now,
       },
     });
@@ -539,7 +568,10 @@ export const notificationSchedulerService = {
           },
         });
       } catch (error) {
-        console.error(`Error sending block notification FCM to device ${device.id}:`, error);
+        console.error(
+          `Error sending block notification FCM to device ${device.id}:`,
+          error
+        );
       }
     }
 
@@ -552,7 +584,10 @@ export const notificationSchedulerService = {
           timestamp: new Date().toISOString(),
         });
       } catch (error) {
-        console.error(`Error sending block command to device ${device.id}:`, error);
+        console.error(
+          `Error sending block command to device ${device.id}:`,
+          error
+        );
       }
     }
 
@@ -592,7 +627,8 @@ export const notificationSchedulerService = {
     }
 
     const deviceWithRelations = device as unknown as DeviceWithRelations;
-    const currentInstallment = device.installments.length > 0 ? device.installments[0] : null;
+    const currentInstallment =
+      device.installments.length > 0 ? device.installments[0] : null;
 
     switch (instance) {
       case "warning1":

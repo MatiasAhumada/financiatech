@@ -21,7 +21,14 @@ import {
   clientErrorHandler,
   clientSuccessHandler,
 } from "@/utils/handlers/clientError.handler";
-import { Download01Icon, MoreVerticalIcon, ViewIcon, PencilEdit02Icon, Delete02Icon, Notification03Icon } from "hugeicons-react";
+import {
+  Download01Icon,
+  MoreVerticalIcon,
+  ViewIcon,
+  PencilEdit02Icon,
+  Delete02Icon,
+  Notification03Icon,
+} from "hugeicons-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { DeviceStatus, DeviceType, NotificationType } from "@prisma/client";
 import { createPortal } from "react-dom";
@@ -46,7 +53,8 @@ export default function DevicesPage() {
   const [deviceToSendNotification, setDeviceToSendNotification] =
     useState<IDevice | null>(null);
   const [isManualNotifModalOpen, setIsManualNotifModalOpen] = useState(false);
-  const [deviceForManualNotif, setDeviceForManualNotif] = useState<IDevice | null>(null);
+  const [deviceForManualNotif, setDeviceForManualNotif] =
+    useState<IDevice | null>(null);
   const [notificationData, setNotificationData] = useState<SendNotificationDto>(
     {
       title: "",

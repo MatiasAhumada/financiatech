@@ -25,10 +25,14 @@ export async function POST(
 
     const { instance } = body;
 
-    if (!instance || !["warning1", "warning2", "block_warning", "block"].includes(instance)) {
+    if (
+      !instance ||
+      !["warning1", "warning2", "block_warning", "block"].includes(instance)
+    ) {
       throw new ApiError({
         status: httpStatus.BAD_REQUEST,
-        message: "Instancia inválida. Debe ser: warning1, warning2, block_warning o block",
+        message:
+          "Instancia inválida. Debe ser: warning1, warning2, block_warning o block",
       });
     }
 

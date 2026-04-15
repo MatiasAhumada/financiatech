@@ -25,6 +25,7 @@ import {
 } from "hugeicons-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import logo from "../../../public/logo_f_sf.png";
 
 const ICONS = {
   LayoutDashboard: DashboardSpeed01Icon,
@@ -56,14 +57,6 @@ export function Sidebar() {
 
   return (
     <>
-      <motion.button
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 bg-carbon_black border border-carbon_black-600 rounded-lg text-white hover:bg-onyx-600"
-      >
-        {isOpen ? <Cancel01Icon size={24} /> : <Menu01Icon size={24} />}
-      </motion.button>
-
       {/* Mobile sidebar */}
       <AnimatePresence>
         {isOpen && (
@@ -74,11 +67,11 @@ export function Sidebar() {
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="fixed lg:hidden inset-y-0 left-0 z-40 w-64 bg-carbon_black text-white min-h-screen flex flex-col border-r border-carbon_black-600"
           >
-            <div className="p-6">
+            <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
                 <div className="relative w-10 h-10">
                   <Image
-                    src="/logo.png"
+                    src={logo}
                     alt="FinanciaTech"
                     fill
                     className="object-contain"
@@ -91,6 +84,13 @@ export function Sidebar() {
                   </p>
                 </div>
               </div>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsOpen(false)}
+                className="p-2 bg-carbon_black border border-carbon_black-600 rounded-lg text-white hover:bg-onyx-600"
+              >
+                <Cancel01Icon size={20} />
+              </motion.button>
             </div>
 
             <nav className="flex-1 px-3 space-y-1">
@@ -171,7 +171,7 @@ export function Sidebar() {
           <div className="flex items-center gap-3">
             <div className="relative w-10 h-10">
               <Image
-                src="/logo.png"
+                src={logo}
                 alt="FinanciaTech"
                 fill
                 className="object-contain"
@@ -248,6 +248,22 @@ export function Sidebar() {
           </Button>
         </div>
       </aside>
+
+      {/* Mobile toggle button - positioned on the left edge */}
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsOpen(true)}
+            className="fixed top-4 left-4 z-30 lg:hidden p-2 bg-carbon_black border border-carbon_black-600 rounded-lg text-white hover:bg-onyx-600"
+          >
+            <Menu01Icon size={20} />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isOpen && (

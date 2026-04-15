@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { ROUTES } from "@/constants/routes";
 import { ViewIcon, ViewOffIcon } from "hugeicons-react";
+import logo from "../../../public/logo.png";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -32,20 +34,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-onyx">
-      <Card className="w-full max-w-md bg-carbon_black border-carbon_black-600">
-        <CardHeader>
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-mahogany_red rounded-lg flex items-center justify-center font-bold text-white">
-              DG
-            </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-onyx via-carbon_black to-onyx relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-mahogany_red-200/10 via-transparent to-transparent" />
+      <Card className="w-full max-w-md bg-carbon_black/80 backdrop-blur-sm border-mahogany_red/20 relative z-10 shadow-2xl shadow-mahogany_red/10">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-center mb-3">
+            <Image
+              src={logo}
+              alt="FinanciaTech Logo"
+              width={200}
+              height={80}
+              className="object-contain rounded-2xl"
+            />
           </div>
-          <CardTitle className="text-2xl text-center text-white">
-            FinanciaTech
-          </CardTitle>
-          <p className="text-center text-silver-400 text-sm mt-2">
-            Iniciar Sesión
-          </p>
+          <p className="text-center text-white font-medium">Iniciar Sesión</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
