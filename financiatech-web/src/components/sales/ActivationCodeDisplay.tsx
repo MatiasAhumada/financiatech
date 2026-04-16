@@ -27,7 +27,7 @@ export function ActivationCodeDisplay({
 
   // Estado de éxito: el celular ya se vinculó
   if (status === "success") {
-    return <ActivationSuccessView deviceName={deviceName} />;
+    return <ActivationSuccessView devices={[{ deviceId: "", deviceName }]} />;
   }
 
   // Estado de espera: mostrar el código con animación de "esperando vinculación"

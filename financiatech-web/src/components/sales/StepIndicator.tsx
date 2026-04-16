@@ -1,9 +1,17 @@
 interface StepIndicatorProps {
   currentStep: number;
   steps: string[];
+  deviceProgress?: {
+    linked: number;
+    total: number;
+  };
 }
 
-export function StepIndicator({ currentStep, steps }: StepIndicatorProps) {
+export function StepIndicator({
+  currentStep,
+  steps,
+  deviceProgress,
+}: StepIndicatorProps) {
   return (
     <div className="flex items-center justify-center gap-8 mb-6">
       {steps.map((label, index) => {
@@ -34,6 +42,23 @@ export function StepIndicator({ currentStep, steps }: StepIndicatorProps) {
               >
                 {label}
               </p>
+              {stepNumber === 3 && deviceProgress && (
+                <div className="mt-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-16 h-1.5 bg-carbon_black-600 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-success rounded-full transition-all duration-300"
+                        style={{
+                          width: `${(deviceProgress.linked / deviceProgress.total) * 100}%`,
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs text-silver-400">
+                      {deviceProgress.linked}/{deviceProgress.total}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
             {stepNumber < steps.length && (
               <div

@@ -33,5 +33,7 @@ export const API_ROUTES = {
     FCM_TOKEN: "/api/device-syncs/fcm-token",
     SYNC_STATUS: (activationCode: string) =>
       `/api/sales/${activationCode}/sync`,
+    MULTI_SYNC_STATUS: (activationCode: string) =>
+      `/api/sales/${activationCode}/multi-sync`,
   },
 } as const;

@@ -184,6 +184,32 @@ export class DeviceActivationService {
       deviceName: sale.device.name,
     };
   }
+
+  async getMultiSyncStatus(activationCode: string): Promise<{
+    syncedDevices: Array<{
+      deviceId: string;
+      deviceName: string;
+      synced: boolean;
+    }>;
+  }> {
+    const sales =
+      await this.saleRepository.findByActivationCodeAll(activationCode);
+
+    if (!sales || sales.length === 0) {
+      throw new ApiError({
+        status: httpStatus.NOT_FOUND,
+        message: "Código de activación no encontrado",
+      });
+    }
+
+    const syncedDevices = sales.map((sale) => ({
+      deviceId: sale.deviceId,
+      deviceName: sale.device.name,
+      synced: sale.device.status === DeviceStatus.SOLD_SYNCED,
+    }));
+
+    return { syncedDevices };
+  }
 }
 
 export const deviceActivationService = new DeviceActivationService();

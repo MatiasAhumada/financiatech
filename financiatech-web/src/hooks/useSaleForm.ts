@@ -10,6 +10,11 @@ import {
 import { SALES_MESSAGES } from "@/constants/sales.constant";
 import { salesUtils } from "@/utils/sales.util";
 
+interface SelectedDeviceItem {
+  deviceId: string;
+  amount: number;
+}
+
 interface UseSaleFormProps {
   open: boolean;
   initialSale?: ISale | null;
@@ -26,7 +31,9 @@ export function useSaleForm({
   onClose,
 }: UseSaleFormProps) {
   const [step, setStep] = useState(1);
-  const [selectedDevice, setSelectedDevice] = useState("");
+  const [selectedDevices, setSelectedDevices] = useState<SelectedDeviceItem[]>(
+    []
+  );
   const [selectedClient, setSelectedClient] = useState("");
   const [amount, setAmount] = useState("");
   const [initialPayment, setInitialPayment] = useState("");
@@ -44,6 +51,7 @@ export function useSaleForm({
   const [blockDay, setBlockDay] = useState(blockRules.blockDay.toString());
   const [loading, setLoading] = useState(false);
   const [activationCode, setActivationCode] = useState("");
+  const [deviceCount, setDeviceCount] = useState(0);
 
   useEffect(() => {
     if (selectedPlan) {
@@ -60,7 +68,12 @@ export function useSaleForm({
 
   useEffect(() => {
     if (open && initialSale) {
-      setSelectedDevice(initialSale.deviceId);
+      setSelectedDevices([
+        {
+          deviceId: initialSale.deviceId,
+          amount: Number(initialSale.totalAmount),
+        },
+      ]);
       setSelectedClient(initialSale.clientId);
       setAmount(initialSale.totalAmount.toString());
       setInitialPayment(initialSale.initialPayment.toString());
@@ -76,7 +89,7 @@ export function useSaleForm({
 
   const resetForm = () => {
     setStep(1);
-    setSelectedDevice("");
+    setSelectedDevices([]);
     setSelectedClient("");
     setAmount("");
     setInitialPayment("");
@@ -88,6 +101,7 @@ export function useSaleForm({
     setSecondWarningDay(rules.secondWarningDay.toString());
     setBlockDay(rules.blockDay.toString());
     setActivationCode("");
+    setDeviceCount(0);
   };
 
   const handleClose = () => {
@@ -100,7 +114,7 @@ export function useSaleForm({
   };
 
   const handleNext = () => {
-    if (step === 1 && selectedDevice && selectedClient && amount) {
+    if (step === 1 && selectedDevices.length > 0 && selectedClient && amount) {
       setStep(2);
     } else if (
       step === 2 &&
@@ -120,13 +134,21 @@ export function useSaleForm({
   };
 
   const handleSubmit = async () => {
-    if (!selectedDevice || !selectedClient || !amount || !selectedPlan) return;
+    if (
+      selectedDevices.length === 0 ||
+      !selectedClient ||
+      !amount ||
+      !selectedPlan
+    )
+      return;
 
     try {
       setLoading(true);
+      setDeviceCount(selectedDevices.length);
 
       const saleData = {
-        deviceId: selectedDevice,
+        deviceIds: selectedDevices.map((d) => d.deviceId),
+        amounts: selectedDevices.map((d) => d.amount),
         clientId: selectedClient,
         totalAmount: parseFloat(salesUtils.parseFormattedNumber(amount)),
         initialPayment: parseFloat(
@@ -141,12 +163,12 @@ export function useSaleForm({
       };
 
       if (initialSale) {
-        await saleService.update(initialSale.id, saleData);
+        await saleService.updateMultiple(initialSale.id, saleData);
         clientSuccessHandler(SALES_MESSAGES.SUCCESS.UPDATED);
         handleClose();
         onSuccess();
       } else {
-        const result = await saleService.create(saleData);
+        const result = await saleService.createMultiple(saleData);
         setActivationCode(result.activationCode);
         clientSuccessHandler(SALES_MESSAGES.SUCCESS.CREATED);
         setStep(3);
@@ -158,7 +180,8 @@ export function useSaleForm({
     }
   };
 
-  const canProceedStep1 = selectedDevice && selectedClient && amount;
+  const canProceedStep1 =
+    selectedDevices.length > 0 && selectedClient && amount;
   const canProceedStep2 =
     selectedPlan &&
     initialPayment &&
@@ -167,10 +190,16 @@ export function useSaleForm({
     blockDay &&
     !loading;
 
+  const handleDevicesChange = (devices: SelectedDeviceItem[]) => {
+    setSelectedDevices(devices);
+    const total = devices.reduce((sum, d) => sum + d.amount, 0);
+    setAmount(total.toString());
+  };
+
   return {
     step,
-    selectedDevice,
-    setSelectedDevice,
+    selectedDevices,
+    setSelectedDevices: handleDevicesChange,
     selectedClient,
     setSelectedClient,
     amount,
@@ -189,6 +218,7 @@ export function useSaleForm({
     setBlockDay,
     loading,
     activationCode,
+    deviceCount,
     handleClose,
     handleNext,
     handleBack,

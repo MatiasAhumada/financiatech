@@ -4,7 +4,21 @@ import { DeviceStatus, PaymentFrequency } from "@prisma/client";
 
 export class SaleRepository {
   async findByActivationCode(activationCode: string) {
-    return prisma.sale.findUnique({
+    return prisma.sale.findFirst({
+      where: { activationCode },
+      include: {
+        device: {
+          include: {
+            installments: { orderBy: { number: "asc" } },
+          },
+        },
+        client: true,
+      },
+    });
+  }
+
+  async findByActivationCodeAll(activationCode: string) {
+    return prisma.sale.findMany({
       where: { activationCode },
       include: {
         device: {
@@ -218,6 +232,232 @@ export class SaleRepository {
       });
 
       return sale;
+    });
+  }
+
+  async createMultipleWithTransaction(data: {
+    deviceIds: string[];
+    deviceAmounts: number[];
+    clientId: string;
+    totalAmount: number;
+    initialPayment: number;
+    installments: number;
+    installmentAmount: number;
+    paymentFrequency: PaymentFrequency;
+    activationCode: string;
+    deviceCount: number;
+    daysPerInstallment: number;
+    firstWarningDay: number;
+    secondWarningDay: number;
+    blockDay: number;
+  }) {
+    return prisma.$transaction(async (tx) => {
+      for (const deviceId of data.deviceIds) {
+        await tx.device.update({
+          where: { id: deviceId },
+          data: {
+            clientId: data.clientId,
+            status: DeviceStatus.SOLD_PENDING,
+          },
+        });
+      }
+
+      const salesData = data.deviceIds.map((deviceId, index) => ({
+        deviceId,
+        clientId: data.clientId,
+        totalAmount: data.deviceAmounts[index],
+        initialPayment: 0,
+        installments: data.installments,
+        installmentAmount: data.installmentAmount,
+        paymentFrequency: data.paymentFrequency,
+        activationCode: data.activationCode,
+        deviceCount: data.deviceCount,
+      }));
+
+      const sales = await tx.sale.createManyAndReturn({
+        data: salesData,
+        include: {
+          device: true,
+          client: true,
+        },
+      });
+
+      const firstSale = sales[0];
+      const saleDate = firstSale?.saleDate;
+
+      for (let i = 0; i < data.deviceIds.length; i++) {
+        const deviceId = data.deviceIds[i];
+        const deviceAmount = data.deviceAmounts[i];
+        const financedAmount = deviceAmount - 0;
+
+        await tx.paymentPlan.create({
+          data: {
+            deviceId,
+            totalAmount: financedAmount,
+            installments: data.installments,
+            monthlyAmount: data.installmentAmount,
+            startDate: saleDate,
+            endDate: new Date(
+              saleDate.getTime() +
+                data.installments *
+                  data.daysPerInstallment *
+                  24 *
+                  60 *
+                  60 *
+                  1000
+            ),
+          },
+        });
+
+        const installmentsData = Array.from(
+          { length: data.installments },
+          (_, idx) => ({
+            deviceId,
+            number: idx + 1,
+            amount: data.installmentAmount,
+            dueDate: new Date(
+              saleDate.getTime() +
+                (idx + 1) * data.daysPerInstallment * 24 * 60 * 60 * 1000
+            ),
+            status: "PENDING" as const,
+          })
+        );
+
+        await tx.installment.createMany({
+          data: installmentsData,
+        });
+
+        await tx.blockRule.create({
+          data: {
+            deviceId,
+            firstWarningDay: data.firstWarningDay,
+            secondWarningDay: data.secondWarningDay,
+            blockDay: data.blockDay,
+          },
+        });
+      }
+
+      return firstSale;
+    });
+  }
+
+  async updateMultipleWithTransaction(
+    id: string,
+    data: {
+      deviceIds: string[];
+      deviceAmounts: number[];
+      clientId: string;
+      totalAmount: number;
+      initialPayment: number;
+      installments: number;
+      installmentAmount: number;
+      paymentFrequency: PaymentFrequency;
+      daysPerInstallment: number;
+      firstWarningDay: number;
+      secondWarningDay: number;
+      blockDay: number;
+    }
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const oldSale = await tx.sale.findUnique({ where: { id } });
+      const oldDeviceId = oldSale?.deviceId;
+
+      if (oldDeviceId && !data.deviceIds.includes(oldDeviceId)) {
+        await tx.device.update({
+          where: { id: oldDeviceId },
+          data: { status: DeviceStatus.ACTIVE, clientId: null },
+        });
+      }
+
+      for (const deviceId of data.deviceIds) {
+        await tx.device.update({
+          where: { id: deviceId },
+          data: { clientId: data.clientId, status: DeviceStatus.SOLD_PENDING },
+        });
+      }
+
+      const sales = await Promise.all(
+        data.deviceIds.map((deviceId, index) =>
+          tx.sale.upsert({
+            where: { deviceId },
+            create: {
+              deviceId,
+              clientId: data.clientId,
+              totalAmount: data.deviceAmounts[index],
+              initialPayment: data.initialPayment,
+              installments: data.installments,
+              installmentAmount: data.installmentAmount,
+              paymentFrequency: data.paymentFrequency,
+              activationCode: oldSale?.activationCode || "",
+              deviceCount: data.deviceIds.length,
+            },
+            update: {
+              clientId: data.clientId,
+              totalAmount: data.deviceAmounts[index],
+              initialPayment: data.initialPayment,
+              installments: data.installments,
+              installmentAmount: data.installmentAmount,
+              paymentFrequency: data.paymentFrequency,
+            },
+            include: { device: true, client: true },
+          })
+        )
+      );
+
+      const firstSale = sales[0];
+      const saleDate = firstSale?.saleDate;
+
+      for (let i = 0; i < data.deviceIds.length; i++) {
+        const deviceId = data.deviceIds[i];
+        const deviceAmount = data.deviceAmounts[i];
+
+        await tx.paymentPlan.updateMany({
+          where: { deviceId },
+          data: {
+            totalAmount: deviceAmount - data.initialPayment,
+            installments: data.installments,
+            monthlyAmount: data.installmentAmount,
+            endDate: new Date(
+              Date.now() +
+                data.installments *
+                  data.daysPerInstallment *
+                  24 *
+                  60 *
+                  60 *
+                  1000
+            ),
+          },
+        });
+
+        await tx.installment.deleteMany({ where: { deviceId } });
+
+        const installmentsData = Array.from(
+          { length: data.installments },
+          (_, idx) => ({
+            deviceId,
+            number: idx + 1,
+            amount: data.installmentAmount,
+            dueDate: new Date(
+              saleDate!.getTime() +
+                (idx + 1) * data.daysPerInstallment * 24 * 60 * 60 * 1000
+            ),
+            status: "PENDING" as const,
+          })
+        );
+
+        await tx.installment.createMany({ data: installmentsData });
+
+        await tx.blockRule.updateMany({
+          where: { deviceId },
+          data: {
+            firstWarningDay: data.firstWarningDay,
+            secondWarningDay: data.secondWarningDay,
+            blockDay: data.blockDay,
+          },
+        });
+      }
+
+      return firstSale;
     });
   }
 

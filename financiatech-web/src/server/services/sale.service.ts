@@ -6,7 +6,7 @@ import { ISale, IInstallment, SalesStats } from "@/types";
 import { PAYMENT_FREQUENCY_DAYS } from "@/constants/paymentFrequency.constant";
 import { BLOCK_RULES_BY_FREQUENCY } from "@/constants/blockRules.constant";
 import httpStatus from "http-status";
-import { CreateSaleDto } from "@/schemas/sale.schema";
+import { CreateSaleDto, CreateMultipleSaleDto } from "@/schemas/sale.schema";
 
 function generateActivationCode(): string {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -93,6 +93,101 @@ export class SaleService {
 
   async delete(id: string) {
     return this.saleRepository.delete(id);
+  }
+
+  async createMultiple(data: CreateMultipleSaleDto) {
+    const plan = await this.financingPlanRepository.findById(
+      data.financingPlanId
+    );
+
+    if (!plan) {
+      throw new ApiError({
+        status: httpStatus.NOT_FOUND,
+        message: "Plan de financiamiento no encontrado",
+      });
+    }
+
+    for (const deviceId of data.deviceIds) {
+      const device = await this.devicesRepository.findById(deviceId);
+
+      if (!device) {
+        throw new ApiError({
+          status: httpStatus.NOT_FOUND,
+          message: `Dispositivo ${deviceId} no encontrado`,
+        });
+      }
+
+      if (device.clientId && device.status !== "SOLD_PENDING") {
+        throw new ApiError({
+          status: httpStatus.CONFLICT,
+          message: `El dispositivo ${device.name} ya está vendido`,
+        });
+      }
+    }
+
+    const financedAmount = data.totalAmount - data.initialPayment;
+    const totalWithInterest =
+      financedAmount * (1 + Number(plan.interestRate) / 100);
+    const installmentAmount = totalWithInterest / data.installments;
+    const activationCode = generateActivationCode();
+    const daysPerInstallment = PAYMENT_FREQUENCY_DAYS[data.paymentFrequency];
+    const blockRules = BLOCK_RULES_BY_FREQUENCY[data.paymentFrequency];
+
+    const deviceAmountMap = new Map(
+      data.deviceIds.map((id, idx) => [id, data.amounts[idx]])
+    );
+
+    return this.saleRepository.createMultipleWithTransaction({
+      deviceIds: data.deviceIds,
+      deviceAmounts: Array.from(deviceAmountMap.values()),
+      clientId: data.clientId,
+      totalAmount: data.totalAmount,
+      initialPayment: data.initialPayment,
+      installments: data.installments,
+      installmentAmount,
+      paymentFrequency: data.paymentFrequency,
+      activationCode,
+      deviceCount: data.deviceIds.length,
+      daysPerInstallment,
+      firstWarningDay: data.firstWarningDay ?? blockRules.firstWarningDay,
+      secondWarningDay: data.secondWarningDay ?? blockRules.secondWarningDay,
+      blockDay: data.blockDay ?? blockRules.blockDay,
+    });
+  }
+
+  async updateMultiple(id: string, data: CreateMultipleSaleDto) {
+    const plan = await this.financingPlanRepository.findById(
+      data.financingPlanId
+    );
+
+    if (!plan) {
+      throw new ApiError({
+        status: httpStatus.NOT_FOUND,
+        message: "Plan de financiamiento no encontrado",
+      });
+    }
+
+    const financedAmount = data.totalAmount - data.initialPayment;
+    const totalWithInterest =
+      financedAmount * (1 + Number(plan.interestRate) / 100);
+    const installmentAmount = totalWithInterest / data.installments;
+    const daysPerInstallment = PAYMENT_FREQUENCY_DAYS[data.paymentFrequency];
+    const blockRules = BLOCK_RULES_BY_FREQUENCY[data.paymentFrequency];
+
+    return this.saleRepository.updateMultipleWithTransaction(id, {
+      deviceIds: data.deviceIds,
+      deviceAmounts: data.amounts,
+      clientId: data.clientId,
+      totalAmount: data.totalAmount,
+      initialPayment: data.initialPayment,
+      installments: data.installments,
+      installmentAmount,
+      paymentFrequency: data.paymentFrequency,
+      daysPerInstallment,
+      firstWarningDay: data.firstWarningDay ?? blockRules.firstWarningDay,
+      secondWarningDay: data.secondWarningDay ?? blockRules.secondWarningDay,
+      blockDay: data.blockDay ?? blockRules.blockDay,
+    });
   }
 
   async update(id: string, data: CreateSaleDto) {

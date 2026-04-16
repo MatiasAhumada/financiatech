@@ -1,11 +1,27 @@
 import clientAxios from "@/utils/clientAxios.util";
-import { CreateSaleDto } from "@/schemas/sale.schema";
+import { CreateSaleDto, CreateMultipleSaleDto } from "@/schemas/sale.schema";
 import { API_ROUTES } from "@/constants/routes";
 import { SalesStats, IInstallment } from "@/types";
 
 export const saleService = {
   async create(dto: CreateSaleDto) {
     const { data } = await clientAxios.post(API_ROUTES.SALES, dto);
+    return data;
+  },
+
+  async createMultiple(dto: CreateMultipleSaleDto) {
+    const { data } = await clientAxios.post(
+      `${API_ROUTES.SALES}/multiple`,
+      dto
+    );
+    return data;
+  },
+
+  async updateMultiple(id: string, dto: CreateMultipleSaleDto) {
+    const { data } = await clientAxios.put(
+      `${API_ROUTES.SALES}/${id}/multiple`,
+      dto
+    );
     return data;
   },
 

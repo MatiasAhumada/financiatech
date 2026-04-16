@@ -16,10 +16,11 @@ import { salesUtils } from "@/utils/sales.util";
 import { ShoppingCart01Icon } from "hugeicons-react";
 import { CreateFinancingPlanModal } from "@/components/sales/CreateFinancingPlanModal";
 import { StepIndicator } from "@/components/sales/StepIndicator";
-import { DeviceSelectionStep } from "@/components/sales/DeviceSelectionStep";
+import { MultiDeviceSelectionStep } from "@/components/sales/MultiDeviceSelectionStep";
 import { FinancingPlanCard } from "@/components/sales/FinancingPlanCard";
 import { BlockRulesInput } from "@/components/sales/BlockRulesInput";
-import { ActivationCodeDisplay } from "@/components/sales/ActivationCodeDisplay";
+import { MultiActivationStatus } from "@/components/sales/MultiActivationStatus";
+import { ActivationSuccessView } from "@/components/sales/ActivationSuccessView";
 import { useSaleForm } from "@/hooks/useSaleForm";
 import { motion, AnimatePresence } from "framer-motion";
 import { DeviceModal } from "@/components/entities/DeviceModal";
@@ -54,6 +55,14 @@ export function SaleModal({
   const [slideDirection, setSlideDirection] = useState<"left" | "right">(
     "right"
   );
+  const [linkingProgress, setLinkingProgress] = useState({
+    linked: 0,
+    total: 0,
+  });
+  const [allLinked, setAllLinked] = useState(false);
+  const [linkedDevices, setLinkedDevices] = useState<
+    Array<{ deviceId: string; deviceName: string }>
+  >([]);
 
   useEffect(() => {
     setLocalDevices(devices);
@@ -72,8 +81,8 @@ export function SaleModal({
 
   const {
     step,
-    selectedDevice,
-    setSelectedDevice,
+    selectedDevices,
+    setSelectedDevices,
     selectedClient,
     setSelectedClient,
     amount,
@@ -90,6 +99,7 @@ export function SaleModal({
     setBlockDay,
     loading,
     activationCode,
+    deviceCount,
     handleClose,
     handleNext,
     handleBack,
@@ -104,7 +114,12 @@ export function SaleModal({
     onClose: () => onOpenChange(false),
   });
 
-  // Track direction for slide animation
+  useEffect(() => {
+    if (step === 3 && deviceCount > 0) {
+      setLinkingProgress({ linked: 0, total: deviceCount });
+    }
+  }, [step, deviceCount]);
+
   const handleNextWithDirection = () => {
     setSlideDirection("right");
     handleNext();
@@ -152,6 +167,17 @@ export function SaleModal({
     }),
   };
 
+  const deviceNames = selectedDevices
+    .map((sd) => {
+      const device = localDevices.find((d) => d.id === sd.deviceId);
+      return device;
+    })
+    .filter((d): d is IDevice => d !== undefined);
+
+  const handleAllLinked = () => {
+    setAllLinked(true);
+  };
+
   const renderFooter = () => {
     if (step === 1) {
       return (
@@ -196,6 +222,19 @@ export function SaleModal({
       );
     }
 
+    if (step === 3 && !allLinked) {
+      return (
+        <Button
+          variant="outline"
+          onClick={handleClose}
+          disabled
+          className="border-carbon_black-600 text-silver-400 cursor-not-allowed"
+        >
+          Esperando vinculación...
+        </Button>
+      );
+    }
+
     return (
       <Button
         variant="outline"
@@ -224,6 +263,11 @@ export function SaleModal({
           SALES_MESSAGES.STEPS.FINANCING,
           SALES_MESSAGES.STEPS.LINKING,
         ]}
+        deviceProgress={
+          step === 3 && deviceCount > 0
+            ? { linked: linkingProgress.linked, total: linkingProgress.total }
+            : undefined
+        }
       />
 
       <AnimatePresence mode="wait" custom={slideDirection}>
@@ -237,15 +281,13 @@ export function SaleModal({
             exit="exit"
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            <DeviceSelectionStep
+            <MultiDeviceSelectionStep
               devices={localDevices}
               clients={localClients}
-              selectedDevice={selectedDevice}
+              selectedDevices={selectedDevices}
               selectedClient={selectedClient}
-              amount={amount}
-              onDeviceChange={setSelectedDevice}
+              onDevicesChange={setSelectedDevices}
               onClientChange={setSelectedClient}
-              onAmountChange={setAmount}
               onCreateDevice={() => setIsCreateDeviceModalOpen(true)}
               onCreateClient={() => setIsCreateClientModalOpen(true)}
             />
@@ -272,8 +314,8 @@ export function SaleModal({
                   {salesUtils.formatCurrency(amountValue)}
                 </p>
                 <p className="text-xs text-silver-400 italic mt-2">
-                  {localDevices.find((d) => d.id === selectedDevice)?.name ||
-                    ""}
+                  {selectedDevices.length} dispositivo
+                  {selectedDevices.length !== 1 ? "s" : ""}
                 </p>
               </div>
 
@@ -398,7 +440,26 @@ export function SaleModal({
             exit="exit"
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            <ActivationCodeDisplay activationCode={activationCode} />
+            {allLinked ? (
+              <ActivationSuccessView devices={linkedDevices} />
+            ) : (
+              <MultiActivationStatus
+                activationCode={activationCode}
+                devices={deviceNames}
+                onAllLinked={() => {
+                  setLinkedDevices(
+                    deviceNames.map((d) => ({
+                      deviceId: d.id,
+                      deviceName: d.name,
+                    }))
+                  );
+                  setAllLinked(true);
+                }}
+                onLinkingProgress={(linked, total) => {
+                  setLinkingProgress({ linked, total });
+                }}
+              />
+            )}
           </motion.div>
         )}
       </AnimatePresence>

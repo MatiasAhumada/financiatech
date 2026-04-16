@@ -18,11 +18,11 @@ interface DeviceWithRelations {
     secondWarningDay: number;
     blockDay: number;
   } | null;
-  sale: {
+  sales: Array<{
     saleDate: Date;
     paymentFrequency: PaymentFrequency;
     installments: number;
-  } | null;
+  }>;
   installments: Array<{
     id: string;
     number: number;
@@ -178,13 +178,13 @@ export const notificationSchedulerService = {
         blockRule: {
           isActive: true,
         },
-        sale: {
-          isNot: null,
+        sales: {
+          some: {},
         },
       },
       include: {
         blockRule: true,
-        sale: true,
+        sales: true,
         installments: {
           where: {
             status: InstallmentStatus.PENDING,
@@ -199,10 +199,15 @@ export const notificationSchedulerService = {
     });
 
     const filteredDevices = devices.filter((device: DeviceWithRelations) => {
-      if (!device.blockRule || !device.sale || device.installments.length === 0)
+      if (
+        !device.blockRule ||
+        device.sales.length === 0 ||
+        device.installments.length === 0
+      )
         return false;
 
-      const currentDay = this.getCurrentDay(device.sale.paymentFrequency, now);
+      const sale = device.sales[0];
+      const currentDay = this.getCurrentDay(sale.paymentFrequency, now);
       const targetDay = device.blockRule[dayField];
 
       if (currentDay !== targetDay) return false;
@@ -229,13 +234,13 @@ export const notificationSchedulerService = {
         blockRule: {
           isActive: true,
         },
-        sale: {
-          isNot: null,
+        sales: {
+          some: {},
         },
       },
       include: {
         blockRule: true,
-        sale: true,
+        sales: true,
         installments: {
           where: {
             status: InstallmentStatus.PENDING,
@@ -250,11 +255,16 @@ export const notificationSchedulerService = {
     });
 
     const filteredDevices = devices.filter((device: DeviceWithRelations) => {
-      if (!device.blockRule || !device.sale || device.installments.length === 0)
+      if (
+        !device.blockRule ||
+        device.sales.length === 0 ||
+        device.installments.length === 0
+      )
         return false;
 
+      const sale = device.sales[0];
       const now = new Date();
-      const currentDay = this.getCurrentDay(device.sale.paymentFrequency, now);
+      const currentDay = this.getCurrentDay(sale.paymentFrequency, now);
       const blockWarningDay = device.blockRule.blockDay - 1;
 
       if (currentDay !== blockWarningDay) return false;
@@ -282,13 +292,13 @@ export const notificationSchedulerService = {
         blockRule: {
           isActive: true,
         },
-        sale: {
-          isNot: null,
+        sales: {
+          some: {},
         },
       },
       include: {
         blockRule: true,
-        sale: true,
+        sales: true,
         installments: {
           where: {
             status: InstallmentStatus.PENDING,
@@ -303,11 +313,16 @@ export const notificationSchedulerService = {
     });
 
     const filteredDevices = devices.filter((device: DeviceWithRelations) => {
-      if (!device.blockRule || !device.sale || device.installments.length === 0)
+      if (
+        !device.blockRule ||
+        device.sales.length === 0 ||
+        device.installments.length === 0
+      )
         return false;
 
+      const sale = device.sales[0];
       const now = new Date();
-      const currentDay = this.getCurrentDay(device.sale.paymentFrequency, now);
+      const currentDay = this.getCurrentDay(sale.paymentFrequency, now);
 
       if (currentDay !== device.blockRule.blockDay) return false;
 
@@ -611,7 +626,7 @@ export const notificationSchedulerService = {
       where: { id: deviceId },
       include: {
         blockRule: true,
-        sale: true,
+        sales: true,
         installments: {
           where: { status: InstallmentStatus.PENDING },
           orderBy: { number: "asc" },
@@ -622,7 +637,7 @@ export const notificationSchedulerService = {
       },
     });
 
-    if (!device || !device.sale) {
+    if (!device || device.sales.length === 0) {
       throw new Error("Dispositivo no encontrado o sin venta activa");
     }
 
