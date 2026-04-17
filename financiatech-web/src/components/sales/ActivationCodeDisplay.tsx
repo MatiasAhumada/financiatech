@@ -23,11 +23,10 @@ interface ActivationCodeDisplayProps {
 export function ActivationCodeDisplay({
   activationCode,
 }: ActivationCodeDisplayProps) {
-  const { status, deviceName } = useActivationPolling(activationCode);
+  const { status, device } = useActivationPolling(activationCode);
 
-  // Estado de éxito: el celular ya se vinculó
-  if (status === "success") {
-    return <ActivationSuccessView deviceName={deviceName} />;
+  if (status === "success" && device) {
+    return <ActivationSuccessView device={device} />;
   }
 
   // Estado de espera: mostrar el código con animación de "esperando vinculación"

@@ -3,26 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import clientAxios from "@/utils/clientAxios.util";
 import { API_ROUTES } from "@/constants/routes";
+import { IDevice } from "@/types";
 
 export type SyncStatus = "waiting" | "success";
 
 export interface ActivationPollResult {
   status: SyncStatus;
-  deviceName: string;
+  device: IDevice | null;
 }
 
-/**
- * Hook que hace polling al endpoint GET /api/sales/{activationCode}/sync
- * cada 3 segundos hasta detectar que el dispositivo fue vinculado.
- *
- * SRP: solo encapsula la lógica de petición + intervalo + cleanup.
- * El componente que lo consuma decide qué renderizar según el estado.
- */
 export function useActivationPolling(
   activationCode: string
 ): ActivationPollResult {
   const [status, setStatus] = useState<SyncStatus>("waiting");
-  const [deviceName, setDeviceName] = useState("");
+  const [device, setDevice] = useState<IDevice | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -32,21 +26,19 @@ export function useActivationPolling(
       try {
         const { data } = await clientAxios.get<{
           synced: boolean;
-          deviceName: string;
+          device: IDevice;
         }>(API_ROUTES.DEVICE_SYNCS.SYNC_STATUS(activationCode));
 
         if (data.synced) {
-          setDeviceName(data.deviceName);
+          setDevice(data.device);
           setStatus("success");
-          // Detener el intervalo: ya no hay nada más que esperar
           if (intervalRef.current) clearInterval(intervalRef.current);
         }
       } catch {
-        // Red caída, 404, o error del servidor — silencioso, el intervalo reintentará
+        // Silencioso
       }
     };
 
-    // Primera llamada inmediata para no esperar 3s al montar
     poll();
     intervalRef.current = setInterval(poll, 3000);
 
@@ -55,5 +47,5 @@ export function useActivationPolling(
     };
   }, [activationCode]);
 
-  return { status, deviceName };
+  return { status, device };
 }

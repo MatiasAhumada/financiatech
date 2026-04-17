@@ -167,7 +167,7 @@ export class DeviceActivationService {
 
   async getSyncStatus(
     activationCode: string
-  ): Promise<{ synced: boolean; deviceName: string }> {
+  ): Promise<{ synced: boolean; device: any }> {
     const sale = await this.saleRepository.findByActivationCode(activationCode);
 
     if (!sale) {
@@ -179,9 +179,18 @@ export class DeviceActivationService {
 
     const synced = sale.device.status === DeviceStatus.SOLD_SYNCED;
 
+    const deviceWithSync = await prisma.device.findUnique({
+      where: { id: sale.deviceId },
+      include: {
+        sync: true,
+        admin: true,
+        client: true,
+      },
+    });
+
     return {
       synced,
-      deviceName: sale.device.name,
+      device: deviceWithSync,
     };
   }
 }

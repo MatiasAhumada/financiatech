@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.32.0",
   "scripts": {
     "dev": "next dev -p 3003 -H 0.0.0.0",
-    "build": "next build",
+    "build": "rimraf .next && next build",
     "start": "next start -p 3003 -H 0.0.0.0",
     "lint": "eslint",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css}\" --ignore-path .prettierignore",
@@ -58,6 +58,7 @@
     "eslint-config-next": "16.1.6",
     "prettier": "^3.5.3",
     "prisma": "^6.13.0",
+    "rimraf": "^6.0.1",
     "tailwindcss": "^4",
     "tsx": "^4.7.0",
     "typescript": "^5"
