@@ -1,25 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <uses-permission android:name="android.permission.INTERNET"/>
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-  <uses-permission android:name="android.permission.BIND_DEVICE_ADMIN"/>
-  <uses-permission android:name="android.permission.WAKE_LOCK"/>
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
-  <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
-  <!-- Permisos adicionales para Device Owner -->
-  <uses-permission android:name="android.permission.MANAGE_DEVICE_ADMINS"/>
-  <uses-permission android:name="android.permission.CHANGE_CONFIGURATION"/>
-  <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
-  <uses-permission android:name="android.permission.REORDER_TASKS"/>
-  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-  <!-- Permisos para AlarmManager y wake locks -->
-  <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
-  <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
-  <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
@@ -27,110 +12,21 @@
       <data android:scheme="https"/>
     </intent>
   </queries>
-  <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="true" android:theme="@style/AppTheme" android:supportsRtl="true" android:enableOnBackInvokedCallback="false" android:networkSecurityConfig="@xml/network_security_config">
+  <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="true" android:theme="@style/AppTheme" android:supportsRtl="true" android:enableOnBackInvokedCallback="false">
     <meta-data android:name="expo.modules.updates.ENABLED" android:value="false"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="ALWAYS"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>
-    
-    <!-- DeviceAdmin Receiver -->
-    <receiver
-        android:name="com.financiatech.kiosk.DeviceAdmin"
-        android:label="FinanciaTech Admin"
-        android:permission="android.permission.BIND_DEVICE_ADMIN"
-        android:exported="true"
-        android:directBootAware="true">
-        <meta-data
-            android:name="android.app.device_admin"
-            android:resource="@xml/device_admin_rules" />
-        <meta-data
-            android:name="android.app.device_owner"
-            android:resource="@xml/device_owner_policy" />
-        <intent-filter>
-            <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
-            <action android:name="android.intent.action.BOOT_COMPLETED" />
-            <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
-            <action android:name="android.intent.action.USER_PRESENT" />
-        </intent-filter>
-    </receiver>
-
-    <!-- BootReceiver para auto-inicio confiable -->
-    <receiver
-        android:name="com.financiatech.kiosk.BootReceiver"
-        android:enabled="true"
-        android:exported="true"
-        android:directBootAware="true">
-        <intent-filter>
-            <action android:name="android.intent.action.BOOT_COMPLETED" />
-            <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
-            <action android:name="android.intent.action.USER_PRESENT" />
-            <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-        </intent-filter>
-    </receiver>
-
-    <!-- ConnectivityWatchdog Service -->
-    <service
-        android:name=".ConnectivityWatchdog"
-        android:enabled="true"
-        android:exported="false" />
-
-    <!-- FinanciaTechPollingService - Foreground Service para monitoreo -->
-    <service
-        android:name=".FinanciaTechPollingService"
-        android:enabled="true"
-        android:exported="false"
-        android:foregroundServiceType="dataSync"
-        android:stopWithTask="false" />
-
-    <!-- FinanciaTechFirebaseService - Firebase Cloud Messaging -->
-    <service
-        android:name=".FinanciaTechFirebaseService"
-        android:enabled="true"
-        android:exported="false">
-        <intent-filter>
-            <action android:name="com.google.firebase.MESSAGING_EVENT" />
-        </intent-filter>
-    </service>
-
-    <!-- PersistentService - Guardián que asegura que el polling siempre esté activo -->
-    <service
-        android:name=".PersistentService"
-        android:enabled="true"
-        android:exported="false"
-        android:stopWithTask="false" />
-    
-    <!-- AppGuardianService - Guardián simple que reabre la app cuando se cierra -->
-    <service
-        android:name=".AppGuardianService"
-        android:enabled="true"
-        android:exported="false"
-        android:stopWithTask="false" />
-    
-    <activity android:name=".MainActivity"
-        android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode"
-        android:launchMode="singleTask"
-        android:windowSoftInputMode="adjustResize"
-        android:theme="@style/Theme.App.SplashScreen"
-        android:exported="true"
-        android:screenOrientation="portrait"
-        android:excludeFromRecents="false"
-        android:showWhenLocked="true"
-        android:turnScreenOn="true"
-        android:lockTaskMode="always"
-        android:resumeWhilePausing="true"
-        android:relinquishTaskIdentity="false"
-        android:autoRemoveFromRecents="false"
-        android:taskAffinity=""
-        android:persistableMode="persistNever">
+    <activity android:name=".MainActivity" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode" android:launchMode="singleTask" android:windowSoftInputMode="adjustResize" android:theme="@style/Theme.App.SplashScreen" android:exported="true" android:screenOrientation="portrait">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.LAUNCHER"/>
-        <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
       <intent-filter>
         <action android:name="android.intent.action.VIEW"/>
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="financiatechapp"/>
+        <data android:scheme="exp+financiatech-app"/>
       </intent-filter>
     </activity>
   </application>
