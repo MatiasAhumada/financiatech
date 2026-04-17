@@ -10,7 +10,7 @@
     "build:apk": "cd android && .\\gradlew assembleRelease && cd ..",
     "build:desktop": "cd android && .\\gradlew assembleRelease && cd .. && copy \".\\android\\app\\build\\outputs\\apk\\release\\app-release.apk\" \"..\\financiatech-desktop\\bin\\app-release.apk\" /Y && cd ..\\financiatech-desktop && pnpm dist && pnpm dev",
     "clean:android": "cd android && .\\gradlew clean && cd ..",
-    "build:img": "npx expo prebuild --clean"
+    "build:img": "npx expo prebuild"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

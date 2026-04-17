@@ -31,21 +31,27 @@ export function useDeviceImei(): DeviceIdentity {
         let deviceId: string | null = null;
 
         if (Platform.OS === 'android') {
-          // Intentar obtener el IMEI real desde nuestro módulo nativo (Requiere permisos o ser Device Owner)
+          // Intentar obtener el IMEI real desde nuestro módulo nativo
           if (DeviceModule && DeviceModule.getDeviceImei) {
             try {
               const imei = await DeviceModule.getDeviceImei();
-              if (imei) {
+              if (imei && imei.length >= 14) {
                 deviceId = imei;
+                console.log('[DEVICE] IMEI real obtenido:', imei);
+              } else {
+                console.warn('[DEVICE] IMEI inválido o vacío:', imei);
               }
             } catch (err) {
-              console.warn('Error al obtener el IMEI real de Android:', err);
+              console.error('[DEVICE] Error al obtener IMEI:', err);
             }
+          } else {
+            console.warn('[DEVICE] DeviceModule.getDeviceImei no disponible');
           }
 
-          // Fallback al androidId si no se pudo obtener el IMEI
+          // Fallback al androidId solo si no se pudo obtener el IMEI
           if (!deviceId) {
             deviceId = Application.getAndroidId();
+            console.warn('[DEVICE] Usando androidId como fallback:', deviceId);
           }
         } else if (Platform.OS === 'ios') {
           // identifierForVendor: único por (app vendor, dispositivo).
