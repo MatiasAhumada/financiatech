@@ -528,6 +528,32 @@ public class DeviceModule extends ReactContextBaseJavaModule {
     }
     
     @ReactMethod
+    public void getInitialIntent(Promise promise) {
+        try {
+            Activity activity = getCurrentActivity();
+            if (activity != null) {
+                Intent intent = activity.getIntent();
+                if (intent != null) {
+                    String navigateTo = intent.getStringExtra("navigate_to");
+                    boolean unlocked = intent.getBooleanExtra("unlocked", false);
+                    
+                    java.util.HashMap<String, Object> result = new java.util.HashMap<>();
+                    result.put("navigate_to", navigateTo);
+                    result.put("unlocked", unlocked);
+                    
+                    Log.i(TAG, "Initial intent extras: navigate_to=" + navigateTo + ", unlocked=" + unlocked);
+                    promise.resolve(result);
+                    return;
+                }
+            }
+            promise.resolve(null);
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting initial intent", e);
+            promise.reject("ERROR", e.getMessage());
+        }
+    }
+    
+    @ReactMethod
     public void restartApp() {
         try {
             Activity activity = getCurrentActivity();
