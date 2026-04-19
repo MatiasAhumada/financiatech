@@ -325,8 +325,9 @@ model DeviceSync {
   syncedAt     DateTime @default(now())
   lastPing     DateTime @default(now())
 
-  device          Device          @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  device          Device           @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   pendingCommands PendingCommand[]
+  locations       DeviceLocation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -334,6 +335,22 @@ model DeviceSync {
   @@index([lastPing], name: "idx_device_syncs_lastping")
   @@index([serialNumber], name: "idx_device_syncs_serial")
   @@map("device_syncs")
+}
+
+model DeviceLocation {
+  id           String   @id @default(cuid())
+  deviceId     String
+  latitude     Float
+  longitude    Float
+  accuracy     Float?
+  timestamp    DateTime
+  receivedAt   DateTime @default(now())
+
+  deviceSync DeviceSync @relation(fields: [deviceId], references: [deviceId], onDelete: Cascade)
+
+  @@index([deviceId, timestamp], name: "idx_device_locations_device_time")
+  @@index([receivedAt], name: "idx_device_locations_received")
+  @@map("device_locations")
 }
 
 model PendingCommand {

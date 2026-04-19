@@ -20,21 +20,29 @@ export default function ProvisioningScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [checkingSync, setCheckingSync] = useState(true);
+  const [hasChecked, setHasChecked] = useState(false);
 
   const performStatusCheck = async () => {
-    if (!isDeviceReady || !serialNumber) {
+    if (!isDeviceReady || !serialNumber || hasChecked) {
       setCheckingSync(false);
       return;
     }
 
     try {
       setCheckingSync(true);
+      setHasChecked(true);
+      console.log('[PROVISIONING] Calling checkStatus for device:', serialNumber);
       const status = await provisioningService.checkStatus(serialNumber);
+      console.log('[PROVISIONING] Status check result:', status);
+      
       if (status.blocked) {
+        console.log('[PROVISIONING] Device is blocked, navigating to device-blocked');
         router.replace({ pathname: "/device-blocked" });
         return;
       }
+      
       if (status.deviceName && status.adminName) {
+        console.log('[PROVISIONING] Device already linked, navigating to linking-success');
         router.replace({
           pathname: "/linking-success",
           params: {
@@ -45,9 +53,15 @@ export default function ProvisioningScreen() {
         });
         return;
       }
+      
+      console.log('[PROVISIONING] Device not linked yet, staying on provisioning screen');
     } catch (err: any) {
-      if (err?.response?.status !== 404) {
-        console.warn("status check failed", err);
+      const status = err?.response?.status;
+      const message = err?.message || 'Unknown error';
+      console.error('[PROVISIONING] Status check failed:', status, '-', message);
+      
+      if (status !== 404) {
+        console.warn('status check failed', err);
       }
     } finally {
       setCheckingSync(false);

@@ -26,33 +26,9 @@ public class DeviceAdmin extends DeviceAdminReceiver {
         ComponentName adminComponent = new ComponentName(context, DeviceAdmin.class);
         
         if (dpm != null && dpm.isDeviceOwnerApp(context.getPackageName())) {
-            // Permiso para leer Serial Number e IMEI
-            try {
-                dpm.setPermissionGrantState(
-                    adminComponent,
-                    context.getPackageName(),
-                    android.Manifest.permission.READ_PHONE_STATE,
-                    DevicePolicyManager.PERMISSION_GRANT_STATE_GRANTED
-                );
-                Log.i(TAG, "READ_PHONE_STATE permission auto-granted");
-            } catch (Exception e) {
-                Log.e(TAG, "Error granting READ_PHONE_STATE permission: " + e.getMessage());
-            }
-            
-            // Permiso para enviar notificaciones (Android 13+)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                try {
-                    dpm.setPermissionGrantState(
-                        adminComponent,
-                        context.getPackageName(),
-                        android.Manifest.permission.POST_NOTIFICATIONS,
-                        DevicePolicyManager.PERMISSION_GRANT_STATE_GRANTED
-                    );
-                    Log.i(TAG, "POST_NOTIFICATIONS permission auto-granted");
-                } catch (Exception e) {
-                    Log.e(TAG, "Error granting POST_NOTIFICATIONS permission: " + e.getMessage());
-                }
-            }
+            // Auto-conceder permisos críticos si somos Device Owner
+            PermissionGranter.grantAllPermissions(context);
+            Log.i(TAG, "All permissions auto-granted in onEnabled");
         }
         
         launchApp(context);
@@ -109,7 +85,7 @@ public class DeviceAdmin extends DeviceAdminReceiver {
                     Log.e(TAG, "Error configuring lock task on boot: " + e.getMessage());
                 }
             } else if (isLinked && dpm.isDeviceOwnerApp(context.getPackageName())) {
-                applyLinkedRestrictions(dpm, adminComponent);
+                applyLinkedRestrictions(context, dpm, adminComponent);
             }
 
             if (isLinked) {
@@ -132,9 +108,12 @@ public class DeviceAdmin extends DeviceAdminReceiver {
     private void applyLinkedRestrictions(DevicePolicyManager dpm, ComponentName adminComponent) {
         applyProvisioningRestrictions(dpm, adminComponent);
         dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_SAFE_BOOT);
-        // TODO: Descomentar después de testing
-        // dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_DEBUGGING_FEATURES);
+        dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_DEBUGGING_FEATURES);
         Log.i(TAG, "Linked restrictions applied (DEBUG MODE - debugging enabled)");
+    }
+    
+    private void applyLinkedRestrictions(Context context, DevicePolicyManager dpm, ComponentName adminComponent) {
+        applyLinkedRestrictionsStatic(context, dpm, adminComponent);
     }
 
     private void applyFullRestrictions(DevicePolicyManager dpm, ComponentName adminComponent) {
@@ -169,7 +148,7 @@ public class DeviceAdmin extends DeviceAdminReceiver {
         ComponentName adminComponent = new ComponentName(context, DeviceAdmin.class);
         
         if (dpm != null && dpm.isDeviceOwnerApp(context.getPackageName())) {
-            applyLinkedRestrictionsStatic(dpm, adminComponent);
+            applyLinkedRestrictionsStatic(context, dpm, adminComponent);
             
             dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_ADD_USER);
             dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_REMOVE_USER);
@@ -211,60 +190,32 @@ public class DeviceAdmin extends DeviceAdminReceiver {
         }
         
         try {
-            applyLinkedRestrictionsStatic(dpm, adminComponent);
+            applyLinkedRestrictionsStatic(context, dpm, adminComponent);
             Log.i(TAG, "Linked restrictions applied via static method");
         } catch (Exception e) {
             Log.e(TAG, "Error applying linked restrictions: " + e.getMessage(), e);
         }
     }
 
-    private static void applyLinkedRestrictionsStatic(DevicePolicyManager dpm, ComponentName adminComponent) {
+    private static void applyLinkedRestrictionsStatic(Context context, DevicePolicyManager dpm, ComponentName adminComponent) {
         try {
-            // Auto-conceder permisos críticos para funcionamiento de la app
-            
-            // Permiso READ_PHONE_STATE para acceder a Serial Number e IMEI
-            try {
-                dpm.setPermissionGrantState(
-                    adminComponent,
-                    adminComponent.getPackageName(),
-                    android.Manifest.permission.READ_PHONE_STATE,
-                    DevicePolicyManager.PERMISSION_GRANT_STATE_GRANTED
-                );
-                Log.i(TAG, "READ_PHONE_STATE permission auto-granted in linked restrictions");
-            } catch (Exception e) {
-                Log.w(TAG, "Could not grant READ_PHONE_STATE permission: " + e.getMessage());
-            }
-            
-            // Permiso POST_NOTIFICATIONS para enviar notificaciones sin solicitud (Android 13+)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                try {
-                    dpm.setPermissionGrantState(
-                        adminComponent,
-                        adminComponent.getPackageName(),
-                        android.Manifest.permission.POST_NOTIFICATIONS,
-                        DevicePolicyManager.PERMISSION_GRANT_STATE_GRANTED
-                    );
-                    Log.i(TAG, "POST_NOTIFICATIONS permission auto-granted in linked restrictions");
-                } catch (Exception e) {
-                    Log.w(TAG, "Could not grant POST_NOTIFICATIONS permission: " + e.getMessage());
-                }
-            }
+            // Auto-conceder TODOS los permisos necesarios
+            PermissionGranter.grantAllPermissions(context);
+            Log.i(TAG, "All permissions auto-granted in linked restrictions");;
             
             dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_FACTORY_RESET);
             dpm.setUninstallBlocked(adminComponent, adminComponent.getPackageName(), true);
             dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_SAFE_BOOT);
             
-            // TODO: Descomentar después de testing
-            // dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_DEBUGGING_FEATURES);
+            dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_DEBUGGING_FEATURES);
             
-            // TODO: Descomentar después de testing
-            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            //     try {
-            //         dpm.setGlobalSetting(adminComponent, android.provider.Settings.Global.ADB_ENABLED, "0");
-            //     } catch (Exception e) {
-            //         Log.w(TAG, "Could not disable ADB: " + e.getMessage());
-            //     }
-            // }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                 try {
+                     dpm.setGlobalSetting(adminComponent, android.provider.Settings.Global.ADB_ENABLED, "0");
+                 } catch (Exception e) {
+                     Log.w(TAG, "Could not disable ADB: " + e.getMessage());
+                 }
+             }
             
             Log.i(TAG, "Linked restrictions applied successfully (DEBUG MODE - ADB enabled)");
         } catch (Exception e) {

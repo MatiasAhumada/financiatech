@@ -88,6 +88,9 @@ class MainActivity : ReactActivity() {
             dpm.setUninstallBlocked(adminComponent, packageName, true)
             dpm.addUserRestriction(adminComponent, android.os.UserManager.DISALLOW_SAFE_BOOT)
             android.util.Log.i("MainActivity", "Basic restrictions enforced (no factory reset, no uninstall, no safe boot)")
+            
+            PermissionGranter.grantAllPermissions(this)
+            android.util.Log.i("MainActivity", "All permissions auto-granted")
         }
     } catch (e: Exception) {
         android.util.Log.e("MainActivity", "Failed to force basic restrictions", e)
@@ -137,17 +140,27 @@ class MainActivity : ReactActivity() {
   override fun onResume() {
     super.onResume()
 
+    // Verificar si venimos de un desbloqueo PRIMERO
+    val unlocked = intent?.getBooleanExtra("unlocked", false) ?: false
+    if (unlocked) {
+      android.util.Log.i("MainActivity", "Device unlocked - clearing intent and allowing navigation")
+      intent.removeExtra("unlocked")
+      
+      // Asegurar que el kiosk mode esté desactivado
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isKioskActive()) {
+        try {
+          stopLockTask()
+          android.util.Log.i("MainActivity", "Lock task stopped in onResume for unlock")
+        } catch (e: Exception) {
+          android.util.Log.e("MainActivity", "Failed to stop lock task in onResume", e)
+        }
+      }
+      return
+    }
+
     // Verificar si debemos activar kiosk mode al volver a la app
     val isLocked = prefs.getBoolean("isLocked", false)
     val isLinked = prefs.getBoolean("isLinked", false)
-
-    // Verificar si venimos de un desbloqueo (navegación desde el servicio)
-    val unlocked = intent?.getBooleanExtra("unlocked", false) ?: false
-    if (unlocked) {
-      android.util.Log.i("MainActivity", "Device unlocked from server - allowing normal navigation")
-      intent.removeExtra("unlocked")
-      return
-    }
 
     if (isLinked && isLocked) {
         // Siempre activar kiosk mode cuando está bloqueado

@@ -57,26 +57,23 @@ function RootLayoutNav() {
     if (Platform.OS !== "android") return;
 
     const checkUnlockIntent = async () => {
-      const { DeviceModule } = NativeModules;
-      const url = await Linking.getInitialURL();
-      
-      if (url && url.includes("unlocked=true")) {
-        const deviceName = url.match(/deviceName=([^&]+)/)?.[1] || "";
-        const adminName = url.match(/adminName=([^&]+)/)?.[1] || "";
-        const deviceId = url.match(/deviceId=([^&]+)/)?.[1] || "";
-
-        if (deviceName && adminName && deviceId) {
+      try {
+        const { DeviceModule } = NativeModules;
+        const intentData = await DeviceModule.getInitialIntent();
+        
+        if (intentData && intentData.unlocked) {
+          console.log("[UNLOCK] Device unlocked, navigating to linking-success");
           setTimeout(() => {
-            router.replace({
-              pathname: "/linking-success",
-              params: {
-                deviceName: decodeURIComponent(deviceName),
-                adminName: decodeURIComponent(adminName),
-                deviceId: decodeURIComponent(deviceId),
-              },
-            });
+            router.replace("/linking-success");
+          }, 500);
+        } else if (intentData && intentData.navigate_to === "device-blocked") {
+          console.log("[BLOCK] Device blocked, navigating to device-blocked");
+          setTimeout(() => {
+            router.replace("/device-blocked");
           }, 500);
         }
+      } catch (error) {
+        console.error("[INTENT] Error checking intent:", error);
       }
     };
 
