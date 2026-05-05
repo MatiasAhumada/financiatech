@@ -13,46 +13,50 @@ export async function sendPushNotification(
 ): Promise<boolean> {
   const messaging = getMessaging();
 
-  console.log("[FCM-SEND] Attempting to send notification");
-  console.log("[FCM-SEND] Token:", token);
+  console.log("[FCM-SEND] ========================================");
+  console.log("[FCM-SEND] Intentando enviar notificación");
+  console.log("[FCM-SEND] Timestamp:", new Date().toISOString());
+  console.log("[FCM-SEND] Token (primeros 50):", token.substring(0, 50) + "...");
   console.log("[FCM-SEND] Title:", notification.title);
   console.log("[FCM-SEND] Body:", notification.body);
   console.log("[FCM-SEND] Data:", JSON.stringify(notification.data));
 
   try {
+    // Enviar SOLO data (sin notification) para que onMessageReceived() siempre se ejecute
+    // Esto permite que el servicio Java maneje la notificación tanto en foreground como background
     const message = {
-      notification: {
+      data: {
         title: notification.title,
         body: notification.body,
+        ...(notification.data || {}),
       },
-      data: notification.data,
       token,
       android: {
         priority: "high" as const,
-        notification: {
-          channelId: "default",
-          priority: "high" as const,
-          visibility: "public" as const,
-          defaultSound: true,
-          defaultVibrateTimings: true,
-          defaultLightSettings: true,
-        },
       },
       apns: {
         payload: {
           aps: {
             sound: "default",
             badge: 1,
+            contentAvailable: true,
           },
         },
       },
     };
 
-    await messaging.send(message);
-    console.log("[FCM-SEND] Notification sent successfully");
+    console.log("[FCM-SEND] Enviando mensaje a Firebase...");
+    const response = await messaging.send(message);
+    console.log("[FCM-SEND] ✓ Respuesta de Firebase:", response);
+    console.log("[FCM-SEND] ✓ Notificación enviada exitosamente");
+    console.log("[FCM-SEND] ========================================");
     return true;
-  } catch (error) {
-    console.error("[FCM-SEND] Error al enviar notificación:", error);
+  } catch (error: any) {
+    console.error("[FCM-SEND] ✗ Error al enviar notificación:");
+    console.error("[FCM-SEND] Error code:", error?.code);
+    console.error("[FCM-SEND] Error message:", error?.message);
+    console.error("[FCM-SEND] Error details:", error);
+    console.log("[FCM-SEND] ========================================");
     return false;
   }
 }
@@ -71,13 +75,17 @@ export async function sendTopicNotification(
   const messaging = getMessaging();
 
   try {
+    // Enviar SOLO data (sin notification) para que onMessageReceived() siempre se ejecute
     const message = {
-      notification: {
+      data: {
         title: notification.title,
         body: notification.body,
+        ...(notification.data || {}),
       },
-      data: notification.data,
       topic,
+      android: {
+        priority: "high" as const,
+      },
     };
 
     await messaging.send(message);

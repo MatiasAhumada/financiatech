@@ -374,6 +374,21 @@ export const notificationSchedulerService = {
     installment: { id: string; number: number } | null,
     trigger: NotificationTrigger = NotificationTrigger.SCHEDULED
   ): Promise<NotificationResult> {
+    console.log("[NOTIFICATION-SEND] ========================================");
+    console.log("[NOTIFICATION-SEND] Enviando notificación");
+    console.log("[NOTIFICATION-SEND] Device ID:", device.id);
+    console.log("[NOTIFICATION-SEND] Device Name:", device.name);
+    console.log("[NOTIFICATION-SEND] Instance:", instance);
+    console.log("[NOTIFICATION-SEND] Trigger:", trigger);
+    console.log("[NOTIFICATION-SEND] Tiene sync?:", !!device.sync);
+    console.log("[NOTIFICATION-SEND] Tiene fcmToken?:", !!device.sync?.fcmToken);
+    
+    if (device.sync?.fcmToken) {
+      console.log("[NOTIFICATION-SEND] FCM Token (primeros 50):", device.sync.fcmToken.substring(0, 50) + "...");
+    } else {
+      console.log("[NOTIFICATION-SEND] ✗ NO HAY FCM TOKEN - La notificación NO se enviará");
+    }
+    
     const installmentNumber = installment?.number;
     const now = new Date();
     const messages: Record<string, string> = {
@@ -399,6 +414,7 @@ export const notificationSchedulerService = {
 
     if (device.sync?.fcmToken) {
       try {
+        console.log("[NOTIFICATION-SEND] Llamando a sendPushNotification...");
         await sendPushNotification(device.sync.fcmToken, {
           title:
             instance === "warning1"
@@ -412,7 +428,11 @@ export const notificationSchedulerService = {
             installmentNumber: installmentNumber?.toString() || "",
           },
         });
+        console.log("[NOTIFICATION-SEND] ✓ Notificación enviada exitosamente");
+        console.log("[NOTIFICATION-SEND] ========================================");
       } catch (error) {
+        console.error("[NOTIFICATION-SEND] ✗ Error al enviar notificación:", error);
+        console.log("[NOTIFICATION-SEND] ========================================");
         await prisma.notification.create({
           data: {
             deviceId: device.id,
@@ -429,6 +449,9 @@ export const notificationSchedulerService = {
           },
         });
       }
+    } else {
+      console.log("[NOTIFICATION-SEND] ⚠️ Saltando envío de FCM - No hay token");
+      console.log("[NOTIFICATION-SEND] ========================================");
     }
 
     return {
@@ -447,6 +470,20 @@ export const notificationSchedulerService = {
     installment: { id: string; number: number } | null,
     trigger: NotificationTrigger = NotificationTrigger.SCHEDULED
   ): Promise<NotificationResult> {
+    console.log("[BLOCK-WARNING] ========================================");
+    console.log("[BLOCK-WARNING] Enviando notificación de bloqueo inminente");
+    console.log("[BLOCK-WARNING] Device ID:", device.id);
+    console.log("[BLOCK-WARNING] Device Name:", device.name);
+    console.log("[BLOCK-WARNING] Trigger:", trigger);
+    console.log("[BLOCK-WARNING] Tiene sync?:", !!device.sync);
+    console.log("[BLOCK-WARNING] Tiene fcmToken?:", !!device.sync?.fcmToken);
+    
+    if (device.sync?.fcmToken) {
+      console.log("[BLOCK-WARNING] FCM Token (primeros 50):", device.sync.fcmToken.substring(0, 50) + "...");
+    } else {
+      console.log("[BLOCK-WARNING] ✗ NO HAY FCM TOKEN - La notificación NO se enviará");
+    }
+    
     const installmentNumber = installment?.number;
     const now = new Date();
     const message = `⏰ ATENCIÓN: Tu equipo se bloqueará automáticamente en 4 horas (Cuota #${installmentNumber || "N"}). Realiza el pago inmediatamente para evitar el bloqueo.`;
@@ -467,6 +504,7 @@ export const notificationSchedulerService = {
 
     if (device.sync?.fcmToken) {
       try {
+        console.log("[BLOCK-WARNING] Llamando a sendPushNotification...");
         await sendPushNotification(device.sync.fcmToken, {
           title: "⏰ Alerta de Bloqueo Inminente",
           body: message,
@@ -478,12 +516,15 @@ export const notificationSchedulerService = {
             installmentNumber: installmentNumber?.toString() || "",
           },
         });
+        console.log("[BLOCK-WARNING] ✓ Notificación enviada exitosamente");
+        console.log("[BLOCK-WARNING] ========================================");
       } catch (error) {
-        console.error(
-          `Error sending block warning FCM to device ${device.id}:`,
-          error
-        );
+        console.error("[BLOCK-WARNING] ✗ Error al enviar notificación:", error);
+        console.log("[BLOCK-WARNING] ========================================");
       }
+    } else {
+      console.log("[BLOCK-WARNING] ⚠️ Saltando envío de FCM - No hay token");
+      console.log("[BLOCK-WARNING] ========================================");
     }
 
     if (device.sync?.serialNumber) {
