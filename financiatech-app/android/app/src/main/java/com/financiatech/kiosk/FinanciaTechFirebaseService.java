@@ -31,11 +31,13 @@ public class FinanciaTechFirebaseService extends FirebaseMessagingService {
         Log.d(TAG, "Message ID: " + remoteMessage.getMessageId());
         Log.d(TAG, "Message priority: " + remoteMessage.getPriority());
         
+        // Siempre procesar data (ahora contiene title y body)
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
             handleDataMessage(remoteMessage.getData());
         }
         
+        // Mantener compatibilidad con notificaciones antiguas que usan notification
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message notification body: " + remoteMessage.getNotification().getBody());
             showNotification(

@@ -49,7 +49,7 @@ public class DeviceAdmin extends DeviceAdminReceiver {
 
         if ("com.financiatech.kiosk.FORCE_RESTRICTIONS".equals(action)) {
             if (dpm.isDeviceOwnerApp(context.getPackageName())) {
-                applyFullRestrictions(dpm, adminComponent);
+                applyFullRestrictions(context, dpm, adminComponent);
                 Log.i(TAG, "Forced full restrictions via Intent!");
             }
             return;
@@ -71,7 +71,7 @@ public class DeviceAdmin extends DeviceAdminReceiver {
             Log.i(TAG, "Boot received — isLinked=" + isLinked + " isLocked=" + isLocked);
 
             if (isLinked && isLocked && dpm.isDeviceOwnerApp(context.getPackageName())) {
-                applyFullRestrictions(dpm, adminComponent);
+                applyFullRestrictions(context, dpm, adminComponent);
                 dpm.setKeyguardDisabled(adminComponent, true);
 
                 try {
@@ -85,7 +85,7 @@ public class DeviceAdmin extends DeviceAdminReceiver {
                     Log.e(TAG, "Error configuring lock task on boot: " + e.getMessage());
                 }
             } else if (isLinked && dpm.isDeviceOwnerApp(context.getPackageName())) {
-                applyLinkedRestrictions(context, dpm, adminComponent);
+                applyLinkedRestrictionsStatic(context, dpm, adminComponent);
             }
 
             if (isLinked) {
@@ -116,8 +116,8 @@ public class DeviceAdmin extends DeviceAdminReceiver {
         applyLinkedRestrictionsStatic(context, dpm, adminComponent);
     }
 
-    private void applyFullRestrictions(DevicePolicyManager dpm, ComponentName adminComponent) {
-        applyLinkedRestrictionsStatic(dpm, adminComponent);
+    private void applyFullRestrictions(Context context, DevicePolicyManager dpm, ComponentName adminComponent) {
+        applyLinkedRestrictionsStatic(context, dpm, adminComponent);
         
         dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_ADD_USER);
         dpm.addUserRestriction(adminComponent, UserManager.DISALLOW_REMOVE_USER);
