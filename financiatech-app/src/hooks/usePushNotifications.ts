@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { Platform, Alert, Linking } from "react-native";
 import { initializeMessaging } from "../services/firebase.service";
 import { registerFCMToken } from "../services/notification.service";
-import * as Application from "expo-application";
+import { useDeviceImei } from "./useDeviceImei";
 
 /**
  * Hook para manejar notificaciones push en la app
@@ -12,6 +12,7 @@ export function usePushNotifications() {
   const initialized = useRef(false);
   const imeiRef = useRef<string | null>(null);
   const tokenRef = useRef<string | null>(null);
+  const { serialNumber, isReady } = useDeviceImei();
 
   const sendTokenToBackend = useCallback(async (token: string, imei: string) => {
     try {
@@ -25,13 +26,12 @@ export function usePushNotifications() {
   }, []);
 
   useEffect(() => {
-    if (initialized.current) return;
+    if (initialized.current || !isReady || !serialNumber) return;
     initialized.current = true;
 
     const initialize = async () => {
       try {
-        const imei = Application.getAndroidId();
-        imeiRef.current = imei;
+        imeiRef.current = serialNumber;
 
         const token = await initializeMessaging({
           onMessageReceived: (message) => {
@@ -52,9 +52,9 @@ export function usePushNotifications() {
           },
         });
 
-        if (token && imei) {
+        if (token && serialNumber) {
           tokenRef.current = token;
-          await sendTokenToBackend(token, imei);
+          await sendTokenToBackend(token, serialNumber);
         }
       } catch (error: any) {
         console.error("[NOTIFICATION] Error al inicializar:", error);
@@ -62,5 +62,5 @@ export function usePushNotifications() {
     };
 
     initialize();
-  }, [sendTokenToBackend]);
+  }, [sendTokenToBackend, isReady, serialNumber]);
 }

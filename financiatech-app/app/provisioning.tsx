@@ -21,6 +21,7 @@ export default function ProvisioningScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [checkingSync, setCheckingSync] = useState(true);
   const [hasChecked, setHasChecked] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
 
   const performStatusCheck = async () => {
     if (!isDeviceReady || !serialNumber || hasChecked) {
